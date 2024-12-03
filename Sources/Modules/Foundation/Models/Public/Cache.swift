@@ -8,13 +8,9 @@
 /* Native */
 import Foundation
 
+private let cache: NSCache<NSString, AnyObject> = .init()
+
 public struct Cache<KeyType: RawRepresentable> where KeyType.RawValue: StringProtocol, KeyType: CaseIterable {
-    // MARK: - Properties
-
-    fileprivate let cache: NSCache<NSString, AnyObject> = .init()
-
-    // MARK: - Init
-
     public init() {}
 }
 

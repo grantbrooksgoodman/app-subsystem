@@ -10,10 +10,6 @@ import Foundation
 
 private let cache: NSCache<NSString, AnyObject> = .init()
 
-public struct Cache<KeyType: RawRepresentable> where KeyType.RawValue: StringProtocol, KeyType: CaseIterable {
-    public init() {}
-}
-
 @propertyWrapper
 public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawValue: StringProtocol, KeyType: CaseIterable {
     // MARK: - Types
@@ -26,7 +22,6 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 
     // MARK: - Properties
 
-    private let cache: Cache<KeyType> = .init()
     private let key: KeyType
     private let logsAccess: Bool
 
@@ -44,19 +39,19 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 
     public var wrappedValue: ObjectType? {
         get {
-            guard let value = cache.value(forKey: key) as? ObjectType else { return nil }
+            guard let value = value(forKey: key) as? ObjectType else { return nil }
             log(.getValue, key: key)
             return value
         }
 
         set {
             guard let newValue else {
-                cache.removeObject(forKey: key)
+                removeObject(forKey: key)
                 log(.removeValue, key: key)
                 return
             }
 
-            cache.set(newValue, forKey: key)
+            set(newValue, forKey: key)
             log(.setValue, key: key)
         }
     }
@@ -73,7 +68,7 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
     }
 }
 
-extension Cache: Cacheable {
+extension Cached: Cacheable {
     // MARK: - Type Aliases
 
     public typealias CacheKey = KeyType

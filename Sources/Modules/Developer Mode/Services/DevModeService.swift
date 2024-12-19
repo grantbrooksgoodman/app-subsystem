@@ -94,7 +94,6 @@ public enum DevModeService {
 
     public static func presentActionSheet() {
         Task { @MainActor in
-            @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
             @Dependency(\.uiApplication) var uiApplication: UIApplication
 
             guard !uiApplication.isPresentingAlertController else { return }
@@ -106,18 +105,8 @@ public enum DevModeService {
                 .init("Disable Developer Mode", style: .destructive, effect: DevModeService.promptToToggle),
             ]
 
-//            let presentedViewsString = "Presented Views: \(uiApplication.presentedViews.count)"
-//            let presentedViewControllersString = "Presented View Controllers: \(uiApplication.presentedViewControllers.count)"
-//            let memoryFootprintString = "Memory Footprint: \(appMemoryFootprint ?? 0)MB"
-            let presentedViewsString = "\(uiApplication.presentedViews.count) presented views"
-            let presentedViewControllersString = "\(uiApplication.presentedViewControllers.count) presented view controllers"
-            let memoryFootprintString = "\(appMemoryFootprint ?? 0)MB memory footprint"
-
-            let message = "\(presentedViewsString)\n\(presentedViewControllersString)\n\(memoryFootprintString)"
-
             await AKActionSheet(
                 title: "Developer Mode Options",
-                message: message,
                 actions: actions
             ).present(translating: [])
         }

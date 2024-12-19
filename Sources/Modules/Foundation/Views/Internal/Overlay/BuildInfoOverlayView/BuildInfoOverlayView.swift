@@ -34,15 +34,20 @@ struct BuildInfoOverlayView: View {
     // MARK: - View
 
     var body: some View {
-        VStack {
+        VStack(alignment: .trailing, spacing: 0) {
             sendFeedbackButton
+            statsView
             buildInfoButton
         }
-        .animation(.easeIn.speed(2), value: viewModel.shouldUseTranslucentAppearance)
+        .animation(
+            .easeIn.speed(Floats.translucencyAnimationSpeed),
+            value: viewModel.shouldUseTranslucentAppearance
+        )
+        .frame(
+            maxWidth: .infinity,
+            alignment: .trailing
+        )
         .offset(x: Floats.xOffset, y: viewModel.yOffset)
-        .onShake {
-            viewModel.send(.didShakeDevice)
-        }
         .onFirstAppear {
             viewModel.send(.viewAppeared)
         }
@@ -69,14 +74,10 @@ struct BuildInfoOverlayView: View {
                 foregroundColor: Colors.buildInfoButtonLabelForeground
             )
         }
-        .padding(.all, Floats.buildInfoButtonPadding)
+        .disabled(viewModel.isPresentingAlertController)
         .frame(height: Floats.buildInfoButtonFrameHeight)
-        .background(Colors.buildInfoButtonBackground.opacity(viewModel.shouldUseTranslucentAppearance ? 0.35 : 1))
-        .frame(
-            maxWidth: .infinity,
-            alignment: .trailing
-        )
-        .offset(x: Floats.buildInfoButtonXOffset)
+        .padding(.horizontal, 1)
+        .background(viewModel.backgroundColor)
     }
 
     private var sendFeedbackButton: some View {
@@ -93,16 +94,20 @@ struct BuildInfoOverlayView: View {
         ) {
             viewModel.send(.sendFeedbackButtonTapped)
         }
-        .padding(.horizontal, Floats.sendFeedbackButtonHorizontalPadding)
+        .disabled(viewModel.isPresentingAlertController)
         .frame(height: Floats.sendFeedbackButtonFrameHeight)
-        .background(Colors.sendFeedbackButtonBackground.opacity(viewModel.shouldUseTranslucentAppearance ? 0.35 : 1))
-        .frame(
-            maxWidth: .infinity,
-            alignment: .trailing
+        .padding(.horizontal, 1)
+        .background(viewModel.backgroundColor)
+    }
+
+    private var statsView: some View {
+        Components.text(
+            viewModel.statsLabelText,
+            font: .system(scale: .small),
+            foregroundColor: Colors.statsLabelForeground
         )
-        .offset(
-            x: Floats.sendFeedbackButtonXOffset,
-            y: Floats.sendFeedbackButtonYOffset
-        )
+        .frame(height: Floats.statsViewFrameHeight)
+        .padding(.horizontal, 1)
+        .background(viewModel.backgroundColor)
     }
 }

@@ -18,6 +18,7 @@ struct RootOverlayObserver: Observer {
 
     let id = UUID()
     let observedValues: [any ObservableProtocol] = [
+        Observables.isBuildInfoOverlayHidden,
         Observables.rootViewSheet,
         Observables.rootViewToast,
         Observables.rootViewToastAction,
@@ -44,6 +45,10 @@ struct RootOverlayObserver: Observer {
         )
 
         switch observable.key {
+        case .isBuildInfoOverlayHidden:
+            guard let value = observable.value as? Bool else { return }
+            send(.isBuildInfoOverlayHiddenChanged(value))
+
         case .rootViewSheet:
             send(.sheetChanged(observable.value as? AnyView))
 

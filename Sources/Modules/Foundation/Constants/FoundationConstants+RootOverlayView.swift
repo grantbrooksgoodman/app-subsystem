@@ -1,5 +1,5 @@
 //
-//  FoundationConstants+RootWindow.swift
+//  FoundationConstants+RootOverlayView.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -11,7 +11,7 @@ import Foundation
 // MARK: - CGFloat
 
 public extension FoundationConstants.CGFloats {
-    enum RootWindow {
+    enum RootOverlayView {
         public static let buildInfoOverlayFrameMaxHeight: CGFloat = 110
     }
 }

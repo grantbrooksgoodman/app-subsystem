@@ -11,6 +11,10 @@ import SwiftUI
 
 /// Added as a subview to the root window and is perpetually frontmost.
 struct RootOverlayView: View {
+    // MARK: - Constants Accessors
+
+    private typealias Floats = FoundationConstants.CGFloats.RootOverlayView
+
     // MARK: - Properties
 
     @StateObject private var observer: ViewObserver<RootOverlayObserver>
@@ -42,13 +46,38 @@ struct RootOverlayView: View {
     // MARK: - View
 
     var body: some View {
-        EmptyView()
+        contentView
             .sheet(isPresented: sheetBinding) {
                 viewModel.sheet
             }
             .toast(toastBinding, onTap: viewModel.toastAction)
+            .onShake {
+                viewModel.send(.didShakeDevice)
+            }
             .onFirstAppear {
                 viewModel.send(.viewAppeared)
             }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        if viewModel.isBuildInfoOverlayHidden {
+            EmptyView()
+        } else {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    BuildInfoOverlayView(.init(
+                        initialState: .init(viewModel.buildInfoOverlayYOffset),
+                        reducer: BuildInfoOverlayReducer()
+                    ))
+                    .frame(maxHeight: Floats.buildInfoOverlayFrameMaxHeight)
+                    .ignoresSafeArea()
+                }
+            }
+            .opacity(viewModel.isBuildInfoOverlayHidden ? 0 : 1)
+            .padding(.bottom, 1)
+        }
     }
 }

@@ -45,10 +45,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         // Root window
 
         let rootWindow = UIWindow(windowScene: windowScene)
-        rootWindow.rootViewController = UIHostingController(rootView: RootWindow(
-            .init(initialState: .init(), reducer: RootWindowReducer()),
-            view: rootView
-        ))
+        rootWindow.rootViewController = UIHostingController(rootView: AnyView(rootView))
         rootWindow.makeKeyAndVisible()
         rootWindow.tag = coreUI.semTag(for: "ROOT_WINDOW")
 

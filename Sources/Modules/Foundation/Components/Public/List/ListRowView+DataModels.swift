@@ -71,7 +71,7 @@ public extension ListRowView {
         // MARK: - Cases
 
         case button(_ id: UUID = UUID(), showsChevron: Bool = false, action: () -> Void)
-        case destination(_ id: UUID = UUID(), _ view: any View)
+        case destination(id: UUID = UUID(), _ view: any View)
         case `switch`(_ id: UUID = UUID(), isToggled: Binding<Bool>)
 
         // MARK: - Properties

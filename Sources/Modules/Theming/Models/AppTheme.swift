@@ -40,7 +40,7 @@ public extension AppTheme {
         let navigationBarTitle = Item(type: .navigationBarTitle, set: .init(primary: .black, variant: .white))
 
         let titleText = Item(type: .titleText, set: .init(primary: .black, variant: .white))
-        let subtitleText = Item(type: .subtitleText, set: .init(primary: .black, variant: .white))
+        let subtitleText = Item(type: .subtitleText, set: .init(primary: .systemGray))
 
         return [
             accent,

@@ -32,4 +32,23 @@ public extension UIColor {
     private convenience init(red: Int, green: Int, blue: Int, alpha: CGFloat = 1.0) {
         self.init(red: CGFloat(red) / 255.0, green: CGFloat(green) / 255.0, blue: CGFloat(blue) / 255.0, alpha: alpha)
     }
+
+    func darker(by percentage: CGFloat = 30) -> UIColor? {
+        adjust(by: -1 * abs(percentage))
+    }
+
+    func lighter(by percentage: CGFloat = 30) -> UIColor? {
+        adjust(by: abs(percentage))
+    }
+
+    private func adjust(by percentage: CGFloat) -> UIColor? {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        guard getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        return .init(
+            red: min(red + percentage / 100, 1),
+            green: min(green + percentage / 100, 1),
+            blue: min(blue + percentage / 100, 1),
+            alpha: alpha
+        )
+    }
 }

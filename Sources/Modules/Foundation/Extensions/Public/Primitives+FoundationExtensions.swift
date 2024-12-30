@@ -101,6 +101,10 @@ public extension String {
         "A" ... "Z" ~= self || "a" ... "z" ~= self
     }
 
+    var isBlank: Bool {
+        lowercasedTrimmingWhitespaceAndNewlines.isEmpty
+    }
+
     var isLowercase: Bool {
         self == lowercased()
     }

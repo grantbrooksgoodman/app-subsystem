@@ -7,7 +7,7 @@
 
 /* Native */
 import Foundation
-import UIKit
+import SwiftUI
 
 public extension UIImage {
     static func downloadedFrom(_ link: String) async -> UIImage? {
@@ -46,5 +46,12 @@ public extension UIImage {
 
             completion(image)
         }.resume()
+    }
+}
+
+public extension UIImage? {
+    var swiftUIImage: Image? {
+        guard let self else { return nil }
+        return .init(uiImage: self)
     }
 }

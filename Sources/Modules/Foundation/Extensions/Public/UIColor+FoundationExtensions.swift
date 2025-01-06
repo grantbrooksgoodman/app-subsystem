@@ -7,7 +7,7 @@
 
 /* Native */
 import Foundation
-import UIKit
+import SwiftUI
 
 public extension UIColor {
     /**
@@ -50,5 +50,12 @@ public extension UIColor {
             blue: min(blue + percentage / 100, 1),
             alpha: alpha
         )
+    }
+}
+
+public extension UIColor? {
+    var swiftUIColor: Color? {
+        guard let self else { return nil }
+        return .init(uiColor: self)
     }
 }

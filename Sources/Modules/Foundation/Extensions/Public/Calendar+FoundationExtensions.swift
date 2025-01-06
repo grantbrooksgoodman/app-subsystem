@@ -25,41 +25,27 @@ public extension Calendar {
 
         /* MARK: Properties */
 
-        public var asComponent: Component {
+        var asComponent: Component {
             switch self {
-            case .day:
-                return .day
-            case .hour:
-                return .hour
-            case .minute:
-                return .minute
-            case .month:
-                return .month
-            case .second:
-                return .second
-            case .week:
-                return .weekOfMonth
-            case .year:
-                return .year
+            case .day: .day
+            case .hour: .hour
+            case .minute: .minute
+            case .month: .month
+            case .second: .second
+            case .week: .weekOfMonth
+            case .year: .year
             }
         }
 
-        public var asNSCalendarUnit: NSCalendar.Unit {
+        var asNSCalendarUnit: NSCalendar.Unit {
             switch self {
-            case .day:
-                return .day
-            case .hour:
-                return .hour
-            case .minute:
-                return .minute
-            case .month:
-                return .month
-            case .second:
-                return .second
-            case .week:
-                return .weekOfMonth
-            case .year:
-                return .year
+            case .day: .day
+            case .hour: .hour
+            case .minute: .minute
+            case .month: .month
+            case .second: .second
+            case .week: .weekOfMonth
+            case .year: .year
             }
         }
     }
@@ -88,23 +74,16 @@ public extension Calendar {
     }
 }
 
-public extension Calendar.Component {
+private extension Calendar.Component {
     init(_ component: Calendar.LocalizableComponent) {
         switch component {
-        case .day:
-            self = .day
-        case .hour:
-            self = .hour
-        case .minute:
-            self = .minute
-        case .month:
-            self = .month
-        case .second:
-            self = .second
-        case .week:
-            self = .weekOfMonth
-        case .year:
-            self = .year
+        case .day: self = .day
+        case .hour: self = .hour
+        case .minute: self = .minute
+        case .month: self = .month
+        case .second: self = .second
+        case .week: self = .weekOfMonth
+        case .year: self = .year
         }
     }
 }

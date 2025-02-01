@@ -28,10 +28,6 @@ struct RootOverlayReducer: Reducer {
         case toastChanged(Toast?)
     }
 
-    // MARK: - Feedback
-
-    typealias Feedback = Never
-
     // MARK: - State
 
     struct State: Equatable {
@@ -79,31 +75,31 @@ struct RootOverlayReducer: Reducer {
 
     // MARK: - Reduce
 
-    func reduce(into state: inout State, for event: Event) -> Effect<Feedback> {
-        switch event {
-        case .action(.viewAppeared):
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .viewAppeared:
             rootWindowService.startRaisingWindow()
             guard UIApplication.iOS19IsAvailable else { return .none }
             rootWindowService.addKeyboardAppearanceObservers()
 
-        case .action(.didShakeDevice):
+        case .didShakeDevice:
             guard build.developerModeEnabled else { return .none }
             DevModeService.presentActionSheet()
 
-        case let .action(.isBuildInfoOverlayHiddenChanged(isBuildInfoOverlayHidden)):
+        case let .isBuildInfoOverlayHiddenChanged(isBuildInfoOverlayHidden):
             state.isBuildInfoOverlayHidden = isBuildInfoOverlayHidden
 
-        case let .action(.isPresentingSheetChanged(isPresentingSheet)):
+        case let .isPresentingSheetChanged(isPresentingSheet):
             state.isPresentingSheet = isPresentingSheet
 
-        case let .action(.sheetChanged(sheet)):
+        case let .sheetChanged(sheet):
             state.sheet = sheet ?? .init(EmptyView())
             state.isPresentingSheet = sheet != nil
 
-        case let .action(.toastActionChanged(action)):
+        case let .toastActionChanged(action):
             state.toastAction = action
 
-        case let .action(.toastChanged(toast)):
+        case let .toastChanged(toast):
             state.toast = toast
             state.toastAction = nil
         }

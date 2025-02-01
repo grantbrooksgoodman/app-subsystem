@@ -8,14 +8,14 @@
 /* Native */
 import Foundation
 
-public struct Reduce<State, Action, Feedback>: Reducer where State: Equatable {
+public struct Reduce<State, Action>: Reducer where State: Equatable {
     // MARK: - Properties
 
-    let reduce: (inout State, ReduceEvent<Action, Feedback>) -> Effect<Feedback>
+    let reduce: (inout State, Action) -> Effect<Action>
 
     // MARK: - Init
 
-    public init(reduce: @escaping (inout State, ReduceEvent<Action, Feedback>) -> Effect<Feedback>) {
+    public init(reduce: @escaping (inout State, Action) -> Effect<Action>) {
         self.reduce = reduce
     }
 
@@ -23,8 +23,8 @@ public struct Reduce<State, Action, Feedback>: Reducer where State: Equatable {
 
     public func reduce(
         into state: inout State,
-        for event: ReduceEvent<Action, Feedback>
-    ) -> Effect<Feedback> {
-        reduce(&state, event)
+        action: Action
+    ) -> Effect<Action> {
+        reduce(&state, action)
     }
 }

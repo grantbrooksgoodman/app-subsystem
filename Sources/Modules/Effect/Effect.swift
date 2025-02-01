@@ -8,10 +8,10 @@
 /* Native */
 import Foundation
 
-public struct Effect<Feedback> {
+public struct Effect<Action> {
     // MARK: - Type Aliases
 
-    public typealias Operation = @Sendable (Send<Feedback>) async -> Void
+    public typealias Operation = @Sendable (Send<Action>) async -> Void
 
     // MARK: - Properties
 
@@ -54,7 +54,7 @@ public extension Effect {
     static func run<S: AsyncSequence>(
         priority: TaskPriority? = nil,
         _ sequence: S
-    ) -> Self where S.Element == Feedback, S.Element: Sendable {
+    ) -> Self where S.Element == Action, S.Element: Sendable {
         assert(
             !String(describing: type(of: sequence)).localizedStandardContains("AsyncPublisher") &&
                 !String(describing: type(of: sequence)).localizedStandardContains("AsyncThrowingPublisher")
@@ -62,8 +62,8 @@ public extension Effect {
 
         return .run(priority: priority) { send in
             do {
-                for try await feedback in sequence {
-                    await send(feedback)
+                for try await action in sequence {
+                    await send(action)
                 }
             } catch is CancellationError {} catch { fatalError("This sequence should not throw") }
         }
@@ -74,7 +74,7 @@ public extension Effect {
     static func task(
         priority: TaskPriority? = nil,
         delay: Duration? = nil,
-        operation: @Sendable @escaping () async -> Feedback?
+        operation: @Sendable @escaping () async -> Action?
     ) -> Self {
         .run(priority: priority) { send in
             if let delay {
@@ -85,8 +85,8 @@ public extension Effect {
             }
 
             func performOperation() async {
-                if let feedback = await operation() {
-                    await send(feedback)
+                if let action = await operation() {
+                    await send(action)
                 }
             }
         }
@@ -94,13 +94,13 @@ public extension Effect {
 }
 
 public extension Effect {
-    func map<MappedFeedback>(
-        _ toMapAction: @escaping (Feedback) -> (MappedFeedback)
-    ) -> Effect<MappedFeedback> {
+    func map<MappedAction>(
+        _ toMapAction: @escaping (Action) -> (MappedAction)
+    ) -> Effect<MappedAction> {
         .run { send in
             await operation(
-                Send<Feedback> { feedback in
-                    send(toMapAction(feedback))
+                Send<Action> { action in
+                    send(toMapAction(action))
                 }
             )
         }

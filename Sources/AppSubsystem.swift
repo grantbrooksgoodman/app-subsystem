@@ -17,7 +17,6 @@ import Translator
 public enum AppSubsystem {
     /* MARK: Properties */
 
-    public static let bundle = Bundle.shared
     public static let delegates = Delegates.shared
 
     private(set) static var didInitialize = false
@@ -25,18 +24,16 @@ public enum AppSubsystem {
     /* MARK: Initialize */
 
     public static func initialize(
-        appStoreBuildNumber: Int = bundle.appStoreBuildNumber,
-        buildMilestone: Build.Milestone = bundle.buildMilestone,
-        codeName: String = bundle.codeName,
-        dmyFirstCompileDateString: String = bundle.dmyFirstCompileDateString,
-        finalName: String = bundle.finalName,
-        languageCode: String = bundle.languageCode,
-        loggingEnabled: Bool = bundle.loggingEnabled,
-        timebombActive: Bool = bundle.timebombActive
+        appStoreBuildNumber: Int,
+        buildMilestone: Build.Milestone,
+        codeName: String,
+        dmyFirstCompileDateString: String,
+        finalName: String,
+        languageCode: String,
+        loggingEnabled: Bool
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.breadcrumbs) var breadcrumbs: Breadcrumbs
-        @Dependency(\.build) var build: Build
         @Dependency(\.coreKit) var core: CoreKit
         @Dependency(\.translatorConfig) var translatorConfig: Translator.Config
 
@@ -44,16 +41,16 @@ public enum AppSubsystem {
 
         didInitialize = true
 
-        bundle.setAppStoreBuildNumber(appStoreBuildNumber)
-        bundle.setBuildMilestone(buildMilestone)
-        bundle.setCodeName(codeName)
-        bundle.setDMYFirstCompileDateString(dmyFirstCompileDateString)
-        bundle.setFinalName(finalName)
+        _build = .init(
+            appStoreBuildNumber: appStoreBuildNumber,
+            codeName: codeName,
+            dmyFirstCompileDateString: dmyFirstCompileDateString,
+            finalName: finalName,
+            loggingEnabled: loggingEnabled,
+            milestone: buildMilestone
+        )
 
         core.utils.setLanguageCode(languageCode)
-
-        bundle.setLoggingEnabled(loggingEnabled)
-        bundle.setTimebombActive(timebombActive)
 
         /* MARK: AlertKit & Translator Setup */
 
@@ -72,7 +69,7 @@ public enum AppSubsystem {
 
         @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
         @Persistent(.breadcrumbsCapturesAllViews) var breadcrumbsCapturesAllViews: Bool?
-        if build.milestone == .generalRelease {
+        if _build.milestone == .generalRelease {
             breadcrumbsCaptureEnabled = false
             breadcrumbsCapturesAllViews = nil
         } else if let breadcrumbsCaptureEnabled,
@@ -86,13 +83,13 @@ public enum AppSubsystem {
         core.gcd.after(.milliseconds(50)) {
             @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
             if let hidesBuildInfoOverlay,
-               build.developerModeEnabled {
+               _build.isDeveloperModeEnabled {
                 switch hidesBuildInfoOverlay {
                 case true: BuildInfoOverlay.hide()
                 case false: BuildInfoOverlay.show()
                 }
             } else {
-                switch build.milestone == .generalRelease {
+                switch _build.milestone == .generalRelease {
                 case true: BuildInfoOverlay.hide()
                 case false: BuildInfoOverlay.show()
                 }
@@ -113,69 +110,6 @@ public enum AppSubsystem {
             ThemeService.setTheme(correspondingCase.theme, checkStyle: false)
         } else {
             ThemeService.setTheme(AppTheme.default.theme, checkStyle: false)
-        }
-    }
-}
-
-// MARK: - Bundle
-
-public extension AppSubsystem {
-    final class Bundle {
-        /* MARK: Properties */
-
-        // Bool
-        public private(set) var loggingEnabled = true
-        public private(set) var timebombActive = true
-
-        // String
-        public private(set) var codeName = "Template"
-        public private(set) var dmyFirstCompileDateString = "29062007"
-        public private(set) var finalName = ""
-        public private(set) var languageCode = Locale.systemLanguageCode
-
-        // Other
-        public private(set) var appStoreBuildNumber = 0
-        public private(set) var buildMilestone: Build.Milestone = .preAlpha
-
-        // swiftlint:disable:next discouraged_direct_init
-        fileprivate static let shared = Bundle()
-
-        /* MARK: Init */
-
-        private init() {}
-
-        /* MARK: Setters */
-
-        public func setAppStoreBuildNumber(_ appStoreBuildNumber: Int) {
-            self.appStoreBuildNumber = appStoreBuildNumber
-        }
-
-        public func setBuildMilestone(_ buildMilestone: Build.Milestone) {
-            self.buildMilestone = buildMilestone
-        }
-
-        public func setCodeName(_ codeName: String) {
-            self.codeName = codeName
-        }
-
-        public func setDMYFirstCompileDateString(_ dmyFirstCompileDateString: String) {
-            self.dmyFirstCompileDateString = dmyFirstCompileDateString
-        }
-
-        public func setFinalName(_ finalName: String) {
-            self.finalName = finalName
-        }
-
-        public func setLanguageCode(_ languageCode: String) {
-            self.languageCode = languageCode
-        }
-
-        public func setLoggingEnabled(_ loggingEnabled: Bool) {
-            self.loggingEnabled = loggingEnabled
-        }
-
-        public func setTimebombActive(_ timebombActive: Bool) {
-            self.timebombActive = timebombActive
         }
     }
 }

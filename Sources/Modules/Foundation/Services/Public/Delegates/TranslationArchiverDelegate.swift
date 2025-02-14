@@ -102,14 +102,15 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
 
 /* MARK: Dependency */
 
+// FIXME: This should be declared in an extension to Translator. Called TranslationArchiverDelegateDependency.
 public enum LocalTranslationArchiverDependency: DependencyKey {
-    public static func resolve(_ dependencies: DependencyValues) -> LocalTranslationArchiverDelegate {
-        (dependencies.translatorConfig.archiverDelegate as? LocalTranslationArchiverDelegate) ?? .init()
+    public static func resolve(_ dependencies: DependencyValues) -> TranslationArchiverDelegate {
+        dependencies.translatorConfig.archiverDelegate ?? LocalTranslationArchiverDelegate()
     }
 }
 
 public extension DependencyValues {
-    var localTranslationArchiver: LocalTranslationArchiverDelegate {
+    var localTranslationArchiver: TranslationArchiverDelegate {
         get { self[LocalTranslationArchiverDependency.self] }
         set { self[LocalTranslationArchiverDependency.self] = newValue }
     }

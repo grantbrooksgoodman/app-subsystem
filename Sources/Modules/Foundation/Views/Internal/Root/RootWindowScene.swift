@@ -45,7 +45,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         // Root window
 
         let rootWindow = UIWindow(windowScene: windowScene)
-        rootWindow.rootViewController = UIHostingController(rootView: AnyView(rootView))
+        rootWindow.rootViewController = UIHostingController(rootView: RootWindow(rootView))
         rootWindow.makeKeyAndVisible()
         rootWindow.tag = coreUI.semTag(for: "ROOT_WINDOW")
 
@@ -56,9 +56,14 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
             rootOverlayWindow.frame = .zero
         }
 
-        rootOverlayWindow.rootViewController = UIHostingController(rootView: RootOverlayView(
-            .init(initialState: .init(), reducer: RootOverlayReducer())
-        ))
+        rootOverlayWindow.rootViewController = UIHostingController(
+            rootView: RootOverlayView(
+                .init(
+                    initialState: .init(),
+                    reducer: RootOverlayReducer()
+                )
+            )
+        )
         rootOverlayWindow.tag = coreUI.semTag(for: "ROOT_OVERLAY_WINDOW")
 
         rootOverlayWindow.backgroundColor = .clear
@@ -76,24 +81,6 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         let tapGesture = UITapGestureRecognizer(target: self, action: nil)
         tapGesture.delegate = self
         rootWindow.addGestureRecognizer(tapGesture)
-
-        // Expiry overlay window
-
-        if build.expiryDate.comparator == Date().comparator,
-           build.timebombActive {
-            let expiryOverlayWindow = UIWindow()
-            expiryOverlayWindow.frame = CGRect(
-                x: 0,
-                y: 0,
-                width: rootWindow.screen.bounds.size.width,
-                height: rootWindow.screen.bounds.size.height
-            )
-            expiryOverlayWindow.rootViewController = UIHostingController(rootView: ExpiryOverlayView())
-            expiryOverlayWindow.isHidden = false
-            expiryOverlayWindow.tag = coreUI.semTag(for: "EXPIRY_OVERLAY_WINDOW")
-
-            rootWindow.addSubview(expiryOverlayWindow)
-        }
 
         return rootWindow
     }

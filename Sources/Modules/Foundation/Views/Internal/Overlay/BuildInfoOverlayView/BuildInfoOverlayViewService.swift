@@ -33,7 +33,7 @@ struct BuildInfoOverlayViewService {
                 self.viewBuildInformationButtonTapped()
             }
 
-            let developerModeButtonTitle = "\(build.developerModeEnabled ? "Disable" : "Enable") Developer Mode"
+            let developerModeButtonTitle = "\(build.isDeveloperModeEnabled ? "Disable" : "Enable") Developer Mode"
             let developerModeAction: AKAction = .init(
                 developerModeButtonTitle,
                 style: developerModeButtonTitle.hasPrefix("Enable") ? .default : .destructive
@@ -79,7 +79,7 @@ struct BuildInfoOverlayViewService {
 
     private func getBuildInfoButtonMessage() -> (String?, NSAttributedString?) {
         let milestoneString = build.milestone.rawValue
-        let expiryString = build.timebombActive ? "\n\n\(build.expiryInfoString)" : ""
+        let expiryString = build.isTimebombActive ? "\n\n\(build.expiryInfoString)" : ""
 
         var message = "This is a\(milestoneString == "alpha" ? "n" : "") \(milestoneString) version of ⌘project code name \(build.codeName)⌘.\(expiryString)"
         if build.appStoreReleaseVersion > 0 {

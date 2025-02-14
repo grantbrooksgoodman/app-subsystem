@@ -18,8 +18,6 @@ final class BuildInfoOverlayViewObserver: Observer {
     let id = UUID()
     let observedValues: [any ObservableProtocol] = [
         Observables.breadcrumbsDidCapture,
-        Observables.isDeveloperModeEnabled,
-        Observables.languageCodeChanged,
         Observables.rootViewTapped,
     ]
     let viewModel: ViewModel<BuildInfoOverlayReducer>
@@ -48,13 +46,6 @@ final class BuildInfoOverlayViewObserver: Observer {
         switch observable.key {
         case .breadcrumbsDidCapture:
             send(.breadcrumbsDidCapture)
-
-        case .isDeveloperModeEnabled:
-            guard let value = observable.value as? Bool else { return }
-            send(.isDeveloperModeEnabledChanged(value))
-
-        case .languageCodeChanged:
-            send(.languageCodeChanged)
 
         case .rootViewTapped:
             touchTimer?.invalidate()

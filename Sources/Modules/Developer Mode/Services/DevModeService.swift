@@ -144,7 +144,7 @@ public enum DevModeService {
             @Dependency(\.build) var build: Build
             guard build.milestone != .generalRelease else { return }
 
-            guard !build.developerModeEnabled else {
+            guard !build.isDeveloperModeEnabled else {
                 let confirmed = await AKConfirmationAlert(
                     title: "Disable Developer Mode",
                     message: "Are you sure you'd like to disable Developer Mode?",
@@ -189,18 +189,7 @@ public enum DevModeService {
         @Dependency(\.build) var build: Build
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
-        @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
-        if !enabled,
-           let hidesBuildInfoOverlay,
-           hidesBuildInfoOverlay {
-            BuildInfoOverlay.show()
-        }
-
-        @Persistent(.developerModeEnabled) var developerModeEnabled: Bool?
-        developerModeEnabled = enabled
-
-        build.setDeveloperModeEnabled(to: enabled)
-        Observables.isDeveloperModeEnabled.value = enabled
+        build.setIsDeveloperModeEnabled(enabled)
         coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
     }
 }

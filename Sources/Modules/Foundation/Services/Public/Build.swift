@@ -48,11 +48,6 @@ public final class Build {
 
     // MARK: - Properties
 
-    // Bool
-    public private(set) var developerModeEnabled: Bool
-    public private(set) var loggingEnabled: Bool
-    public private(set) var timebombActive: Bool
-
     // String
     public let codeName: String
     public let dmyFirstCompileDateString: String
@@ -60,9 +55,15 @@ public final class Build {
 
     // Other
     public let appStoreBuildNumber: Int
+    public let loggingEnabled: Bool
     public let milestone: Milestone
 
     // MARK: - Computed Properties
+
+    // Bool
+    public var isDeveloperModeEnabled: Bool { getIsDeveloperModeEnabled() }
+    public var isOnline: Bool { getNetworkStatus() }
+    public var isTimebombActive: Bool { getIsTimebombActive() }
 
     // Int
     public var appStoreReleaseVersion: Int { getAppStoreReleaseVersion() }
@@ -79,17 +80,8 @@ public final class Build {
 
     // Other
     public var expiryDate: Date { getExpiryDate() }
-    public var isOnline: Bool { getNetworkStatus() }
 
-    private var buildDateUnixDouble: TimeInterval {
-        guard let cfBuildDate = infoDictionary["CFBuildDate"] as? String else { return .init() }
-        guard cfBuildDate != "1183100400" else {
-            return .init(String(Date().timeIntervalSince1970).components(separatedBy: ".")[0]) ?? .init()
-        }
-
-        return .init(cfBuildDate) ?? .init()
-    }
-
+    private var buildDateUnixDouble: TimeInterval { getBuildDateUnixDouble() }
     private var infoDictionary: [String: Any] { mainBundle.infoDictionary ?? [:] }
 
     // MARK: - Init
@@ -97,43 +89,52 @@ public final class Build {
     public init(
         appStoreBuildNumber: Int,
         codeName: String,
-        developerModeEnabled: Bool,
         dmyFirstCompileDateString: String,
         finalName: String,
         loggingEnabled: Bool,
-        milestone: Milestone,
-        timebombActive: Bool
+        milestone: Milestone
     ) {
-        guard AppSubsystem.didInitialize else { fatalError("AppSubsystem was not initialized") }
-
         self.appStoreBuildNumber = appStoreBuildNumber
         self.codeName = codeName
-        self.developerModeEnabled = developerModeEnabled
         self.dmyFirstCompileDateString = dmyFirstCompileDateString
         self.finalName = finalName
         self.loggingEnabled = loggingEnabled
         self.milestone = milestone
-        self.timebombActive = timebombActive
     }
 
     // MARK: - Setters
 
-    public func setDeveloperModeEnabled(to value: Bool) {
-        developerModeEnabled = value
+    public func setIsDeveloperModeEnabled(_ isDeveloperModeEnabled: Bool) {
+        @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
+        if !isDeveloperModeEnabled,
+           let hidesBuildInfoOverlay,
+           hidesBuildInfoOverlay {
+            BuildInfoOverlay.show()
+        }
+
+        @Persistent(.isDeveloperModeEnabled) var persistedValue: Bool?
+        persistedValue = isDeveloperModeEnabled
+        setIsTimebombActive(isDeveloperModeEnabled ? isTimebombActive : milestone == .generalRelease ? false : true)
     }
 
-    public func setLoggingEnabled(to value: Bool) {
-        loggingEnabled = value
-    }
-
-    public func setTimebombActive(to value: Bool) {
-        timebombActive = value
+    public func setIsTimebombActive(_ isTimebombActive: Bool) {
+        @Persistent(.isTimebombActive) var persistedValue: Bool?
+        persistedValue = isTimebombActive
     }
 
     // MARK: - Computed Property Getters
 
     private func getAppStoreReleaseVersion() -> Int {
         Int(bundleVersion.components(separatedBy: ".").first ?? "") ?? 0
+    }
+
+    private func getBuildDateUnixDouble() -> TimeInterval {
+        guard let cfBuildDate = infoDictionary["CFBuildDate"] as? String,
+              cfBuildDate != "1183100400" else {
+            return floor(Date.now.timeIntervalSince1970)
+        }
+
+        return .init(cfBuildDate) ?? 0
     }
 
     private func getBuildNumber() -> Int {
@@ -225,6 +226,16 @@ public final class Build {
 
         guard daysUntilExpiry <= 0 else { return expiryInfoString }
         return "The evaluation period for this build ended on ⌘\(expiryInfoStringDateFormatter.string(from: expiryDate))⌘."
+    }
+
+    private func getIsDeveloperModeEnabled() -> Bool {
+        @Persistent(.isDeveloperModeEnabled) var persistedValue: Bool?
+        return milestone == .generalRelease ? false : persistedValue ?? false
+    }
+
+    private func getIsTimebombActive() -> Bool {
+        @Persistent(.isTimebombActive) var persistedValue: Bool?
+        return milestone == .generalRelease ? false : persistedValue ?? true
     }
 
     private func getNetworkStatus() -> Bool {

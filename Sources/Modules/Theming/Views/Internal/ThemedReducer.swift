@@ -18,10 +18,6 @@ struct ThemedReducer: Reducer {
         case appearanceChanged
     }
 
-    // MARK: - Feedback
-
-    typealias Feedback = Never
-
     // MARK: - State
 
     struct State: Equatable {
@@ -82,20 +78,20 @@ struct ThemedReducer: Reducer {
 
     // MARK: - Reduce
 
-    func reduce(into state: inout State, for event: Event) -> Effect<Feedback> {
-        switch event {
-        case .action(.viewAppeared):
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .viewAppeared:
             state.previousNavigationBarAppearance = NavigationBar.currentAppearance
             guard let navigationBarAppearance = state.navigationBarAppearance else { return .none }
             NavigationBar.setAppearance(navigationBarAppearance)
 
-        case .action(.viewDisappeared):
+        case .viewDisappeared:
             guard state.restoresNavigationBarAppearanceOnDisappear,
                   state.navigationBarAppearance != nil,
                   let previousNavigationBarAppearance = state.previousNavigationBarAppearance else { return .none }
             NavigationBar.setAppearance(previousNavigationBarAppearance)
 
-        case .action(.appearanceChanged):
+        case .appearanceChanged:
             if let navigationBarAppearance = state.navigationBarAppearance {
                 NavigationBar.setAppearance(navigationBarAppearance)
             }

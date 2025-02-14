@@ -24,15 +24,8 @@ struct BuildInfoOverlayReducer: Reducer {
         case sendFeedbackButtonTapped
 
         case breadcrumbsDidCapture
-        case isDeveloperModeEnabledChanged(Bool)
-        case languageCodeChanged
-        case shouldUseTranslucentAppearanceChanged(Bool)
-    }
-
-    // MARK: - Feedback
-
-    enum Feedback {
         case restoreIndicatorColor
+        case shouldUseTranslucentAppearanceChanged(Bool)
         case updateStatsLabelText
     }
 
@@ -42,12 +35,10 @@ struct BuildInfoOverlayReducer: Reducer {
         /* MARK: Properties */
 
         // Bool
-        var isDeveloperModeEnabled = false
         var shouldUseTranslucentAppearance = false
 
         // String
         var buildInfoButtonText = ""
-        var sendFeedbackButtonText = AppSubsystem.delegates.localizedStrings.sendFeedback
         var statsLabelText = "Calculating..."
 
         // Other
@@ -56,18 +47,20 @@ struct BuildInfoOverlayReducer: Reducer {
 
         /* MARK: Computed Properties */
 
-        var backgroundColor: Color {
-            .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1)
-        }
+        // Bool
+        var isDeveloperModeEnabled: Bool { Dependency(\.build.isDeveloperModeEnabled).wrappedValue }
+        var isPresentingAlertController: Bool { Dependency(\.uiApplication.isPresentingAlertController).wrappedValue }
 
-        // swiftlint:disable:next identifier_name
+        // Color
+        var backgroundColor: Color { .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1) }
+
+        // String
+        var sendFeedbackButtonText: String { AppSubsystem.delegates.localizedStrings.sendFeedback } // swiftlint:disable:next identifier_name
         var _statsLabelText: String {
             @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
             @Dependency(\.uiApplication.presentedViews.count) var presentedViewsCount: Int
             return "\(presentedViewsCount) views // \(appMemoryFootprint ?? 0)MB in use"
         }
-
-        var isPresentingAlertController: Bool { Dependency(\.uiApplication.isPresentingAlertController).wrappedValue }
 
         /* MARK: Init */
 
@@ -82,42 +75,33 @@ struct BuildInfoOverlayReducer: Reducer {
 
     // MARK: - Reduce
 
-    func reduce(into state: inout State, for event: Event) -> Effect<Feedback> {
-        switch event {
-        case .action(.viewAppeared): // swiftlint:disable:next line_length
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .viewAppeared: // swiftlint:disable:next line_length
             state.buildInfoButtonText = "\(build.codeName) \(build.bundleVersion) (\(String(build.buildNumber))\(build.milestone.shortString)/\(build.bundleRevision.lowercased()))"
+            return .task(priority: .background) {
+                .updateStatsLabelText
+            }
 
-            let updateStatsLabelTextTask: Effect<Feedback> = .task(priority: .background) { .updateStatsLabelText }
-            @Persistent(.developerModeEnabled) var defaultsValue: Bool?
-            guard let defaultsValue else { return updateStatsLabelTextTask }
-            state.isDeveloperModeEnabled = defaultsValue
-            return updateStatsLabelTextTask
-
-        case .action(.buildInfoButtonTapped):
+        case .buildInfoButtonTapped:
             viewService.buildInfoButtonTapped()
 
-        case .action(.breadcrumbsDidCapture):
+        case .breadcrumbsDidCapture:
             state.developerModeIndicatorDotColor = .red
             return .task(delay: .seconds(1.5)) {
                 .restoreIndicatorColor
             }
 
-        case let .action(.isDeveloperModeEnabledChanged(developerModeEnabled)):
-            state.isDeveloperModeEnabled = developerModeEnabled
-
-        case .action(.languageCodeChanged):
-            state.sendFeedbackButtonText = AppSubsystem.delegates.localizedStrings.sendFeedback
-
-        case .action(.sendFeedbackButtonTapped):
-            viewService.sendFeedbackButtonTapped()
-
-        case let .action(.shouldUseTranslucentAppearanceChanged(shouldUseTranslucentAppearance)):
-            state.shouldUseTranslucentAppearance = shouldUseTranslucentAppearance
-
-        case .feedback(.restoreIndicatorColor):
+        case .restoreIndicatorColor:
             state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor.developerModeIndicatorDotColor
 
-        case .feedback(.updateStatsLabelText):
+        case .sendFeedbackButtonTapped:
+            viewService.sendFeedbackButtonTapped()
+
+        case let .shouldUseTranslucentAppearanceChanged(shouldUseTranslucentAppearance):
+            state.shouldUseTranslucentAppearance = shouldUseTranslucentAppearance
+
+        case .updateStatsLabelText:
             state.statsLabelText = state._statsLabelText
             return .task(priority: .background, delay: .seconds(1)) {
                 .updateStatsLabelText

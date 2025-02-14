@@ -10,30 +10,30 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public struct Send<Feedback> {
+public struct Send<Action> {
     // MARK: - Properties
 
-    public let send: @MainActor (Feedback) -> Void
+    public let send: @MainActor (Action) -> Void
 
     // MARK: - Init
 
-    public init(send: @escaping @MainActor (Feedback) -> Void) {
+    public init(send: @escaping @MainActor (Action) -> Void) {
         self.send = send
     }
 
     // MARK: - Call as Function
 
-    public func callAsFunction(_ feedback: Feedback) {
+    public func callAsFunction(_ action: Action) {
         guard !Task.isCancelled else { return }
-        send(feedback)
+        send(action)
     }
 
-    public func callAsFunction(_ feedback: Feedback, animation: Animation?) {
-        callAsFunction(feedback, transaction: Transaction(animation: animation))
+    public func callAsFunction(_ action: Action, animation: Animation?) {
+        callAsFunction(action, transaction: Transaction(animation: animation))
     }
 
-    public func callAsFunction(_ feedback: Feedback, transaction: Transaction) {
+    public func callAsFunction(_ action: Action, transaction: Transaction) {
         guard !Task.isCancelled else { return }
-        withTransaction(transaction) { self(feedback) }
+        withTransaction(transaction) { self(action) }
     }
 }

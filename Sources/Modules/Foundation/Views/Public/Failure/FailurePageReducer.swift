@@ -24,10 +24,6 @@ public struct FailurePageReducer: Reducer {
         case reportBugButtonTapped
     }
 
-    // MARK: - Feedback
-
-    public typealias Feedback = Never
-
     // MARK: - State
 
     public struct State: Equatable {
@@ -77,13 +73,13 @@ public struct FailurePageReducer: Reducer {
 
     // MARK: - Reduce
 
-    public func reduce(into state: inout State, for event: Event) -> Effect<Feedback> {
-        switch event {
-        case .action(.executeRetryHandler):
+    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
+        switch action {
+        case .executeRetryHandler:
             guard let effect = state.retryHandler else { return .none }
             effect()
 
-        case .action(.reportBugButtonTapped):
+        case .reportBugButtonTapped:
             guard build.isOnline else {
                 Task { await ConnectionAlert.present() }
                 return .none

@@ -65,8 +65,9 @@ public extension UserDefaultsKey {
         .breadcrumbsCaptureEnabled,
         .breadcrumbsCapturesAllViews,
         .currentThemeID,
-        .developerModeEnabled,
         .hidesBuildInfoOverlay,
+        .isDeveloperModeEnabled,
+        .isTimebombActive,
         .pendingThemeID,
         .translationArchive,
     ]
@@ -75,8 +76,9 @@ public extension UserDefaultsKey {
     internal static let breadcrumbsCaptureEnabled: UserDefaultsKey = .init("breadcrumbsCaptureEnabled")
     internal static let breadcrumbsCapturesAllViews: UserDefaultsKey = .init("breadcrumbsCapturesAllViews")
     internal static let currentThemeID: UserDefaultsKey = .init("currentThemeID")
-    internal static let developerModeEnabled: UserDefaultsKey = .init("developerModeEnabled")
     internal static let hidesBuildInfoOverlay: UserDefaultsKey = .init("hidesBuildInfoOverlay")
+    internal static let isDeveloperModeEnabled: UserDefaultsKey = .init("isDeveloperModeEnabled")
+    internal static let isTimebombActive: UserDefaultsKey = .init("isTimebombActive")
     internal static let pendingThemeID: UserDefaultsKey = .init("pendingThemeID")
 }
 
@@ -85,8 +87,6 @@ public extension UserDefaultsKey {
 public enum Observables {
     static let breadcrumbsDidCapture: Observable<Nil> = .init(key: .breadcrumbsDidCapture)
     static let isBuildInfoOverlayHidden: Observable<Bool> = .init(.isBuildInfoOverlayHidden, true)
-    static let isDeveloperModeEnabled: Observable<Bool> = .init(.isDeveloperModeEnabled, false)
-    static let languageCodeChanged: Observable<Nil> = .init(key: .languageCodeChanged)
     static let rootViewSheet: Observable<AnyView?> = .init(.rootViewSheet, nil)
     static let rootViewTapped: Observable<Nil> = .init(key: .rootViewTapped)
     static let rootViewToast: Observable<Toast?> = .init(.rootViewToast, nil)
@@ -97,8 +97,6 @@ public enum Observables {
 extension ObservableKey {
     static let breadcrumbsDidCapture: ObservableKey = .init("breadcrumbsDidCapture")
     static let isBuildInfoOverlayHidden: ObservableKey = .init("isBuildInfoOverlayHidden")
-    static let isDeveloperModeEnabled: ObservableKey = .init("isDeveloperModeEnabled")
-    static let languageCodeChanged: ObservableKey = .init("languageCodeChanged")
     static let rootViewSheet: ObservableKey = .init("rootViewSheet")
     static let rootViewTapped: ObservableKey = .init("rootViewTapped")
     static let rootViewToast: ObservableKey = .init("rootViewToast")

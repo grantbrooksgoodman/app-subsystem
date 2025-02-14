@@ -52,7 +52,6 @@ final class BuildExpiryAlert {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.build) var build: Build
         @Dependency(\.coreKit) var core: CoreKit
-        @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         let oldTranslationTimeoutConfig = alertKitConfig.translationTimeoutConfig
         alertKitConfig.overrideTranslationTimeoutConfig(
@@ -114,6 +113,7 @@ final class BuildExpiryAlert {
 
             @MainActor
             func disableAction() {
+                @Dependency(\.uiApplication) var uiApplication: UIApplication
                 guard uiApplication.isPresentingAlertController else {
                     return core.gcd.after(.milliseconds(100)) { disableAction() }
                 }
@@ -141,7 +141,7 @@ final class BuildExpiryAlert {
             exitTimer = nil
 
             alertKitConfig.overrideTranslationTimeoutConfig(oldTranslationTimeoutConfig)
-            uiApplication.mainWindow?.removeSubviews(for: "EXPIRY_OVERLAY_WINDOW")
+            RootWindowStatus.shared.buildExpiryOverrideTriggered = true
         }
     }
 

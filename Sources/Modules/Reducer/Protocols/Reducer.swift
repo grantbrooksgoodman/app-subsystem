@@ -8,28 +8,23 @@
 /* Native */
 import Foundation
 
-public protocol Reducer<State, Action, Feedback> {
+public protocol Reducer<State, Action> {
     // MARK: - Associated Types
 
     associatedtype Action
-    associatedtype Feedback
     associatedtype ReducerBody
     associatedtype State: Equatable
 
-    // MARK: - Type Aliases
-
-    typealias Event = ReduceEvent<Action, Feedback>
-
     // MARK: - Properties
 
-    @ReducerBuilder<State, Action, Feedback> var body: ReducerBody { get }
+    @ReducerBuilder<State, Action> var body: ReducerBody { get }
 
     // MARK: - Methods
 
     func reduce(
         into state: inout State,
-        for event: Event
-    ) -> Effect<Feedback>
+        action: Action
+    ) -> Effect<Action>
 }
 
 public extension Reducer where ReducerBody == Never {

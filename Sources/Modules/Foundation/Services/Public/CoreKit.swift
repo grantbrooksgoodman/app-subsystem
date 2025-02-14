@@ -11,6 +11,7 @@ import UIKit
 
 /* Proprietary */
 import AlertKit
+import Translator
 
 public struct CoreKit {
     // MARK: - Properties
@@ -286,7 +287,7 @@ public struct CoreKit {
         /// - Returns: The domains whose caches were not cleared by the subsystem.
         @discardableResult
         public func clearCaches(domains: [CacheDomain]) -> [CacheDomain] {
-            @Dependency(\.localTranslationArchiver) var localTranslationArchiver: LocalTranslationArchiverDelegate
+            @Dependency(\.localTranslationArchiver) var localTranslationArchiver: TranslationArchiverDelegate
 
             var domains = domains
 
@@ -310,11 +311,9 @@ public struct CoreKit {
         public func setLanguageCode(_ languageCode: String, override: Bool = false) {
             @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
 
-            AppSubsystem.bundle.setLanguageCode(languageCode)
             alertKitConfig.overrideTargetLanguageCode(languageCode)
             RuntimeStorage.store(languageCode, as: .languageCode)
 
-            Observables.languageCodeChanged.trigger()
             guard override else { return }
             RuntimeStorage.store(languageCode, as: .overriddenLanguageCode)
         }

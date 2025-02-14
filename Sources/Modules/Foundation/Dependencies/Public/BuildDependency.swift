@@ -8,25 +8,12 @@
 /* Native */
 import Foundation
 
+var _build: Build!
+
 public enum BuildDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> Build {
-        var developerModeEnabled = false
-        @Persistent(.developerModeEnabled) var defaultsValue: Bool?
-        if let value = defaultsValue {
-            developerModeEnabled = AppSubsystem.bundle.buildMilestone == .generalRelease ? false : value
-            defaultsValue = developerModeEnabled
-        }
-
-        return .init(
-            appStoreBuildNumber: AppSubsystem.bundle.appStoreBuildNumber,
-            codeName: AppSubsystem.bundle.codeName,
-            developerModeEnabled: developerModeEnabled,
-            dmyFirstCompileDateString: AppSubsystem.bundle.dmyFirstCompileDateString,
-            finalName: AppSubsystem.bundle.finalName,
-            loggingEnabled: AppSubsystem.bundle.loggingEnabled,
-            milestone: AppSubsystem.bundle.buildMilestone,
-            timebombActive: AppSubsystem.bundle.timebombActive
-        )
+        guard AppSubsystem.didInitialize else { fatalError("AppSubsystem was not initialized") }
+        return _build
     }
 }
 

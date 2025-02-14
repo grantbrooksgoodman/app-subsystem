@@ -21,6 +21,7 @@ extension DevModeAction {
                 toggleBuildInfoOverlayAction,
                 overrideLanguageCodeAction,
                 toggleBreadcrumbsAction,
+                toggleTimebombAction,
                 viewLoggerSessionRecordAction,
             ]
 
@@ -188,6 +189,18 @@ extension DevModeAction {
             }
 
             return .init(title: "Show/Hide Build Info Overlay", perform: toggleBuildInfoOverlay)
+        }
+
+        private static var toggleTimebombAction: DevModeAction {
+            @Dependency(\.build) var build: Build
+
+            func toggleTimebomb() {
+                @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
+                build.setIsTimebombActive(!build.isTimebombActive)
+                coreHUD.showSuccess(text: "Timebomb \(build.isTimebombActive ? "Enabled" : "Disabled")")
+            }
+
+            return .init(title: "\(build.isTimebombActive ? "Disable" : "Enable") Build Expiry Timebomb", perform: toggleTimebomb)
         }
 
         private static var viewLoggerSessionRecordAction: DevModeAction {

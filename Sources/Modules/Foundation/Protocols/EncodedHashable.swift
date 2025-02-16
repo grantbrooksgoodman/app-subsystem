@@ -20,16 +20,17 @@ public extension EncodedHashable {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
         let compiledString = hashFactors.reduce(String(), +)
 
-        if let cachedValue = _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings?[compiledString] {
+        if let cachedValue = _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] {
             return cachedValue
         }
 
         do {
             let encodedHash = try jsonEncoder.encode(hashFactors).encodedHash
 
-            var cachedEncodedHashesForCompiledHashFactorStrings = _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings ?? [:]
-            cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
-            _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings = cachedEncodedHashesForCompiledHashFactorStrings
+//            var cachedEncodedHashesForCompiledHashFactorStrings = _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings ?? [:]
+//            cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
+            _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
+//            _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings = cachedEncodedHashesForCompiledHashFactorStrings
 
             return encodedHash
         } catch {
@@ -47,11 +48,11 @@ private extension Data {
 
 public enum EncodedHashCache {
     public static func clearCache() {
-        _EncodedHashCache.clearCache()
+        _EncodedHashCache.shared.clearCache()
     }
 }
 
-private enum _EncodedHashCache {
+private struct _EncodedHashCache {
     // MARK: - Types
 
     private enum CacheKey: String, CaseIterable {
@@ -60,13 +61,19 @@ private enum _EncodedHashCache {
 
     // MARK: - Properties
 
+    public static let shared = _EncodedHashCache()
+
     /*@Cached(CacheKey.encodedHashesForCompiledHashFactorStrings)*/
-    @LockIsolated public static var cachedEncodedHashesForCompiledHashFactorStrings: [String: String]?
+    @LockIsolated public var cachedEncodedHashesForCompiledHashFactorStrings = [String: String]()
+
+    // MARK: - Init
+
+    private init() {}
 
     // MARK: - Clear Cache
 
-    public static func clearCache() {
-        cachedEncodedHashesForCompiledHashFactorStrings = nil
+    public func clearCache() {
+        cachedEncodedHashesForCompiledHashFactorStrings = .init()
     }
 }
 

@@ -12,28 +12,35 @@ import Foundation
 public final class LockIsolated<Value>: @unchecked Sendable {
     // MARK: - Properties
 
-    private var isolatedValue: _LockIsolated<Value>
+    private var isolatedValue: _LockIsolated<Value?>
 
     // MARK: - Init
 
-    public init(wrappedValue: @autoclosure @Sendable () throws -> Value) {
-        do {
-            isolatedValue = try _LockIsolated(wrappedValue())
-        } catch {
-            fatalError(error.localizedDescription)
-        }
+    public init(wrappedValue: @autoclosure @Sendable () -> Value) {
+        isolatedValue = _LockIsolated(wrappedValue())
     }
+
+    public init() where Value: ExpressibleByNilLiteral {
+        isolatedValue = _LockIsolated(nil)
+    }
+
+    // MARK: - ProjectedValue
+
+    public var projectedValue: _LockIsolated<Value?> { isolatedValue }
 
     // MARK: - WrappedValue
 
     public var wrappedValue: Value {
-        get { isolatedValue.value }
+        get {
+            guard let value = isolatedValue.value else { fatalError() }
+            return value
+        }
         set { isolatedValue.setValue(newValue) }
     }
 }
 
 @dynamicMemberLookup
-private final class _LockIsolated<Value>: @unchecked Sendable {
+public final class _LockIsolated<Value>: @unchecked Sendable {
     // MARK: - Properties
 
     private let lock = NSRecursiveLock()
@@ -68,6 +75,15 @@ private final class _LockIsolated<Value>: @unchecked Sendable {
     }
 }
 
+public extension NSRecursiveLock {
+    @inlinable @discardableResult
+    @_spi(Internals) func sync<R>(work: () throws -> R) rethrows -> R {
+        lock()
+        defer { unlock() }
+        return try work()
+    }
+}
+
 extension _LockIsolated where Value: Sendable {
     var value: Value {
         lock.sync { _value }
@@ -77,24 +93,15 @@ extension _LockIsolated where Value: Sendable {
 #if swift(<6)
 @available(*, deprecated, message: "Lock isolated values should not be equatable")
 extension _LockIsolated: Equatable where Value: Equatable {
-    static func == (left: _LockIsolated, right: _LockIsolated) -> Bool {
+    public static func == (left: _LockIsolated, right: _LockIsolated) -> Bool {
         left.value == right.value
     }
 }
 
 @available(*, deprecated, message: "Lock isolated values should not be hashable")
 extension _LockIsolated: Hashable where Value: Hashable {
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(value)
     }
 }
 #endif
-
-public extension NSRecursiveLock {
-    @inlinable @discardableResult
-    @_spi(Internals) func sync<R>(work: () throws -> R) rethrows -> R {
-        lock()
-        defer { unlock() }
-        return try work()
-    }
-}

@@ -60,7 +60,8 @@ private enum _EncodedHashCache {
 
     // MARK: - Properties
 
-    @Cached(CacheKey.encodedHashesForCompiledHashFactorStrings) public static var cachedEncodedHashesForCompiledHashFactorStrings: [String: String]?
+    /*@Cached(CacheKey.encodedHashesForCompiledHashFactorStrings)*/
+    @LockIsolated public static var cachedEncodedHashesForCompiledHashFactorStrings: [String: String]?
 
     // MARK: - Clear Cache
 

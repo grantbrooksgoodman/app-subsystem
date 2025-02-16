@@ -16,8 +16,12 @@ public final class LockIsolated<Value>: @unchecked Sendable {
 
     // MARK: - Init
 
-    public init(wrappedValue: @autoclosure @Sendable () throws -> Value) rethrows {
-        isolatedValue = try _LockIsolated(wrappedValue())
+    public init(wrappedValue: @autoclosure @Sendable () throws -> Value) {
+        do {
+            isolatedValue = try _LockIsolated(wrappedValue())
+        } catch {
+            fatalError(error.localizedDescription)
+        }
     }
 
     // MARK: - WrappedValue

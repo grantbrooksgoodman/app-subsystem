@@ -20,7 +20,7 @@ public extension EncodedHashable {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
         let compiledString = hashFactors.reduce(String(), +)
 
-        if let cachedValue = _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] {
+        if let cachedValue = _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] {
             return cachedValue
         }
 
@@ -29,7 +29,7 @@ public extension EncodedHashable {
 
 //            var cachedEncodedHashesForCompiledHashFactorStrings = _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings ?? [:]
 //            cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
-            _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
+            _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
 //            _EncodedHashCache.shared.cachedEncodedHashesForCompiledHashFactorStrings = cachedEncodedHashesForCompiledHashFactorStrings
 
             return encodedHash
@@ -48,11 +48,11 @@ private extension Data {
 
 public enum EncodedHashCache {
     public static func clearCache() {
-        _EncodedHashCache.shared.clearCache()
+        _EncodedHashCache.clearCache()
     }
 }
 
-private struct _EncodedHashCache {
+private enum _EncodedHashCache {
     // MARK: - Types
 
     private enum CacheKey: String, CaseIterable {
@@ -61,18 +61,18 @@ private struct _EncodedHashCache {
 
     // MARK: - Properties
 
-    public static let shared = _EncodedHashCache()
+//    public static let shared = _EncodedHashCache()
 
     /*@Cached(CacheKey.encodedHashesForCompiledHashFactorStrings)*/
-    @LockIsolated public var cachedEncodedHashesForCompiledHashFactorStrings = [String: String]()
+    @LockIsolated public static var cachedEncodedHashesForCompiledHashFactorStrings = [String: String]()
 
     // MARK: - Init
 
-    private init() {}
+//    private init() {}
 
     // MARK: - Clear Cache
 
-    public func clearCache() {
+    public static func clearCache() {
         cachedEncodedHashesForCompiledHashFactorStrings = .init()
     }
 }

@@ -12,7 +12,7 @@ import Foundation
 public final class LockIsolated<Value>: @unchecked Sendable {
     // MARK: - Properties
 
-    private var isolatedValue: _LockIsolated<Value?>
+    private var isolatedValue: _LockIsolated<Value>
 
     // MARK: - Init
 
@@ -20,27 +20,16 @@ public final class LockIsolated<Value>: @unchecked Sendable {
         isolatedValue = _LockIsolated(wrappedValue())
     }
 
-    public init() where Value: ExpressibleByNilLiteral {
-        isolatedValue = _LockIsolated(nil)
-    }
-
-    // MARK: - ProjectedValue
-
-    public var projectedValue: _LockIsolated<Value?> { isolatedValue }
-
     // MARK: - WrappedValue
 
     public var wrappedValue: Value {
-        get {
-            guard let value = isolatedValue.value else { fatalError() }
-            return value
-        }
+        get { isolatedValue.value }
         set { isolatedValue.setValue(newValue) }
     }
 }
 
 @dynamicMemberLookup
-public final class _LockIsolated<Value>: @unchecked Sendable {
+private final class _LockIsolated<Value>: @unchecked Sendable {
     // MARK: - Properties
 
     private let lock = NSRecursiveLock()
@@ -93,14 +82,14 @@ extension _LockIsolated where Value: Sendable {
 #if swift(<6)
 @available(*, deprecated, message: "Lock isolated values should not be equatable")
 extension _LockIsolated: Equatable where Value: Equatable {
-    public static func == (left: _LockIsolated, right: _LockIsolated) -> Bool {
+    static func == (left: _LockIsolated, right: _LockIsolated) -> Bool {
         left.value == right.value
     }
 }
 
 @available(*, deprecated, message: "Lock isolated values should not be hashable")
 extension _LockIsolated: Hashable where Value: Hashable {
-    public func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(value)
     }
 }

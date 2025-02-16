@@ -60,6 +60,7 @@ final class RootWindowService {
               let rootOverlayWindow = mainWindow.subviews.first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") }),
               mainWindow.subviews.last != rootOverlayWindow else { return }
 
+        print("brought subview to front")
         mainWindow.bringSubviewToFront(rootOverlayWindow)
     }
 

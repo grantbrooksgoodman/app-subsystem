@@ -287,12 +287,12 @@ public struct CoreKit {
         /// - Returns: The domains whose caches were not cleared by the subsystem.
         @discardableResult
         public func clearCaches(domains: [CacheDomain]) -> [CacheDomain] {
-            @Dependency(\.localTranslationArchiver) var localTranslationArchiver: TranslationArchiverDelegate
+            @Dependency(\.translationArchiverDelegate) var localTranslationArchiver: TranslationArchiverDelegate
 
             var domains = domains
 
             if domains.contains(.encodedHash) {
-                EncodedHashCache.clearCache()
+                EncodedHashStore.clearStore()
                 domains.removeAll(where: { $0 == .encodedHash })
             }
 

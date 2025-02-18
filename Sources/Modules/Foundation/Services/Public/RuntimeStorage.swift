@@ -11,7 +11,7 @@ import Foundation
 public actor RuntimeStorage {
     // MARK: - Properties
 
-    private static var storedItems = [String: Any]()
+    @LockIsolated private static var storedItems = [String: Any]()
 
     // MARK: - Removal
 

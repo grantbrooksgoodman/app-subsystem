@@ -12,37 +12,21 @@ import Foundation
 import Translator
 
 public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate {
-    // MARK: - Types
-
-    private enum CacheKey: String, CaseIterable {
-        case archive
-        case translationsForInputValueEncodedHashes
-    }
-
     // MARK: - Properties
 
     // Array
-    @Cached(CacheKey.archive) private var cachedArchive: [Translation]?
+    @LockIsolated private var archive = [Translation]() {
+        didSet { persistedArchive = archive.isEmpty ? nil : archive }
+    }
+
     @Persistent(.translationArchive) private var persistedArchive: [Translation]?
 
     // Dictionary
-    // swiftlint:disable:next identifier_name
-    @Cached(CacheKey.translationsForInputValueEncodedHashes) private var cachedTranslationsForInputValueEncodedHashes: [String: Translation]?
-
-    // MARK: - Computed Properties
-
-    private var archive: [Translation] {
-        get { cachedArchive ?? persistedArchive ?? [] }
-
-        set {
-            cachedArchive = newValue
-            persistedArchive = newValue
-        }
-    }
+    @LockIsolated private var translationsForInputValueEncodedHashes = [String: Translation]()
 
     // MARK: - Init
 
-    fileprivate init() {}
+    fileprivate init() { archive = persistedArchive ?? [] }
 
     // MARK: - Register with Dependencies
 
@@ -57,27 +41,22 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
         archive.removeAll(where: { $0 == translation })
         archive.append(translation)
 
-        cachedTranslationsForInputValueEncodedHashes = cachedTranslationsForInputValueEncodedHashes?.filter { $0.value != translation }
+        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes.filter { $0.value != translation }
     }
 
     // MARK: - Get Value
 
     public func getValue(inputValueEncodedHash hash: String, languagePair: LanguagePair) -> Translation? {
-        // swiftlint:disable:next identifier_name
-        if let cachedTranslationsForInputValueEncodedHashes,
-           let cachedValue = cachedTranslationsForInputValueEncodedHashes[hash],
-           cachedValue.languagePair == languagePair {
-            return cachedValue
+        if let value = translationsForInputValueEncodedHashes[hash],
+           value.languagePair == languagePair {
+            return value
         }
 
         guard let translation = archive.first(where: {
             $0.input.value.encodedHash == hash && $0.languagePair == languagePair
         }) else { return nil }
 
-        var newCacheValue = cachedTranslationsForInputValueEncodedHashes ?? [:]
-        newCacheValue[hash] = translation
-        cachedTranslationsForInputValueEncodedHashes = newCacheValue
-
+        translationsForInputValueEncodedHashes[hash] = translation
         return translation
     }
 
@@ -89,29 +68,28 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
         }
 
         archive.removeAll(where: { satisfiesConstraints($0) })
-        cachedTranslationsForInputValueEncodedHashes = cachedTranslationsForInputValueEncodedHashes?.filter { !satisfiesConstraints($0.value) }
+        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes.filter { !satisfiesConstraints($0.value) }
     }
 
     // MARK: - Clear Archive
 
     public func clearArchive() {
         archive = []
-        cachedTranslationsForInputValueEncodedHashes = nil
+        translationsForInputValueEncodedHashes = [:]
     }
 }
 
 /* MARK: Dependency */
 
-// FIXME: This should be declared in an extension to Translator. Called TranslationArchiverDelegateDependency.
-public enum LocalTranslationArchiverDependency: DependencyKey {
+public enum TranslationArchiverDelegateDependency: DependencyKey {
     public static func resolve(_ dependencies: DependencyValues) -> TranslationArchiverDelegate {
         dependencies.translatorConfig.archiverDelegate ?? LocalTranslationArchiverDelegate()
     }
 }
 
 public extension DependencyValues {
-    var localTranslationArchiver: TranslationArchiverDelegate {
-        get { self[LocalTranslationArchiverDependency.self] }
-        set { self[LocalTranslationArchiverDependency.self] = newValue }
+    var translationArchiverDelegate: TranslationArchiverDelegate {
+        get { self[TranslationArchiverDelegateDependency.self] }
+        set { self[TranslationArchiverDelegateDependency.self] = newValue }
     }
 }

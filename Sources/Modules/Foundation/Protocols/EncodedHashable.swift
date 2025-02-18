@@ -20,17 +20,13 @@ public extension EncodedHashable {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
         let compiledString = hashFactors.reduce(String(), +)
 
-        if let cachedValue = _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings?[compiledString] {
-            return cachedValue
+        if let storedValue = _EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] {
+            return storedValue
         }
 
         do {
             let encodedHash = try jsonEncoder.encode(hashFactors).encodedHash
-
-            var cachedEncodedHashesForCompiledHashFactorStrings = _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings ?? [:]
-            cachedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
-            _EncodedHashCache.cachedEncodedHashesForCompiledHashFactorStrings = cachedEncodedHashesForCompiledHashFactorStrings
-
+            _EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
             return encodedHash
         } catch {
             Logger.log(.init(error, metadata: [self, #file, #function, #line]))
@@ -45,27 +41,21 @@ private extension Data {
     }
 }
 
-public enum EncodedHashCache {
-    public static func clearCache() {
-        _EncodedHashCache.clearCache()
+public enum EncodedHashStore {
+    public static func clearStore() {
+        _EncodedHashStore.clearStore()
     }
 }
 
-private enum _EncodedHashCache {
-    // MARK: - Types
-
-    private enum CacheKey: String, CaseIterable {
-        case encodedHashesForCompiledHashFactorStrings
-    }
-
+private enum _EncodedHashStore {
     // MARK: - Properties
 
-    @Cached(CacheKey.encodedHashesForCompiledHashFactorStrings) public static var cachedEncodedHashesForCompiledHashFactorStrings: [String: String]?
+    @LockIsolated public static var storedEncodedHashesForCompiledHashFactorStrings = [String: String]()
 
     // MARK: - Clear Cache
 
-    public static func clearCache() {
-        cachedEncodedHashesForCompiledHashFactorStrings = nil
+    public static func clearStore() {
+        storedEncodedHashesForCompiledHashFactorStrings = .init()
     }
 }
 

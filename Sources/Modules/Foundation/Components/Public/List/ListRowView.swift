@@ -49,20 +49,20 @@ public struct ListRowView: View {
                     )
                     .padding(.bottom, -1)
                     .padding(.horizontal, Floats.headerLabelHorizontalPadding)
+                }
 
-                    contentView
-                        .clipShape(RoundedRectangle(cornerRadius: configuration.cornerRadius))
-                        .disabled(!configuration.isEnabled)
+                contentView
+                    .clipShape(RoundedRectangle(cornerRadius: configuration.cornerRadius))
+                    .disabled(!configuration.isEnabled)
 
-                    if let footerText = configuration.footerText {
-                        Components.text(
-                            footerText,
-                            font: .system(scale: .custom(Floats.footerLabelSystemFontScale)),
-                            foregroundColor: .subtitleText
-                        )
-                        .padding(.horizontal, Floats.footerLabelHorizontalPadding)
-                        .padding(.top, 1)
-                    }
+                if let footerText = configuration.footerText {
+                    Components.text(
+                        footerText,
+                        font: .system(scale: .custom(Floats.footerLabelSystemFontScale)),
+                        foregroundColor: .subtitleText
+                    )
+                    .padding(.horizontal, Floats.footerLabelHorizontalPadding)
+                    .padding(.top, 1)
                 }
             }
         } else {

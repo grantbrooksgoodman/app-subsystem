@@ -91,6 +91,7 @@ public extension TranslationService {
         var canComplete: Bool {
             guard !didComplete else { return false }
             didComplete = true
+            guard hudConfig != nil else { return true }
             core.hud.hide()
             return true
         }
@@ -103,35 +104,62 @@ public extension TranslationService {
             }
 
             Logger.log(
-                AppSubsystem.delegates.localizedStrings.timedOut,
-                domain: .translation,
-                metadata: [self, #file, #function, #line]
+                .timedOut([self, #file, #function, #line]),
+                domain: .translation
             )
 
-            let translations = inputs.map { Translation(
-                input: $0,
-                output: $0.original.sanitized,
-                languagePair: languagePair
-            ) }
-            completion(.success(translations))
+            completion(.success(inputs.map {
+                Translation(
+                    input: $0,
+                    output: $0.original.sanitized,
+                    languagePair: languagePair
+                )
+            }))
         }
 
         Task {
-            let getTranslationsResult = await translator.getTranslations(
-                inputs,
-                languagePair: languagePair
-            )
+            var exceptions = [Exception]()
+            var translations = [Translation]()
 
-            timeout.cancel()
-            guard canComplete else { return }
+            for input in inputs {
+                let translateResult = await translator.translate(
+                    input,
+                    languagePair: languagePair
+                )
 
-            switch getTranslationsResult {
-            case let .success(translations):
-                completion(.success(translations))
+                switch translateResult {
+                case let .success(translation):
+                    translations.append(translation)
 
-            case let .failure(error):
-                completion(.failure(.init(error, metadata: [self, #file, #function, #line])))
+                case let .failure(error):
+                    exceptions.append(.init(error, metadata: [self, #file, #function, #line]))
+                    translations.append(.init(
+                        input: input,
+                        output: input.original.sanitized,
+                        languagePair: languagePair
+                    ))
+                }
             }
+
+            guard canComplete else { return }
+            guard translations.count == inputs.count else {
+                return completion(.failure(.init(
+                    "Mismatched ratio returned.",
+                    metadata: [self, #file, #function, #line]
+                )))
+            }
+
+            guard exceptions.isEmpty else {
+                let exception = exceptions.compiledException ?? .init(metadata: [self, #file, #function, #line])
+                if timeoutConfig.returnsInputs {
+                    Logger.log(exception, domain: .translation)
+                    return completion(.success(translations))
+                }
+
+                return completion(.failure(exception))
+            }
+
+            completion(.success(translations))
         }
     }
 }

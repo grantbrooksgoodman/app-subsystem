@@ -22,3 +22,39 @@ public protocol Exceptionable {
     var metaID: String! { get }
     var underlyingExceptions: [Exception]? { get }
 }
+
+public extension Callback {
+    func get() throws -> Success {
+        switch self {
+        case let .success(success):
+            return success
+
+        case let .failure(exceptionable):
+            let exception: Exception = .init(
+                exceptionable.descriptor,
+                isReportable: exceptionable.isReportable,
+                extraParams: exceptionable.extraParams,
+                underlyingExceptions: exceptionable.underlyingExceptions,
+                metadata: exceptionable.metadata
+            )
+
+            Logger.log(exception)
+            guard let hashlet = exception.hashlet else { throw _Failure.exceptionDescriptor(exception.descriptor) }
+            throw _Failure.exceptionDescriptor("\(exception.descriptor) (\(hashlet))")
+        }
+    }
+}
+
+private enum _Failure: LocalizedError {
+    // MARK: - Cases
+
+    case exceptionDescriptor(String)
+
+    // MARK: - Properties
+
+    var errorDescription: String? {
+        switch self {
+        case let .exceptionDescriptor(descriptor): return descriptor
+        }
+    }
+}

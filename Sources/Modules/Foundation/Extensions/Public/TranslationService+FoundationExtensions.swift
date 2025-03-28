@@ -141,6 +141,7 @@ public extension TranslationService {
                 }
             }
 
+            timeout.cancel()
             guard canComplete else { return }
             guard translations.count == inputs.count else {
                 return completion(.failure(.init(

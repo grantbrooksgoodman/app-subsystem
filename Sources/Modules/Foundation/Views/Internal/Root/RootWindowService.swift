@@ -35,17 +35,20 @@ final class RootWindowService {
 
         notificationCenter.addObserver(
             self,
-            selector: #selector(keyboardWillHide),
             name: UIResponder.keyboardWillHideNotification,
             object: nil
-        )
+        ) { _ in
+            Toast.updateFrameForKeyboardAppearance(0)
+        }
 
         notificationCenter.addObserver(
             self,
-            selector: #selector(keyboardWillShow),
             name: UIResponder.keyboardWillShowNotification,
             object: nil
-        )
+        ) { notification in
+            guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+            Toast.updateFrameForKeyboardAppearance(keyboardFrame.cgRectValue.height)
+        }
     }
 
     func startRaisingWindow() {
@@ -61,19 +64,6 @@ final class RootWindowService {
               mainWindow.subviews.last != rootOverlayWindow else { return }
 
         mainWindow.bringSubviewToFront(rootOverlayWindow)
-    }
-
-    // MARK: - Private
-
-    @objc
-    private func keyboardWillHide() {
-        Toast.updateFrameForKeyboardAppearance(0)
-    }
-
-    @objc
-    private func keyboardWillShow(_ notification: Notification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
-        Toast.updateFrameForKeyboardAppearance(keyboardFrame.cgRectValue.height)
     }
 }
 

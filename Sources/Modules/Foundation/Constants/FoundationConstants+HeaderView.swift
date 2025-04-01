@@ -27,6 +27,8 @@ public extension FoundationConstants.CGFloats {
         public static let fullScreenCoverSizeClassFrameMinHeight: CGFloat = 44
         public static let separatorMaxHeight: CGFloat = 0.3
         public static let sheetSizeClassFrameMinHeight: CGFloat = 54
+
+        public static let textMinimumScaleFactor: CGFloat = 0.05
     }
 }
 

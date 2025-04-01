@@ -82,6 +82,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         tapGesture.delegate = self
         rootWindow.addGestureRecognizer(tapGesture)
 
+        UIViewController.swizzleUIAlertControllerDismiss
         return rootWindow
     }
 

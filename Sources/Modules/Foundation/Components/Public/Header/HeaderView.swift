@@ -70,6 +70,10 @@ public struct HeaderView: View {
     private typealias Colors = FoundationConstants.Colors.HeaderView
     private typealias Floats = FoundationConstants.CGFloats.HeaderView
 
+    // MARK: - Dependencies
+
+    @Dependency(\.uiApplication) private var uiApplication: UIApplication
+
     // MARK: - Properties
 
     // PeripheralButtonType
@@ -80,12 +84,11 @@ public struct HeaderView: View {
     public let attributes: Attributes
     public let centerItem: CenterItemType?
 
-    @Environment(\.mainWindowSize) private var mainWindowSize: CGSize
-
     // MARK: - Computed Properties
 
     private var centerItemImageMaxWidth: CGFloat { mainWindowSize.width / Floats.mainWindowSizeWidthDivisor }
     private var isThemed: Bool { attributes.appearance == .themed }
+    private var mainWindowSize: CGSize { uiApplication.mainScreen?.bounds.size ?? UIScreen.main.bounds.size }
 
     // MARK: - Init
 
@@ -126,7 +129,7 @@ public struct HeaderView: View {
     // MARK: - Content View
 
     private var contentView: some View {
-        ZStack {
+        HStack {
             HStack {
                 if let leftItem {
                     peripheralButton(for: leftItem)
@@ -207,6 +210,8 @@ public struct HeaderView: View {
         Text(attributes.string)
             .font(attributes.font)
             .foregroundStyle(isThemed ? .navigationBarTitle : attributes.foregroundColor)
+            .minimumScaleFactor(Floats.textMinimumScaleFactor)
+            .multilineTextAlignment(.center)
     }
 
     // MARK: - Divider View
@@ -251,6 +256,8 @@ public struct HeaderView: View {
                     Text(attributes.text.string)
                         .font(attributes.text.font)
                         .foregroundStyle(isThemed ? (attributes.isEnabled ? .accent : .disabled) : attributes.text.foregroundColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(Floats.textMinimumScaleFactor)
                 }
                 .disabled(!attributes.isEnabled)
             }

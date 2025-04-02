@@ -65,6 +65,11 @@ public struct HeaderView: View {
         }
     }
 
+    private enum PeripheralButtonAlignment {
+        case left
+        case right
+    }
+
     // MARK: - Constants Accessors
 
     private typealias Colors = FoundationConstants.Colors.HeaderView
@@ -86,7 +91,7 @@ public struct HeaderView: View {
 
     // MARK: - Computed Properties
 
-    private var centerItemImageMaxWidth: CGFloat { mainWindowSize.width / Floats.mainWindowSizeWidthDivisor }
+    private var imageMaxWidth: CGFloat { mainWindowSize.width / Floats.mainWindowSizeWidthDivisor }
     private var isThemed: Bool { attributes.appearance == .themed }
     private var mainWindowSize: CGSize { uiApplication.mainScreen?.bounds.size ?? UIScreen.main.bounds.size }
 
@@ -132,7 +137,7 @@ public struct HeaderView: View {
         HStack {
             HStack {
                 if let leftItem {
-                    peripheralButton(for: leftItem)
+                    peripheralButton(for: leftItem, alignment: .left)
                 }
 
                 Spacer()
@@ -162,7 +167,7 @@ public struct HeaderView: View {
                 Spacer()
 
                 if let rightItem {
-                    peripheralButton(for: rightItem)
+                    peripheralButton(for: rightItem, alignment: .right)
                 }
             }
         }
@@ -182,12 +187,12 @@ public struct HeaderView: View {
             return AnyView(
                 image
                     .frame(
-                        width: size.width > centerItemImageMaxWidth ? nil : size.width,
-                        height: size.height > Floats.centerItemImageMaxHeight ? nil : size.height
+                        width: size.width > imageMaxWidth ? nil : size.width,
+                        height: size.height > Floats.imageMaxHeight ? nil : size.height
                     )
                     .frame(
-                        maxWidth: centerItemImageMaxWidth,
-                        maxHeight: Floats.centerItemImageMaxHeight,
+                        maxWidth: imageMaxWidth,
+                        maxHeight: Floats.imageMaxHeight,
                         alignment: .center
                     )
             )
@@ -197,8 +202,8 @@ public struct HeaderView: View {
             image
                 .scaledToFit()
                 .frame(
-                    maxWidth: centerItemImageMaxWidth,
-                    maxHeight: Floats.centerItemImageMaxHeight,
+                    maxWidth: imageMaxWidth,
+                    maxHeight: Floats.imageMaxHeight,
                     alignment: .center
                 )
         )
@@ -210,6 +215,9 @@ public struct HeaderView: View {
         Text(attributes.string)
             .font(attributes.font)
             .foregroundStyle(isThemed ? .navigationBarTitle : attributes.foregroundColor)
+            .lineLimit(
+                attributes.string.count >= Int(Floats.longCenterItemTextCharacterCountThreshold) ? Int(Floats.longCenterItemTextLineLimit) : 1
+            )
             .minimumScaleFactor(Floats.textMinimumScaleFactor)
             .multilineTextAlignment(.center)
     }
@@ -227,24 +235,40 @@ public struct HeaderView: View {
 
     // MARK: - Peripheral Button
 
-    private func peripheralButton(for type: PeripheralButtonType) -> some View {
+    private func peripheralButton(
+        for type: PeripheralButtonType,
+        alignment: PeripheralButtonAlignment
+    ) -> some View {
         Group {
             switch type {
             case let .image(attributes):
                 Button {
                     attributes.action()
                 } label: {
+                    let image = attributes.image.image
+                        .resizable()
+                        .scaledToFit()
+                        .fontWeight(attributes.image.weight)
+                        .foregroundStyle(isThemed ? (attributes.isEnabled ? .accent : .disabled) : attributes.image.foregroundColor)
+
                     if let size = attributes.image.size {
-                        attributes.image.image
-                            .resizable()
-                            .scaledToFit()
-                            .fontWeight(attributes.image.weight)
-                            .foregroundStyle(isThemed ? (attributes.isEnabled ? .accent : .disabled) : attributes.image.foregroundColor)
-                            .frame(width: size.width, height: size.height)
+                        image
+                            .frame(
+                                width: size.width > imageMaxWidth ? nil : size.width,
+                                height: size.height > Floats.imageMaxHeight ? nil : size.height
+                            )
+                            .frame(
+                                maxWidth: imageMaxWidth,
+                                maxHeight: Floats.imageMaxHeight,
+                                alignment: alignment == .left ? .leading : .trailing
+                            )
                     } else {
-                        attributes.image.image
-                            .fontWeight(attributes.image.weight)
-                            .foregroundStyle(isThemed ? (attributes.isEnabled ? .accent : .disabled) : attributes.image.foregroundColor)
+                        image
+                            .frame(
+                                maxWidth: imageMaxWidth,
+                                maxHeight: Floats.imageMaxHeight,
+                                alignment: alignment == .left ? .leading : .trailing
+                            )
                     }
                 }
                 .disabled(!attributes.isEnabled)

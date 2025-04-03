@@ -62,7 +62,7 @@ public extension Calendar {
         formatter.allowedUnits = [component.asNSCalendarUnit]
         formatter.unitsStyle = style
 
-        let currentDate = Date()
+        let currentDate = Date.now
         guard let date = date(
             byAdding: .init(component),
             value: plural ? 2 : 1,

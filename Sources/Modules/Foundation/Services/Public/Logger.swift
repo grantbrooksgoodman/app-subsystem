@@ -36,7 +36,7 @@ public enum Logger {
 
     private static let sessionID = UUID()
 
-    private static var currentTimeLastCalled = Date()
+    private static var currentTimeLastCalled = Date.now
     private static var streamOpen = false
 
     // MARK: - Computed Properties
@@ -47,7 +47,7 @@ public enum Logger {
     }
 
     private static var elapsedTime: String {
-        let time = String(abs(currentTimeLastCalled.seconds(from: Date())))
+        let time = String(abs(currentTimeLastCalled.seconds(from: Date.now)))
         return time == "0" ? "" : " @ \(time)s FLC"
     }
 
@@ -111,7 +111,7 @@ public enum Logger {
             return
         }
 
-        let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date())) -----"
+        let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
         log(
             "\n\(header)\n\(typeName).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(exception.descriptor) (\(exception.hashlet!))",
@@ -128,7 +128,7 @@ public enum Logger {
             addingNewline: exception.extraParams == nil ? .preceding : nil
         )
 
-        currentTimeLastCalled = Date()
+        currentTimeLastCalled = Date.now
         showAlertIfNeeded()
 
         func showAlertIfNeeded() {
@@ -160,14 +160,14 @@ public enum Logger {
             return
         }
 
-        let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date())) -----"
+        let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
         log(
             "\n\(header)\n\(typeName).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(text)\n\(footer)\n",
             domain: domain
         )
 
-        currentTimeLastCalled = Date()
+        currentTimeLastCalled = Date.now
         showAlertIfNeeded()
 
         func showAlertIfNeeded() {
@@ -196,18 +196,18 @@ public enum Logger {
         let lineNumber = metadata[3] as! Int // swiftlint:enable force_cast
 
         streamOpen = true
-        currentTimeLastCalled = Date()
+        currentTimeLastCalled = Date.now
 
         guard let message else {
             log( // swiftlint:disable:next line_length
-                "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date())) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\(elapsedTime)",
+                "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\(elapsedTime)",
                 domain: domain
             )
             return
         }
 
         log( // swiftlint:disable:next line_length
-            "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date())) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\n[\(lineNumber)]: \(message)\(elapsedTime)",
+            "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\n[\(lineNumber)]: \(message)\(elapsedTime)",
             domain: domain
         )
     }
@@ -241,19 +241,19 @@ public enum Logger {
         guard let message,
               let onLine else {
             log(
-                "*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date())) ----------*\n",
+                "*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
                 domain: domain
             )
             return
         }
 
         log(
-            "[\(onLine)]: \(message)\(elapsedTime)\n*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date())) ----------*\n",
+            "[\(onLine)]: \(message)\(elapsedTime)\n*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
             domain: domain
         )
 
         streamOpen = false
-        currentTimeLastCalled = Date()
+        currentTimeLastCalled = Date.now
     }
 
     // MARK: - Auxiliary
@@ -280,14 +280,14 @@ public enum Logger {
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
-        let header = "----- \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date())) -----"
+        let header = "----- \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
         log(
             "\n\(header)\n[IMPROPERLY FORMATTED METADATA]\n\(text)\n\(footer)\n",
             domain: domain
         )
 
-        currentTimeLastCalled = Date()
+        currentTimeLastCalled = Date.now
         showAlertIfNeeded()
 
         func showAlertIfNeeded() {
@@ -401,76 +401,34 @@ public enum Logger {
                 return await alert.present(translating: [])
 
             case let .toast(style: style, isPersistent: isPersistent):
-                @Sendable
-                func showToast(_ userFacingDescriptor: String) {
-                    let style = style ?? (exception == nil ? .info : .error)
+                let style = style ?? (exception == nil ? .info : .error)
 
-                    var title: String?
-                    var message: String?
+                var title: String?
+                var message: String?
 
-                    if let exception,
-                       exception.isReportable {
-                        title = userFacingDescriptor
-                        message = AppSubsystem.delegates.localizedStrings.tapToReport
-                    }
-
-                    var reportAction: (() -> Void)? {
-                        guard let exception,
-                              exception.isReportable else { return nil }
-                        return { alertKitConfig.reportDelegate?.fileReport(exception) }
-                    }
-
-                    Toast.show(
-                        .init(
-                            isPersistent ? .banner(style: style) : .capsule(style: style),
-                            title: title,
-                            message: message ?? userFacingDescriptor,
-                            perpetuation: isPersistent ? .persistent : .ephemeral(.seconds(10))
-                        ),
-                        onTap: reportAction
-                    )
+                if let exception,
+                   exception.isReportable {
+                    title = userFacingDescriptor
+                    message = AppSubsystem.delegates.localizedStrings.tapToReport
                 }
 
-                guard !shouldTranslate else {
-                    let translateWithSystemLanguagePairResult = await translateWithSystemLanguagePair(userFacingDescriptor)
-
-                    switch translateWithSystemLanguagePairResult {
-                    case let .success(translatedUserFacingDescriptor):
-                        showToast(translatedUserFacingDescriptor)
-
-                    case .failure:
-                        showToast(userFacingDescriptor)
-                    }
-
-                    return
+                var reportAction: (() -> Void)? {
+                    guard let exception,
+                          exception.isReportable else { return nil }
+                    return { alertKitConfig.reportDelegate?.fileReport(exception) }
                 }
 
-                showToast(userFacingDescriptor)
+                Toast.show(
+                    .init(
+                        isPersistent ? .banner(style: style) : .capsule(style: style),
+                        title: title,
+                        message: message ?? userFacingDescriptor,
+                        perpetuation: isPersistent ? .persistent : .ephemeral(.seconds(10))
+                    ),
+                    translating: shouldTranslate ? [.message, .title] : [],
+                    onTap: reportAction
+                )
             }
-        }
-    }
-
-    private static func translateWithSystemLanguagePair(_ text: String) async -> Callback<String, Exception> {
-        @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-
-        guard let translationDelegate = alertKitConfig.translationDelegate else { return .success(text) }
-        let getTranslationsResult = await translationDelegate.getTranslations(
-            [.init(text)],
-            languagePair: .system,
-            hud: alertKitConfig.translationHUDConfig,
-            timeout: alertKitConfig.translationTimeoutConfig
-        )
-
-        switch getTranslationsResult {
-        case let .success(translations):
-            guard let translation = translations.first else {
-                return .failure(.init(metadata: [self, #file, #function, #line]))
-            }
-
-            return .success(translation.output)
-
-        case let .failure(error):
-            return .failure(.init(error, metadata: [self, #file, #function, #line]))
         }
     }
 }

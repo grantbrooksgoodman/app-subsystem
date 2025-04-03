@@ -28,7 +28,7 @@ public extension Date {
         @Dependency(\.currentCalendar) var calendar: Calendar
         @Dependency(\.formattedShortStringDateFormatter) var dateFormatter: DateFormatter
 
-        let currentDate = Date()
+        let currentDate = Date.now
         let distance = currentDate.distance(to: self)
 
         if calendar.isDateInToday(self) {
@@ -54,7 +54,7 @@ public extension Date {
     ) -> String? {
         @Dependency(\.systemLocalizedCalendar) var calendar: Calendar
 
-        let currentDate = Date()
+        let currentDate = Date.now
         guard currentDate > self else { return nil }
 
         let components = granularity.map(\.asComponent)

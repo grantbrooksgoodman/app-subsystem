@@ -214,7 +214,7 @@ public final class Build {
         let expiryDate = getExpiryDate()
         let expiryDateComponents = calendar.dateComponents(
             [.day],
-            from: Date().comparator,
+            from: Date.now.comparator,
             to: expiryDate.comparator
         )
 

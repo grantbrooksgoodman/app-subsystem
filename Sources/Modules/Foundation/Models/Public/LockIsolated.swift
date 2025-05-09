@@ -24,7 +24,7 @@ public final class LockIsolated<Value>: @unchecked Sendable {
 
     public var wrappedValue: Value {
         get { isolatedValue.value }
-        set { isolatedValue.setValue(newValue) }
+        set { isolatedValue.withValue { $0 = newValue } }
     }
 }
 

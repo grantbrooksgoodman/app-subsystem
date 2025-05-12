@@ -91,6 +91,7 @@ public final class MailComposer: UIViewController, MFMailComposeViewControllerDe
         }
 
         coreUI.present(composeController)
+        StatusBarStyle.override(.lightContent)
     }
 
     // MARK: - On Compose Finished
@@ -107,6 +108,7 @@ public final class MailComposer: UIViewController, MFMailComposeViewControllerDe
         error: Error?
     ) {
         controller.dismiss(animated: true) {
+            StatusBarStyle.restore()
             guard let error else {
                 self.onComposeFinished?(.success(result))
                 return

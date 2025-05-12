@@ -32,6 +32,7 @@ public enum Logger {
     // MARK: - Properties
 
     public private(set) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
+    public private(set) static var reportsErrorsAutomatically = false
     public private(set) static var subscribedDomains = [LoggerDomain]()
 
     private static let sessionID = UUID()
@@ -55,6 +56,10 @@ public enum Logger {
 
     public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
         self.domainsExcludedFromSessionRecord = domainsExcludedFromSessionRecord
+    }
+
+    public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
+        self.reportsErrorsAutomatically = reportsErrorsAutomatically
     }
 
     public static func subscribe(to domain: LoggerDomain) {
@@ -99,12 +104,20 @@ public enum Logger {
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none
     ) {
+        @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
         let typeName = String(exception.metadata[0]) // swiftlint:disable force_cast
         let fileName = fileName(for: exception.metadata[1] as! String)
         let functionName = (exception.metadata[2] as! String).components(separatedBy: "(")[0]
         let lineNumber = exception.metadata[3] as! Int // swiftlint:enable force_cast
+
+        defer {
+            if exception.isReportable,
+               Logger.reportsErrorsAutomatically {
+                alertKitConfig.reportDelegate?.fileReport(exception)
+            }
+        }
 
         guard !streamOpen else {
             logToStream(exception.descriptor, domain: domain, line: lineNumber)
@@ -361,7 +374,6 @@ public enum Logger {
             @Dependency(\.coreKit) var core: CoreKit
 
             guard let userFacingDescriptor = exception?.userFacingDescriptor ?? text else { return }
-
             core.hud.hide()
 
             let mockGenericException: Exception = .init(metadata: [self, #file, #function, #line])
@@ -385,7 +397,8 @@ public enum Logger {
                 )
 
                 var translationOptionKeys: [AKErrorAlert.TranslationOptionKey] = shouldTranslate ? [.errorDescription] : []
-                if exception.isReportable {
+                if exception.isReportable,
+                   !Logger.reportsErrorsAutomatically {
                     translationOptionKeys.append(.sendErrorReportButtonTitle)
                 }
 
@@ -408,13 +421,15 @@ public enum Logger {
 
                 if let exception,
                    exception.isReportable {
+                    let strings = AppSubsystem.delegates.localizedStrings
                     title = userFacingDescriptor
-                    message = AppSubsystem.delegates.localizedStrings.tapToReport
+                    message = Logger.reportsErrorsAutomatically ? strings.errorReported : strings.tapToReport
                 }
 
                 var reportAction: (() -> Void)? {
                     guard let exception,
-                          exception.isReportable else { return nil }
+                          exception.isReportable,
+                          !Logger.reportsErrorsAutomatically else { return nil }
                     return { alertKitConfig.reportDelegate?.fileReport(exception) }
                 }
 
@@ -438,6 +453,7 @@ public enum Logger {
 extension Logger {
     struct AlertKitLogger: AlertKit.LoggerDelegate {
         public init() {}
+        public var reportsErrorsAutomatically: Bool { Logger.reportsErrorsAutomatically }
         public func log(_ text: String, metadata: [Any]) {
             Logger.log(
                 text,

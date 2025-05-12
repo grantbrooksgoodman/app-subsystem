@@ -132,6 +132,7 @@ extension AppSubsystem.Delegates.DefaultLocalizedStringsDelegate {
     static let cancelString = "Cancel"
     static let dismissString = "Dismiss"
     static let doneString = "Done"
+    static let errorReportedString = "This error has been reported."
     static let internetConnectionOfflineString = "Internet connection is offline."
     static let noEmailString = "It appears that your device is not able to send e-mail.\n\nPlease verify that your e-mail client is set up and try again."
     static let noInternetMessageString = "The internet connection appears to be offline.\n\nPlease connect to the internet and try again."

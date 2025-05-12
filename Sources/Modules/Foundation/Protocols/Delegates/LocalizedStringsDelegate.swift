@@ -13,6 +13,7 @@ public extension AppSubsystem.Delegates {
         var cancel: String { get }
         var dismiss: String { get }
         var done: String { get }
+        var errorReported: String { get }
         var internetConnectionOffline: String { get }
         var noEmail: String { get }
         var noInternetMessage: String { get }
@@ -31,6 +32,7 @@ public extension AppSubsystem.Delegates {
         public let cancel = DefaultLocalizedStringsDelegate.cancelString
         public let dismiss = DefaultLocalizedStringsDelegate.dismissString
         public let done = DefaultLocalizedStringsDelegate.doneString
+        public let errorReported = DefaultLocalizedStringsDelegate.errorReportedString
         public let internetConnectionOffline = DefaultLocalizedStringsDelegate.internetConnectionOfflineString
         public let noEmail = DefaultLocalizedStringsDelegate.noEmailString
         public let noInternetMessage = DefaultLocalizedStringsDelegate.noInternetMessageString

@@ -57,8 +57,6 @@ public extension UIView {
         return superviews
     }
 
-    internal private(set) static var isShowingModalOverlay = false
-
     // MARK: - Methods
 
     func addOrEnable(_ gestureRecognizer: UIGestureRecognizer) {
@@ -77,15 +75,8 @@ public extension UIView {
         @Dependency(\.coreKit) var core: CoreKit
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-        func continuallyBlockUserInteraction() {
-            guard UIView.isShowingModalOverlay else { return }
-            core.ui.blockUserInteraction()
-            core.gcd.after(.milliseconds(10)) { continuallyBlockUserInteraction() }
-        }
-
         if isModal {
-            UIView.isShowingModalOverlay = true
-            continuallyBlockUserInteraction()
+            core.ui.blockUserInteraction()
             uiApplication
                 .windows?
                 .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
@@ -125,7 +116,6 @@ public extension UIView {
                 overlayViews.forEach { $0.removeFromSuperview() }
                 activityIndicatorViews.forEach { $0.removeFromSuperview() }
 
-                UIView.isShowingModalOverlay = false
                 core.ui.unblockUserInteraction()
                 uiApplication
                     .windows?

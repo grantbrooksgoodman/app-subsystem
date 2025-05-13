@@ -20,8 +20,6 @@ public extension CoreKit {
 
         public static let shared = UI()
 
-        private static var isBlockingUserInteraction = false
-
         // MARK: - Init
 
         private init() {}
@@ -30,7 +28,7 @@ public extension CoreKit {
 
         func blockUserInteraction() {
             mainQueue.async {
-                UI.isBlockingUserInteraction = true
+                UIApplication.isBlockingUserInteraction = true
 
                 self.uiApplication
                     .windows?
@@ -43,7 +41,7 @@ public extension CoreKit {
 
         func unblockUserInteraction() {
             mainQueue.async {
-                UI.isBlockingUserInteraction = false
+                UIApplication.isBlockingUserInteraction = false
 
                 self.uiApplication
                     .windows?
@@ -109,13 +107,13 @@ public extension CoreKit {
 
         private func dismissInteractiveContent() {
             mainQueue.async {
-                guard UI.isBlockingUserInteraction else { return }
+                guard UIApplication.isBlockingUserInteraction else { return }
 
                 Toast.hide()
                 self.uiApplication.dismissAlertControllers()
                 self.uiApplication.resignFirstResponders()
 
-                GCD.shared.after(.milliseconds(10)) { self.dismissInteractiveContent() }
+                GCD.shared.after(.milliseconds(100)) { self.dismissInteractiveContent() }
             }
         }
 
@@ -124,9 +122,7 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            guard !HUD.isShowingModalProgress,
-                  !UIView.isShowingModalOverlay else { return }
-
+            guard !UIApplication.isBlockingUserInteraction else { return }
             HUD.shared.hide()
 
             let keyVC = uiApplication.keyViewController
@@ -156,4 +152,8 @@ public extension CoreKit {
             present(viewController, animated: animated, embedded: embedded)
         }
     }
+}
+
+extension UIApplication {
+    fileprivate(set) static var isBlockingUserInteraction = false
 }

@@ -27,7 +27,7 @@ public extension CoreKit {
 
         public static let shared = HUD()
 
-        private(set) static var isBlockingUserInteraction = false
+        @LockIsolated private(set) static var isBlockingUserInteraction = false
 
         // MARK: - Init
 

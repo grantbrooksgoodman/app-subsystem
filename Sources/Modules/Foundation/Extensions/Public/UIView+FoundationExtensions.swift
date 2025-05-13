@@ -57,7 +57,7 @@ public extension UIView {
         return superviews
     }
 
-    internal private(set) static var isBlockingUserInteraction = false
+    @LockIsolated internal private(set) static var isBlockingUserInteraction = false
 
     // MARK: - Methods
 
@@ -74,34 +74,36 @@ public extension UIView {
         blurStyle: UIBlurEffect.Style? = nil,
         isModal: Bool = true
     ) {
-        @Dependency(\.coreKit) var core: CoreKit
-        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        Task { @MainActor in
+            @Dependency(\.coreKit) var core: CoreKit
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-        if isModal {
-            UIView.isBlockingUserInteraction = true
-            core.ui.blockUserInteraction()
-            uiApplication
-                .windows?
-                .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
-                .alpha = 0
+            if isModal {
+                UIView.isBlockingUserInteraction = true
+                core.ui.blockUserInteraction()
+                uiApplication
+                    .windows?
+                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
+                    .alpha = 0
+            }
+
+            let overlayView = blurStyle == nil ? UIView() : UIVisualEffectView(effect: UIBlurEffect(style: blurStyle!))
+            overlayView.alpha = alpha
+            overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            overlayView.backgroundColor = backgroundColor
+            overlayView.frame = bounds
+            overlayView.tag = core.ui.semTag(for: "OVERLAY_VIEW")
+            addSubview(overlayView)
+
+            guard let indicatorConfig else { return }
+
+            let indicatorView = UIActivityIndicatorView(style: indicatorConfig.style)
+            indicatorView.center = overlayView.center
+            indicatorView.color = indicatorConfig.color
+            indicatorView.startAnimating()
+            indicatorView.tag = core.ui.semTag(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
+            addSubview(indicatorView)
         }
-
-        let overlayView = blurStyle == nil ? UIView() : UIVisualEffectView(effect: UIBlurEffect(style: blurStyle!))
-        overlayView.alpha = alpha
-        overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlayView.backgroundColor = backgroundColor
-        overlayView.frame = bounds
-        overlayView.tag = core.ui.semTag(for: "OVERLAY_VIEW")
-        addSubview(overlayView)
-
-        guard let indicatorConfig else { return }
-
-        let indicatorView = UIActivityIndicatorView(style: indicatorConfig.style)
-        indicatorView.center = overlayView.center
-        indicatorView.color = indicatorConfig.color
-        indicatorView.startAnimating()
-        indicatorView.tag = core.ui.semTag(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
-        addSubview(indicatorView)
     }
 
     func firstSubview(for string: String) -> UIView? {

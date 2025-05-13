@@ -158,5 +158,5 @@ public extension CoreKit {
 }
 
 extension UIApplication {
-    fileprivate(set) static var isBlockingUserInteraction = false
+    @LockIsolated fileprivate(set) static var isBlockingUserInteraction = false
 }

@@ -57,6 +57,8 @@ public extension UIView {
         return superviews
     }
 
+    internal private(set) static var isBlockingUserInteraction = false
+
     // MARK: - Methods
 
     func addOrEnable(_ gestureRecognizer: UIGestureRecognizer) {
@@ -76,6 +78,7 @@ public extension UIView {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         if isModal {
+            UIView.isBlockingUserInteraction = true
             core.ui.blockUserInteraction()
             uiApplication
                 .windows?
@@ -116,6 +119,7 @@ public extension UIView {
                 overlayViews.forEach { $0.removeFromSuperview() }
                 activityIndicatorViews.forEach { $0.removeFromSuperview() }
 
+                UIView.isBlockingUserInteraction = false
                 core.ui.unblockUserInteraction()
                 uiApplication
                     .windows?

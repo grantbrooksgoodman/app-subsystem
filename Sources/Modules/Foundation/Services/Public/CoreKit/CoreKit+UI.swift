@@ -41,6 +41,9 @@ public extension CoreKit {
 
         func unblockUserInteraction() {
             mainQueue.async {
+                guard !CoreKit.HUD.isBlockingUserInteraction,
+                      !UIView.isBlockingUserInteraction else { return }
+
                 UIApplication.isBlockingUserInteraction = false
 
                 self.uiApplication

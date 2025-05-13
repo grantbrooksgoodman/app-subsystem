@@ -54,14 +54,6 @@ public enum Logger {
 
     // MARK: - Domain Subscription
 
-    public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
-        self.domainsExcludedFromSessionRecord = domainsExcludedFromSessionRecord
-    }
-
-    public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
-        self.reportsErrorsAutomatically = reportsErrorsAutomatically
-    }
-
     public static func subscribe(to domain: LoggerDomain) {
         subscribedDomains.append(domain)
         subscribedDomains = subscribedDomains.unique
@@ -77,6 +69,16 @@ public enum Logger {
 
     public static func unsubscribe(from domains: [LoggerDomain]) {
         domains.forEach { unsubscribe(from: $0) }
+    }
+
+    // MARK: - Setters
+
+    public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
+        self.domainsExcludedFromSessionRecord = domainsExcludedFromSessionRecord
+    }
+
+    public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
+        self.reportsErrorsAutomatically = reportsErrorsAutomatically
     }
 
     // MARK: - Logging

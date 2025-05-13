@@ -85,7 +85,7 @@ public extension CoreKit {
 
         public func overrideUserInterfaceStyle(_ style: UIUserInterfaceStyle) {
             mainQueue.async {
-                StatusBarStyle.override(style.statusBarStyle)
+                StatusBar.overrideStyle(style.statusBarStyle)
                 guard let windows = uiApplication.windows else { return }
                 windows.forEach { $0.overrideUserInterfaceStyle = style }
             }
@@ -124,9 +124,10 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            if !HUD.isShowingModalHUD {
-                HUD.shared.hide()
-            }
+            guard !HUD.isShowingModalProgress,
+                  !UIView.isShowingModalOverlay else { return }
+
+            HUD.shared.hide()
 
             let keyVC = uiApplication.keyViewController
             guard embedded else {

@@ -57,7 +57,7 @@ public extension UIView {
         return superviews
     }
 
-    private static var isOverlayBlockingUserInteraction = false
+    internal private(set) static var isShowingModalOverlay = false
 
     // MARK: - Methods
 
@@ -78,13 +78,13 @@ public extension UIView {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         func continuallyBlockUserInteraction() {
-            guard UIView.isOverlayBlockingUserInteraction else { return }
+            guard UIView.isShowingModalOverlay else { return }
             core.ui.blockUserInteraction()
             core.gcd.after(.milliseconds(10)) { continuallyBlockUserInteraction() }
         }
 
         if isModal {
-            UIView.isOverlayBlockingUserInteraction = true
+            UIView.isShowingModalOverlay = true
             continuallyBlockUserInteraction()
             uiApplication
                 .windows?
@@ -125,7 +125,7 @@ public extension UIView {
                 overlayViews.forEach { $0.removeFromSuperview() }
                 activityIndicatorViews.forEach { $0.removeFromSuperview() }
 
-                UIView.isOverlayBlockingUserInteraction = false
+                UIView.isShowingModalOverlay = false
                 core.ui.unblockUserInteraction()
                 uiApplication
                     .windows?

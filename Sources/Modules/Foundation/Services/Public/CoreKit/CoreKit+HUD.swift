@@ -27,7 +27,7 @@ public extension CoreKit {
 
         public static let shared = HUD()
 
-        private(set) static var isShowingModalHUD = false
+        private(set) static var isShowingModalProgress = false
 
         // MARK: - Init
 
@@ -63,7 +63,7 @@ public extension CoreKit {
 
         public func hide(after delay: Duration = .milliseconds(250)) {
             mainQueue.async {
-                HUD.isShowingModalHUD = false
+                HUD.isShowingModalProgress = false
                 UI.shared.unblockUserInteraction()
                 ProgressHUD.dismiss()
                 GCD.shared.after(delay) { ProgressHUD.remove() }
@@ -79,7 +79,7 @@ public extension CoreKit {
                 func showHUD() {
                     ProgressHUD.show(text)
                     guard isModal else { return }
-                    HUD.isShowingModalHUD = true
+                    HUD.isShowingModalProgress = true
                     UI.shared.blockUserInteraction()
                 }
 

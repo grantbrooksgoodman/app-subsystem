@@ -124,7 +124,9 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            HUD.shared.hide()
+            if !HUD.isShowingModalHUD {
+                HUD.shared.hide()
+            }
 
             let keyVC = uiApplication.keyViewController
             guard embedded else {

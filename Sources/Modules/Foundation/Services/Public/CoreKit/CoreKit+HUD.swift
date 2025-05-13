@@ -27,6 +27,8 @@ public extension CoreKit {
 
         public static let shared = HUD()
 
+        private(set) static var isShowingModalHUD = false
+
         // MARK: - Init
 
         private init() {}
@@ -59,16 +61,12 @@ public extension CoreKit {
             mainQueue.async { ProgressHUD.show(resolvedText, icon: alertIcon, interaction: true) }
         }
 
-        public func hide(after delay: Duration? = nil) {
+        public func hide(after delay: Duration = .milliseconds(250)) {
             mainQueue.async {
-                func hideHUD() {
-                    UI.shared.unblockUserInteraction()
-                    ProgressHUD.dismiss()
-                    GCD.shared.after(.milliseconds(250)) { ProgressHUD.remove() }
-                }
-
-                guard let delay else { return hideHUD() }
-                GCD.shared.after(delay) { hideHUD() }
+                HUD.isShowingModalHUD = false
+                UI.shared.unblockUserInteraction()
+                ProgressHUD.dismiss()
+                GCD.shared.after(delay) { ProgressHUD.remove() }
             }
         }
 
@@ -81,6 +79,7 @@ public extension CoreKit {
                 func showHUD() {
                     ProgressHUD.show(text)
                     guard isModal else { return }
+                    HUD.isShowingModalHUD = true
                     UI.shared.blockUserInteraction()
                 }
 

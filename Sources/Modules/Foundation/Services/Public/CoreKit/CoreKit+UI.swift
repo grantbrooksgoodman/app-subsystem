@@ -143,7 +143,7 @@ public extension CoreKit {
         ) {
             guard !UIApplication.isBlockingUserInteraction,
                   !uiApplication.isPresentingAlertController else {
-                GCD.shared.after(.seconds(1)) { queuePresentation(of: viewController, animated: animated, embedded: embedded) }
+                GCD.shared.after(.milliseconds(100)) { queuePresentation(of: viewController, animated: animated, embedded: embedded) }
                 return
             }
 

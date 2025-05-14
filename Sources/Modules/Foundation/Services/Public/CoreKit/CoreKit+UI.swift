@@ -125,7 +125,6 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            guard !UIApplication.isBlockingUserInteraction else { return }
             HUD.shared.hide()
 
             let keyVC = uiApplication.keyViewController
@@ -142,7 +141,8 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            guard !uiApplication.isPresentingAlertController else {
+            guard !UIApplication.isBlockingUserInteraction,
+                  !uiApplication.isPresentingAlertController else {
                 GCD.shared.after(.seconds(1)) { queuePresentation(of: viewController, animated: animated, embedded: embedded) }
                 return
             }

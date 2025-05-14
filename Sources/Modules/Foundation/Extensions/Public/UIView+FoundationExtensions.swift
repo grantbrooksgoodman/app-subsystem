@@ -111,10 +111,34 @@ public extension UIView {
         return subviews.first(where: { $0.tag == coreUI.semTag(for: string) })
     }
 
-    func removeOverlay(animated: Bool = true) async {
-        await withCheckedContinuation { continuation in
-            removeOverlay(animated: animated) {
-                continuation.resume()
+    func removeOverlay(animated: Bool = true) {
+        Task { @MainActor in
+            @Dependency(\.coreKit) var core: CoreKit
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
+
+            @MainActor
+            func removeViews() {
+                overlayViews.forEach { $0.removeFromSuperview() }
+                activityIndicatorViews.forEach { $0.removeFromSuperview() }
+
+                UIView.isBlockingUserInteraction = false
+                core.ui.unblockUserInteraction()
+                uiApplication
+                    .windows?
+                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
+                    .alpha = 1
+            }
+
+            let overlayViews = subviews(for: "OVERLAY_VIEW")
+            let activityIndicatorViews = subviews(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
+
+            guard animated else { return removeViews() }
+
+            UIView.animate(withDuration: 0.2) {
+                overlayViews.forEach { $0.alpha = 0 }
+                activityIndicatorViews.forEach { $0.alpha = 0 }
+            } completion: { _ in
+                removeViews()
             }
         }
     }
@@ -141,38 +165,5 @@ public extension UIView {
     func subviews(for string: String) -> [UIView] {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         return subviews.filter { $0.tag == coreUI.semTag(for: string) }
-    }
-
-    private func removeOverlay(animated: Bool, completion: @escaping () -> Void) {
-        Task { @MainActor in
-            @Dependency(\.coreKit) var core: CoreKit
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
-
-            @MainActor
-            func removeViews() {
-                overlayViews.forEach { $0.removeFromSuperview() }
-                activityIndicatorViews.forEach { $0.removeFromSuperview() }
-
-                UIView.isBlockingUserInteraction = false
-                core.ui.unblockUserInteraction()
-                uiApplication
-                    .windows?
-                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
-                    .alpha = 1
-                completion()
-            }
-
-            let overlayViews = subviews(for: "OVERLAY_VIEW")
-            let activityIndicatorViews = subviews(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
-
-            guard animated else { return removeViews() }
-
-            UIView.animate(withDuration: 0.2) {
-                overlayViews.forEach { $0.alpha = 0 }
-                activityIndicatorViews.forEach { $0.alpha = 0 }
-            } completion: { _ in
-                removeViews()
-            }
-        }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  StatusBarStyle.swift
+//  StatusBar.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-public enum StatusBarStyle {
+public enum StatusBar {
     // MARK: - Properties
 
     private static var statusBarViewController: StatusBarViewController? { statusBarWindow?.rootViewController as? StatusBarViewController }
@@ -19,23 +19,34 @@ public enum StatusBarStyle {
         return windows?.first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") })
     }
 
-    // MARK: - Override
+    // MARK: - Override Style
 
-    public static func override(_ style: UIStatusBarStyle) {
+    public static func overrideStyle(_ style: UIStatusBarStyle) {
         @Dependency(\.mainQueue) var mainQueue: DispatchQueue
         mainQueue.async { statusBarViewController?.statusBarStyle = style }
     }
 
-    // MARK: - Restore
+    // MARK: - Restore Style
 
-    public static func restore() {
+    public static func restoreStyle() {
         @Dependency(\.mainQueue) var mainQueue: DispatchQueue
         mainQueue.async { statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent }
+    }
+
+    // MARK: - Toggle Visibility
+
+    public static func toggleVisibility() {
+        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
+        mainQueue.async { statusBarViewController?.statusBarIsHidden = !(statusBarViewController?.statusBarIsHidden ?? false) }
     }
 }
 
 final class StatusBarViewController: UIViewController {
     // MARK: - Properties
+
+    public var statusBarIsHidden: Bool = false {
+        didSet { setNeedsStatusBarAppearanceUpdate() }
+    }
 
     public var statusBarStyle: UIStatusBarStyle = .default {
         didSet { setNeedsStatusBarAppearanceUpdate() }
@@ -44,6 +55,7 @@ final class StatusBarViewController: UIViewController {
     // MARK: - Computed Properties
 
     override public var preferredStatusBarStyle: UIStatusBarStyle { statusBarStyle }
+    override public var prefersStatusBarHidden: Bool { statusBarIsHidden }
 
     // MARK: - Init
 

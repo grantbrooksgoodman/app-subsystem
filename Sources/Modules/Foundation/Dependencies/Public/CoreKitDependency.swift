@@ -11,10 +11,10 @@ import Foundation
 public enum CoreKitDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> CoreKit {
         .init(
-            gcd: .init(),
-            hud: .init(),
-            ui: .init(),
-            utils: .init()
+            gcd: .shared,
+            hud: .shared,
+            ui: .shared,
+            utils: .shared
         )
     }
 }

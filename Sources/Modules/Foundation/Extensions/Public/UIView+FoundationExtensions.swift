@@ -10,6 +10,29 @@ import Foundation
 import UIKit
 
 public extension UIView {
+    // MARK: - Types
+
+    struct OverlayActivityIndicatorConfiguration {
+        /* MARK: Properties */
+
+        public let color: UIColor
+        public let style: UIActivityIndicatorView.Style
+
+        /* MARK: Computed Properties */
+
+        public static let largeWhite: OverlayActivityIndicatorConfiguration = .init(style: .large, color: .white)
+
+        /* MARK: Init */
+
+        public init(
+            style: UIActivityIndicatorView.Style,
+            color: UIColor
+        ) {
+            self.style = style
+            self.color = color
+        }
+    }
+
     // MARK: - Properties
 
     /// Recursively traverses the view hierarchy to resolve all associated subviews.
@@ -34,6 +57,8 @@ public extension UIView {
         return superviews
     }
 
+    @LockIsolated internal private(set) static var isBlockingUserInteraction = false
+
     // MARK: - Methods
 
     func addOrEnable(_ gestureRecognizer: UIGestureRecognizer) {
@@ -43,30 +68,42 @@ public extension UIView {
     }
 
     func addOverlay(
-        alpha: CGFloat = 0.5,
-        activityIndicator indicatorConfig: (style: UIActivityIndicatorView.Style, color: UIColor)? = (.large, .white),
+        alpha: CGFloat = 1,
+        activityIndicator indicatorConfig: OverlayActivityIndicatorConfiguration?,
+        backgroundColor: UIColor = .black,
         blurStyle: UIBlurEffect.Style? = nil,
-        color: UIColor? = nil,
-        name tag: String? = nil
+        isModal: Bool = true
     ) {
-        @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
+        Task { @MainActor in
+            @Dependency(\.coreKit) var core: CoreKit
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-        let overlayView = blurStyle == nil ? UIView() : UIVisualEffectView(effect: UIBlurEffect(style: blurStyle!))
-        overlayView.alpha = alpha
-        overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlayView.backgroundColor = color ?? .black
-        overlayView.frame = bounds
-        overlayView.tag = coreUI.semTag(for: tag ?? "OVERLAY_VIEW")
-        addSubview(overlayView)
+            if isModal {
+                UIView.isBlockingUserInteraction = true
+                core.ui.blockUserInteraction()
+                uiApplication
+                    .windows?
+                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
+                    .alpha = 0
+            }
 
-        guard let indicatorConfig else { return }
+            let overlayView = blurStyle == nil ? UIView() : UIVisualEffectView(effect: UIBlurEffect(style: blurStyle!))
+            overlayView.alpha = alpha
+            overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            overlayView.backgroundColor = backgroundColor
+            overlayView.frame = bounds
+            overlayView.tag = core.ui.semTag(for: "OVERLAY_VIEW")
+            addSubview(overlayView)
 
-        let indicatorView = UIActivityIndicatorView(style: indicatorConfig.style)
-        indicatorView.center = overlayView.center
-        indicatorView.color = indicatorConfig.color
-        indicatorView.startAnimating()
-        indicatorView.tag = coreUI.semTag(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
-        addSubview(indicatorView)
+            guard let indicatorConfig else { return }
+
+            let indicatorView = UIActivityIndicatorView(style: indicatorConfig.style)
+            indicatorView.center = overlayView.center
+            indicatorView.color = indicatorConfig.color
+            indicatorView.startAnimating()
+            indicatorView.tag = core.ui.semTag(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
+            addSubview(indicatorView)
+        }
     }
 
     func firstSubview(for string: String) -> UIView? {
@@ -74,17 +111,34 @@ public extension UIView {
         return subviews.first(where: { $0.tag == coreUI.semTag(for: string) })
     }
 
-    func removeOverlay(name tag: String? = nil, animated: Bool = true) {
-        let overlayViews = subviews(for: tag ?? "OVERLAY_VIEW")
-        let activityIndicatorViews = subviews(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
-
+    func removeOverlay(animated: Bool = true) {
         Task { @MainActor in
+            @Dependency(\.coreKit) var core: CoreKit
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
+
+            @MainActor
+            func removeViews() {
+                overlayViews.forEach { $0.removeFromSuperview() }
+                activityIndicatorViews.forEach { $0.removeFromSuperview() }
+
+                UIView.isBlockingUserInteraction = false
+                core.ui.unblockUserInteraction()
+                uiApplication
+                    .windows?
+                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
+                    .alpha = 1
+            }
+
+            let overlayViews = subviews(for: "OVERLAY_VIEW")
+            let activityIndicatorViews = subviews(for: "OVERLAY_VIEW_ACTIVITY_INDICATOR")
+
+            guard animated else { return removeViews() }
+
             UIView.animate(withDuration: 0.2) {
                 overlayViews.forEach { $0.alpha = 0 }
                 activityIndicatorViews.forEach { $0.alpha = 0 }
             } completion: { _ in
-                overlayViews.forEach { $0.removeFromSuperview() }
-                activityIndicatorViews.forEach { $0.removeFromSuperview() }
+                removeViews()
             }
         }
     }

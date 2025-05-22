@@ -141,6 +141,11 @@ public extension Toast {
 
     private static func show(_ toast: Toast, onTap: (() -> Void)? = nil) {
         Task { @MainActor in
+            guard !UIApplication.isBlockingUserInteraction else {
+                Task.delayed(by: .milliseconds(100)) { show(toast, onTap: onTap) }
+                return
+            }
+
             guard UIApplication.iOS19IsAvailable else {
                 Observables.rootViewToast.value = toast
                 Observables.rootViewToastAction.value = onTap

@@ -18,10 +18,9 @@ extension DevModeAction {
 
         public static var available: [DevModeAction] {
             var availableActions: [DevModeAction] = [
-                clearCachesAction,
+                eraseContentAndSettingsAction,
                 toggleBuildInfoOverlayAction,
                 overrideLanguageCodeAction,
-                resetUserDefaultsAction,
                 toggleBreadcrumbsAction,
                 toggleTimebombAction,
                 viewLoggerSessionRecordAction,
@@ -59,14 +58,90 @@ extension DevModeAction {
             return .init(title: "Change Theme", perform: changeTheme)
         }
 
-        private static var clearCachesAction: DevModeAction {
-            func clearCaches() {
+        private static var eraseContentAndSettingsAction: DevModeAction {
+            func eraseContentAndSettings() {
                 @Dependency(\.coreKit) var core: CoreKit
-                core.utils.clearCaches()
-                core.hud.showSuccess(text: "Cleared Caches")
+                @Dependency(\.userDefaults) var defaults: UserDefaults
+
+                func perform(
+                    clearCaches: Bool = false,
+                    resetUserDefaults: Bool = false,
+                    eraseDocumentsDirectory: Bool = false,
+                    eraseTemporaryDirectory: Bool = false,
+                ) {
+                    if clearCaches {
+                        core.utils.clearCaches()
+                    }
+
+                    if resetUserDefaults {
+                        defaults.reset()
+                    }
+
+                    if eraseDocumentsDirectory,
+                       let exception = core.utils.eraseDocumentsDirectory() {
+                        Logger.log(exception, with: .toast)
+                    }
+
+                    if eraseTemporaryDirectory,
+                       let exception = core.utils.eraseTemporaryDirectory() {
+                        Logger.log(exception, with: .toast)
+                    }
+                }
+
+                let clearCachesAction: AKAction = .init("Clear Caches") {
+                    perform(clearCaches: true)
+                    core.hud.showSuccess(text: "Cleared Caches")
+                }
+
+                let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
+                    if let exception = core.utils.eraseDocumentsDirectory() {
+                        Logger.log(exception, with: .toast)
+                        return
+                    }
+
+                    core.hud.showSuccess(text: "Erased Documents Directory")
+                }
+
+                let eraseTemporaryDirectoryAction: AKAction = .init("Erase Temporary Directory") {
+                    if let exception = core.utils.eraseTemporaryDirectory() {
+                        Logger.log(exception, with: .toast)
+                        return
+                    }
+
+                    core.hud.showSuccess(text: "Erased Temporary Directory")
+                }
+
+                let resetUserDefaultsAction: AKAction = .init("Reset UserDefaults") {
+                    perform(resetUserDefaults: true)
+                    core.hud.showSuccess(text: "Reset UserDefaults")
+                }
+
+                let eraseAllContentAndSettingsAction: AKAction = .init("Erase All Content & Settings", style: .destructivePreferred) {
+                    perform(
+                        clearCaches: true,
+                        resetUserDefaults: true,
+                        eraseDocumentsDirectory: true,
+                        eraseTemporaryDirectory: true
+                    )
+
+                    core.hud.showSuccess()
+                }
+
+                Task {
+                    await AKActionSheet(
+                        title: "Erase Content & Settings",
+                        actions: [
+                            clearCachesAction,
+                            eraseDocumentsDirectoryAction,
+                            eraseTemporaryDirectoryAction,
+                            resetUserDefaultsAction,
+                            eraseAllContentAndSettingsAction,
+                        ]
+                    ).present(translating: [])
+                }
             }
 
-            return .init(title: "Clear Caches", perform: clearCaches)
+            return .init(title: "Erase Content & Settings", perform: eraseContentAndSettings)
         }
 
         private static var overrideLanguageCodeAction: DevModeAction {
@@ -152,18 +227,6 @@ extension DevModeAction {
             }
 
             return .init(title: "Override/Restore Language Code", perform: overrideLanguageCode)
-        }
-
-        private static var resetUserDefaultsAction: DevModeAction {
-            func resetUserDefaults() {
-                @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
-                @Dependency(\.userDefaults) var defaults: UserDefaults
-
-                defaults.reset()
-                coreHUD.showSuccess(text: "Reset UserDefaults")
-            }
-
-            return .init(title: "Reset UserDefaults", perform: resetUserDefaults)
         }
 
         private static var toggleBreadcrumbsAction: DevModeAction {
@@ -265,7 +328,7 @@ extension DevModeAction {
                     filesAtPaths: [Logger.sessionRecordFilePath.path()],
                     embedded: true
                 ) {
-                    Logger.log(exception, with: .toast())
+                    Logger.log(exception, with: .toast)
                 }
             }
 

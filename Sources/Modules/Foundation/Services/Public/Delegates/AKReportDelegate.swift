@@ -185,7 +185,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
         case let .failure(error):
             Logger.log(
                 .init(error, metadata: [self, #file, #function, #line]),
-                with: .toast()
+                with: .toast
             )
 
         case let .success(result):
@@ -193,7 +193,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             case .failed:
                 Logger.log(
                     .init(metadata: [self, #file, #function, #line]),
-                    with: .toast()
+                    with: .toast
                 )
 
             case .sent:

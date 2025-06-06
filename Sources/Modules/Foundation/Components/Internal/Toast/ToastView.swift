@@ -36,6 +36,10 @@ struct ToastView: View {
     // ToastType
     private let type: Toast.ToastType
 
+    // MARK: - Computed Properties
+
+    private var overlayFillColor: Color? { type.colorPalette?.accent ?? type.style.defaultColor }
+
     // MARK: - Init
 
     init(
@@ -134,10 +138,12 @@ struct ToastView: View {
         }
         .background(colorPalette?.background ?? .navigationBarBackground)
         .frame(maxWidth: .infinity)
-        .overlay(
-            overlay(colorPalette?.accent ?? style.defaultColor),
-            alignment: .leading
-        )
+        .if(overlayFillColor != nil) {
+            $0.overlay(
+                overlay(overlayFillColor),
+                alignment: .leading,
+            )
+        }
         .cornerRadius(Floats.bannerCornerRadius)
         .shadow(
             color: Colors.bannerShadowColor.opacity(Floats.bannerShadowColorOpacity),

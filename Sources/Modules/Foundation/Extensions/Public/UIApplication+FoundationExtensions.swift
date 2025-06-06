@@ -24,6 +24,10 @@ public extension UIApplication {
         presentedViewControllers.contains(where: { $0 is UIAlertController })
     }
 
+    var isPresentingSheet: Bool {
+        presentedViewControllers.contains(where: { $0.activePresentationController is UISheetPresentationController })
+    }
+
     var keyViewController: UIViewController? {
         keyViewController(mainWindow?.rootViewController)
     }

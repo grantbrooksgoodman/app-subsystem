@@ -10,6 +10,31 @@ import Foundation
 import SwiftUI
 
 public extension View {
+    @ViewBuilder
+    func `if`(
+        _ condition: Bool,
+        _ transform: (Self) -> some View
+    ) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func `if`(
+        _ condition: Bool,
+        _ ifTransform: (Self) -> some View,
+        else elseTransform: (Self) -> some View
+    ) -> some View {
+        if condition {
+            ifTransform(self)
+        } else {
+            elseTransform(self)
+        }
+    }
+
     func onReceive(
         _ name: Notification.Name,
         center: NotificationCenter = .default,

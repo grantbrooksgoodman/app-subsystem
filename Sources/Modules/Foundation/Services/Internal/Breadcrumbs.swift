@@ -99,9 +99,15 @@ final class Breadcrumbs {
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
         if uniqueViewsOnly {
-            guard let frontmostViewController = uiApplication.keyViewController?.frontmostViewController,
-                  !fileHistory.contains(String(type(of: frontmostViewController))) else { return }
-            fileHistory.append(String(type(of: frontmostViewController)))
+            let viewHierarchyID = uiApplication
+                .presentedViews
+                .map { String(type(of: $0)) }
+                .sorted()
+                .joined()
+                .encodedHash
+
+            guard !fileHistory.contains(viewHierarchyID) else { return }
+            fileHistory.append(viewHierarchyID)
             saveImage()
         } else {
             saveImage()

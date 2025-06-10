@@ -55,7 +55,8 @@ public struct StatefulView: View {
             }
 
         case .loaded:
-            AnyView(content())
+            content()
+                .eraseToAnyView()
 
         case .loading:
             withTransition {

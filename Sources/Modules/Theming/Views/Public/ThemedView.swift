@@ -67,7 +67,8 @@ private struct Themed: View {
     // MARK: - View
 
     public var body: some View {
-        AnyView(viewModel.body())
+        viewModel.body()
+            .eraseToAnyView()
             .id(viewModel.viewID)
             .onFirstAppear {
                 viewModel.send(.viewAppeared)

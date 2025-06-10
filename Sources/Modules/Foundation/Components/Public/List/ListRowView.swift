@@ -30,7 +30,7 @@ public struct ListRowView: View {
         self.configuration = configuration
 
         if let imageView = configuration.imageView?() {
-            image = ImageRenderer(content: AnyView(imageView)).uiImage.swiftUIImage
+            image = ImageRenderer(content: imageView.eraseToAnyView()).uiImage.swiftUIImage
         } else {
             image = nil
         }
@@ -85,7 +85,7 @@ public struct ListRowView: View {
 
         case let .destination(_, view):
             NavigationLink {
-                AnyView(view)
+                view.eraseToAnyView()
             } label: {
                 labelView
             }

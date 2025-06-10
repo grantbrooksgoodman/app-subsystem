@@ -58,7 +58,7 @@ struct RootWindow: View {
 
     var body: some View {
         switch status.rootView {
-        case .appContent: AnyView(view)
+        case .appContent: view.eraseToAnyView()
         case .expiryOverlay: ExpiryOverlayView()
         }
     }

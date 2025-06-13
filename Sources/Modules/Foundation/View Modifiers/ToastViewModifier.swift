@@ -37,21 +37,16 @@ private struct ToastViewModifier: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(
-                ZStack {
-                    withOffset(toastView)
-                        .onSwipe(toast?.type.appearanceEdge == .bottom ? .down : .up) {
-                            dismiss()
-                        }
-                }
-                .animation(
-                    .spring().speed(UIApplication.iOS19IsAvailable ? 1.5 : 1),
-                    value: toast
-                )
+            .overlay(alignment: toast?.type.appearanceEdge == .bottom ? .bottom : .top) {
+                toastView
+            }
+            .animation(
+                .spring().speed(UIApplication.iOS27IsAvailable ? Floats.iOS27SpringAnimationSpeed : 1),
+                value: toast
             )
             .onChange(of: toast) { oldValue, newValue in
                 present()
-                guard UIApplication.iOS19IsAvailable,
+                guard UIApplication.iOS27IsAvailable,
                       appearanceEdge == nil,
                       let toast = oldValue ?? newValue else { return }
                 appearanceEdge = toast.type.appearanceEdge ?? appearanceEdge
@@ -60,26 +55,35 @@ private struct ToastViewModifier: ViewModifier {
 
     @ViewBuilder
     private var toastView: some View {
-        if let toast {
-            VStack {
-                if toast.type.appearanceEdge == .bottom {
-                    Spacer()
-                }
+        Group {
+            if let toast {
+                VStack(spacing: 0) {
+                    if toast.type.appearanceEdge == .bottom {
+                        Spacer()
+                    }
 
-                ToastView(
-                    toast.type,
-                    title: toast.title,
-                    message: toast.message,
-                    onTap: onTap
-                ) {
-                    dismiss()
-                }
+                    withOffset(
+                        ToastView(
+                            toast.type,
+                            title: toast.title,
+                            message: toast.message,
+                            onTap: onTap
+                        ) {
+                            dismiss()
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background { TouchProxy() }
+                    )
+                    .onSwipe(toast.type.appearanceEdge == .bottom ? .down : .up) {
+                        dismiss()
+                    }
 
-                if toast.type.appearanceEdge == .top {
-                    Spacer()
+                    if toast.type.appearanceEdge == .top || toast.type.appearanceEdge == nil {
+                        Spacer()
+                    }
                 }
+                .transition(.move(edge: toast.type.appearanceEdge == .bottom ? .bottom : .top))
             }
-            .transition(.move(edge: toast.type.appearanceEdge == .bottom ? .bottom : .top))
         }
     }
 
@@ -87,7 +91,7 @@ private struct ToastViewModifier: ViewModifier {
 
     private func dismiss() {
         withAnimation { toast = nil }
-        if UIApplication.iOS19IsAvailable {
+        if UIApplication.iOS27IsAvailable {
             Task.delayed(by: .seconds(1)) { Toast.hide() }
         }
 
@@ -122,7 +126,7 @@ private struct ToastViewModifier: ViewModifier {
 
     @ViewBuilder
     private func withOffset(_ toastView: some View) -> some View {
-        if UIApplication.iOS19IsAvailable {
+        if UIApplication.iOS27IsAvailable {
             toastView
                 .padding(appearanceEdge == .top ? .top : .bottom, padding(toast))
         } else {

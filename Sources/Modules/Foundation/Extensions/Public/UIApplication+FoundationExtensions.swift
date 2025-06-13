@@ -20,6 +20,20 @@ public extension UIApplication {
         mainWindow?.overrideUserInterfaceStyle
     }
 
+    static var iOS26IsAvailable: Bool {
+        if #available(iOS 26, *) { return true }
+        return false
+    }
+
+    static var iOS27IsAvailable: Bool {
+        if #available(iOS 27, *) { return true }
+        return false
+    }
+
+    static var isFullyV26Compatible: Bool {
+        UIApplication.iOS26IsAvailable && UIApplication.isCompiledForV26OrLater
+    }
+
     var isPresentingAlertController: Bool {
         presentedViewControllers.contains(where: { $0 is UIAlertController })
     }
@@ -167,6 +181,14 @@ public extension UIApplication {
             guard let firstResponder = self.firstResponder(in: view) else { return }
             firstResponder.resignFirstResponder()
         }
+    }
+
+    private static var isCompiledForV26OrLater: Bool {
+        #if compiler(>=6.2)
+        return true
+        #else
+        return false
+        #endif
     }
 
     private func keyViewController(_ baseVC: UIViewController?) -> UIViewController? {

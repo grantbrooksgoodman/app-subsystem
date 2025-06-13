@@ -73,13 +73,15 @@ public struct GroupedListView: View {
         VStack(spacing: 0) {
             ForEach(0 ..< rows.count, id: \.self) { index in
                 ListRowView(rows[index])
-                    .if(index == rows.count - 1) {
+                    .if(index != rows.count - 1) {
                         $0
                             .overlay(
-                                Divider().padding(
-                                    .leading,
-                                    rows[index].imageView == nil ? Floats.dividerLeadingPadding : Floats.dividerAlternateLeadingPadding
-                                ),
+                                Divider()
+                                    .padding(
+                                        .leading,
+                                        rows[index].imageView == nil ? Floats.dividerLeadingPadding : Floats.dividerAlternateLeadingPadding
+                                    )
+                                    .if(UIApplication.isFullyV26Compatible) { $0.padding(.trailing, Floats.dividerTrailingPadding) },
                                 alignment: .bottom
                             )
                     }

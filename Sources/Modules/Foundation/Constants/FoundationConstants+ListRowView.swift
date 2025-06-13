@@ -18,7 +18,7 @@ public extension FoundationConstants.CGFloats {
 
         public static let footerLabelHorizontalPadding: CGFloat = 16
         public static let footerLabelSystemFontScale: CGFloat = 13.5
-        public static let frameMinHeight: CGFloat = 44
+        public static let frameMinHeight: CGFloat = UIApplication.isFullyV26Compatible ? 48 : 44
 
         public static let headerLabelHorizontalPadding: CGFloat = 16
         public static let headerLabelSystemFontScale: CGFloat = 13.5
@@ -29,7 +29,7 @@ public extension FoundationConstants.CGFloats {
 
         public static let titleLabelLeadingPadding: CGFloat = 5
 
-        public static let verticalPadding: CGFloat = 8
+        public static let verticalPadding: CGFloat = UIApplication.isFullyV26Compatible ? 12 : 8
     }
 }
 

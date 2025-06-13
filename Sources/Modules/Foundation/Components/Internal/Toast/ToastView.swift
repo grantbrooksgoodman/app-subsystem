@@ -36,6 +36,10 @@ struct ToastView: View {
     // ToastType
     private let type: Toast.ToastType
 
+    // MARK: - Computed Properties
+
+    private var accentColor: Color? { type.colorPalette?.accent ?? type.style.defaultColor }
+
     // MARK: - Init
 
     init(
@@ -61,7 +65,6 @@ struct ToastView: View {
 
         case let .capsule(style: style):
             capsuleContentView(style: style)
-            Spacer()
         }
     }
 
@@ -75,10 +78,10 @@ struct ToastView: View {
         VStack(alignment: .leading) {
             HStack(alignment: title == nil ? .center : .top) {
                 if let iconSystemImageName = style.bannerIconSystemImageName,
-                   let defaultColor = style.defaultColor {
+                   let accentColor {
                     Components.symbol(
                         iconSystemImageName,
-                        foregroundColor: colorPalette?.accent ?? defaultColor,
+                        foregroundColor: accentColor,
                         usesIntrinsicSize: true
                     )
                 }
@@ -134,10 +137,10 @@ struct ToastView: View {
         }
         .background(colorPalette?.background ?? .navigationBarBackground)
         .frame(maxWidth: .infinity)
-        .ifLet(type.colorPalette?.accent ?? type.style.defaultColor) { bannerContentView, overlayFillColor in
+        .ifLet(accentColor) { bannerContentView, accentColor in
             bannerContentView
                 .overlay(
-                    overlay(overlayFillColor),
+                    overlay(accentColor),
                     alignment: .leading,
                 )
         }
@@ -236,16 +239,11 @@ struct ToastView: View {
 
     // MARK: - Overlay
 
-    private func overlay(_ fillColor: Color?) -> some View {
-        if let fillColor {
-            return Rectangle()
-                .fill(fillColor)
-                .frame(width: Floats.bannerOverlayFrameWidth)
-                .clipped(antialiased: true)
-                .eraseToAnyView()
-        }
-
-        return EmptyView().eraseToAnyView()
+    private func overlay(_ fillColor: Color) -> some View {
+        Rectangle()
+            .fill(fillColor)
+            .frame(width: Floats.bannerOverlayFrameWidth)
+            .clipped(antialiased: true)
     }
 
     // MARK: - Auxiliary

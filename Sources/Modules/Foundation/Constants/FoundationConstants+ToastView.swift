@@ -56,6 +56,8 @@ public extension FoundationConstants.CGFloats {
         public static let capsuleShadowX: CGFloat = 0
         public static let capsuleShadowY: CGFloat = 6
 
+        public static let iOS27SpringAnimationSpeed: CGFloat = 1.5
+
         public static let topAppearanceEdgePadding: CGFloat = 30
         public static let topAppearanceEdgeYOffset: CGFloat = 20
     }

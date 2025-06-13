@@ -32,7 +32,7 @@ public extension ListRowView {
             innerText: String,
             footerText: String? = nil,
             isEnabled: Bool = true,
-            cornerRadius: CGFloat = 10,
+            cornerRadius: CGFloat = UIApplication.isFullyV26Compatible ? 20 : 10,
             imageView: (() -> any View)? = nil
         ) {
             self.interaction = interaction

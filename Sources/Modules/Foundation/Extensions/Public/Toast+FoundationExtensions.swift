@@ -74,7 +74,7 @@ public extension Toast {
 
     static func hide() {
         Task { @MainActor in
-            guard UIApplication.iOS19IsAvailable else {
+            guard UIApplication.iOS27IsAvailable else {
                 Observables.rootViewToast.value = nil
                 Observables.rootViewToastAction.value = nil
                 return
@@ -88,8 +88,13 @@ public extension Toast {
             Observables.rootViewToast.value = nil
             Observables.rootViewToastAction.value = nil
 
-            rootOverlayWindow.frame = .zero
-            rootOverlayWindow.isUserInteractionEnabled = false
+            @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
+            if hidesBuildInfoOverlay == false {
+                BuildInfoOverlay.show()
+            }
+
+            rootOverlayWindow.frame = BuildInfoOverlay.isHidden ? .zero : RootOverlayView.fallbackFrame
+            rootOverlayWindow.isUserInteractionEnabled = !BuildInfoOverlay.isHidden
 
             isHidden = true
         }
@@ -146,7 +151,7 @@ public extension Toast {
                 return
             }
 
-            guard UIApplication.iOS19IsAvailable else {
+            guard UIApplication.iOS27IsAvailable else {
                 Observables.rootViewToast.value = toast
                 Observables.rootViewToastAction.value = onTap
                 return
@@ -162,13 +167,26 @@ public extension Toast {
             guard let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
                   let overlayFrame = frame(toast.type.appearanceEdge ?? .top) else { return }
 
-            Observables.rootViewToast.value = toast
-            Observables.rootViewToastAction.value = onTap
+            @MainActor
+            func setUpView() {
+                Observables.rootViewToast.value = toast
+                Observables.rootViewToastAction.value = onTap
 
-            rootOverlayWindow.frame = overlayFrame
-            rootOverlayWindow.isUserInteractionEnabled = true
+                rootOverlayWindow.frame = overlayFrame
+                rootOverlayWindow.isUserInteractionEnabled = true
 
-            isHidden = false
+                isHidden = false
+            }
+
+            guard BuildInfoOverlay.isHidden else {
+                BuildInfoOverlay.hide(persistSetting: false)
+                Task.delayed(by: .seconds(0.5)) { @MainActor in
+                    setUpView()
+                }
+                return
+            }
+
+            setUpView()
         }
     }
 }

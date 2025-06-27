@@ -79,7 +79,7 @@ public extension CoreKit {
 
         // MARK: - Auxiliary
 
-        func blockUserInteraction() {
+        func blockUserInteraction(dismissSheets: Bool = true) {
             mainQueue.async {
                 UIApplication.isBlockingUserInteraction = true
 
@@ -88,7 +88,7 @@ public extension CoreKit {
                     .filter { $0.tag == self.semTag(for: "ROOT_OVERLAY_WINDOW") || $0.tag == self.semTag(for: "ROOT_WINDOW") }
                     .forEach { $0.isUserInteractionEnabled = false }
 
-                self.dismissInteractiveContent()
+                self.dismissInteractiveContent(dismissSheets: dismissSheets)
             }
         }
 
@@ -106,15 +106,16 @@ public extension CoreKit {
             }
         }
 
-        private func dismissInteractiveContent() {
+        private func dismissInteractiveContent(dismissSheets: Bool) {
             mainQueue.async {
                 guard UIApplication.isBlockingUserInteraction else { return }
 
                 Toast.hide()
                 self.uiApplication.dismissAlertControllers()
+                if dismissSheets { self.uiApplication.dismissSheets() }
                 self.uiApplication.resignFirstResponders()
 
-                GCD.shared.after(.milliseconds(100)) { self.dismissInteractiveContent() }
+                GCD.shared.after(.milliseconds(100)) { self.dismissInteractiveContent(dismissSheets: dismissSheets) }
             }
         }
 

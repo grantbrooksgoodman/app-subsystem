@@ -45,31 +45,21 @@ public struct StatefulView: View {
     public var body: some View {
         switch viewState {
         case let .error(exception):
-            withTransition {
-                FailurePageView(
-                    .init(
-                        initialState: .init(exception, retryHandler: exceptionRetryHandler),
-                        reducer: FailurePageReducer()
-                    )
+            FailurePageView(
+                .init(
+                    initialState: .init(exception, retryHandler: exceptionRetryHandler),
+                    reducer: FailurePageReducer()
                 )
-            }
+            )
+            .transition(.opacity.animation(.easeIn(duration: 0.2)))
 
         case .loaded:
             content()
                 .eraseToAnyView()
 
         case .loading:
-            withTransition {
-                ProgressPageView(backgroundColor: progressPageViewBackgroundColor)
-            }
+            ProgressPageView(backgroundColor: progressPageViewBackgroundColor)
+                .transition(.opacity.animation(.easeIn(duration: 0.2)))
         }
-    }
-}
-
-private extension View {
-    func withTransition(_ view: () -> some View) -> some View {
-        view()
-            .transition(AnyTransition.opacity.animation(.easeIn(duration: 0.2)))
-            .zIndex(1)
     }
 }

@@ -49,9 +49,9 @@ public struct FailurePageView: View {
                     viewModel.exception.userFacingDescriptor,
                     font: .systemSemibold
                 )
-                .padding(.vertical, Floats.exceptionLabelVerticalPadding)
-                .padding(.horizontal, Floats.exceptionLabelHorizontalPadding)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, Floats.exceptionLabelHorizontalPadding)
+                .padding(.top, Floats.exceptionLabelTopPadding)
 
                 if viewModel.retryHandler != nil {
                     Components.button(
@@ -60,6 +60,7 @@ public struct FailurePageView: View {
                     ) {
                         viewModel.send(.executeRetryHandler)
                     }
+                    .padding(.top, Floats.retryButtonTopPadding)
                 }
 
                 if viewModel.exception.isReportable {
@@ -70,8 +71,8 @@ public struct FailurePageView: View {
                     ) {
                         viewModel.send(.reportBugButtonTapped)
                     }
-                    .padding(.top, Floats.reportBugButtonTopPadding)
                     .disabled(viewModel.didReportBug)
+                    .padding(.top, Floats.reportBugButtonTopPadding)
                 }
             }
         }

@@ -41,6 +41,36 @@ public extension ComponentKit {
         )
     }
 
+    func capsuleButton(
+        _ text: String,
+        backgroundColor: Color = .accent,
+        font: Font,
+        foregroundColor: Color = .background,
+        secondaryForegroundColor: Color? = nil,
+        usesShadow: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
+        Components.button(
+            text,
+            font: font,
+            foregroundColor: foregroundColor,
+            secondaryForegroundColor: secondaryForegroundColor
+        ) {
+            action()
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .tint(backgroundColor)
+        .if(usesShadow) {
+            $0.shadow(
+                color: .black.opacity(0.2),
+                radius: 10,
+                x: 0,
+                y: 5
+            )
+        }
+    }
+
     func symbol(
         _ systemName: String,
         weight: SwiftUI.Font.Weight? = nil,

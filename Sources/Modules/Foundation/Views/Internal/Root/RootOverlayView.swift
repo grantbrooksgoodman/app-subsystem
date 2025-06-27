@@ -17,7 +17,7 @@ struct RootOverlayView: View {
 
     // MARK: - Properties
 
-    @StateObject private var observer: ViewObserver<RootOverlayObserver>
+    @StateObject private var observer: ViewObserver<RootOverlayViewObserver>
     @StateObject private var viewModel: ViewModel<RootOverlayReducer>
 
     // MARK: - Computed Properties

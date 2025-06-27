@@ -86,6 +86,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
         rootWindow.addSubview(statusBarWindow)
 
+        UIViewController.swizzleUIAlertControllerDismiss
         guard buildMilestone != .generalRelease else { return rootWindow }
 
         // Tap gesture recognizer
@@ -94,7 +95,6 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         tapGesture.delegate = self
         rootWindow.addGestureRecognizer(tapGesture)
 
-        UIViewController.swizzleUIAlertControllerDismiss
         return rootWindow
     }
 

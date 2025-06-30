@@ -109,6 +109,15 @@ public extension UIApplication {
         }
     }
 
+    func dismissSheets(animated: Bool = true) {
+        mainQueue.async {
+            guard self.isPresentingSheet else { return }
+            self.presentedViewControllers
+                .filter { $0.activePresentationController is UISheetPresentationController }
+                .forEach { $0.dismiss(animated: animated) }
+        }
+    }
+
     func firstResponder(in view: UIView? = nil) -> UIView? {
         guard let view else { return presentedViews.first(where: { $0.isFirstResponder }) }
         guard !view.isFirstResponder else { return view }

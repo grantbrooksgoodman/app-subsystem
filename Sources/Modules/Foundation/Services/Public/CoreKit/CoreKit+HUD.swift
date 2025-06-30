@@ -80,7 +80,7 @@ public extension CoreKit {
                     ProgressHUD.show(text)
                     guard isModal else { return }
                     HUD.isBlockingUserInteraction = true
-                    UI.shared.blockUserInteraction()
+                    UI.shared.blockUserInteraction(dismissSheets: false)
                 }
 
                 guard let delay else { return showHUD() }

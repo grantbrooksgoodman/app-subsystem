@@ -42,7 +42,7 @@ struct BuildInfoOverlayReducer: Reducer {
         var statsLabelText = "Calculating..."
 
         // Other
-        var developerModeIndicatorDotColor: Color = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor.developerModeIndicatorDotColor
+        var developerModeIndicatorDotColor: Color = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
         var yOffset: CGFloat
 
         /* MARK: Computed Properties */
@@ -50,7 +50,7 @@ struct BuildInfoOverlayReducer: Reducer {
         // Bool
         var isDeveloperModeEnabled: Bool { Dependency(\.build.isDeveloperModeEnabled).wrappedValue }
         var isUserInteractionDisabled: Bool {
-            Dependency(\.uiApplication.isPresentingAlertController).wrappedValue || RootWindowStatus.shared.rootView == .expiryOverlay
+            Dependency(\.uiApplication.isPresentingAlertController).wrappedValue || RootWindowStatus.shared.rootView == .expiryPage
         }
 
         // Color
@@ -95,7 +95,7 @@ struct BuildInfoOverlayReducer: Reducer {
             }
 
         case .restoreIndicatorColor:
-            state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor.developerModeIndicatorDotColor
+            state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
 
         case .sendFeedbackButtonTapped:
             viewService.sendFeedbackButtonTapped()

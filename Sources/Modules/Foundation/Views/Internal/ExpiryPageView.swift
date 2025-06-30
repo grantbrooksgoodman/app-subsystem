@@ -1,5 +1,5 @@
 //
-//  ExpiryOverlayView.swift
+//  ExpiryPageView.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -12,7 +12,7 @@ import SwiftUI
 /* Proprietary */
 import AlertKit
 
-struct ExpiryOverlayView: View {
+struct ExpiryPageView: View {
     // MARK: - Dependencies
 
     @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
@@ -32,7 +32,7 @@ struct ExpiryOverlayView: View {
         .edgesIgnoringSafeArea(.all)
         .onAppear {
             coreGCD.after(.milliseconds(1500)) {
-                Task { await BuildExpiryAlert.present() }
+                Task { await BuildExpiryAlert.shared.present() }
             }
         }
     }

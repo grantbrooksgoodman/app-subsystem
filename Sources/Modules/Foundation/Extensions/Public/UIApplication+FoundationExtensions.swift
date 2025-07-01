@@ -10,6 +10,29 @@ import Foundation
 import UIKit
 
 public extension UIApplication {
+    // MARK: - Types
+
+    struct OverlayActivityIndicatorConfiguration {
+        /* MARK: Properties */
+
+        public let color: UIColor
+        public let style: UIActivityIndicatorView.Style
+
+        /* MARK: Computed Properties */
+
+        public static let largeWhite: OverlayActivityIndicatorConfiguration = .init(style: .large, color: .white)
+
+        /* MARK: Init */
+
+        public init(
+            style: UIActivityIndicatorView.Style,
+            color: UIColor
+        ) {
+            self.style = style
+            self.color = color
+        }
+    }
+
     // MARK: - Properties
 
     var firstResponder: UIView? {
@@ -46,6 +69,7 @@ public extension UIApplication {
         keyViewController(mainWindow?.rootViewController)
     }
 
+    // TODO: Make non-optional.
     var mainScreen: UIScreen? {
         mainWindow?.screen
     }
@@ -99,6 +123,24 @@ public extension UIApplication {
     private var mainQueue: DispatchQueue { Dependency(\.mainQueue).wrappedValue }
 
     // MARK: - Methods
+
+    func addOverlay(
+        alpha: CGFloat = 1,
+        activityIndicator indicatorConfig: UIApplication.OverlayActivityIndicatorConfiguration?,
+        backgroundColor: UIColor = .black,
+        blurStyle: UIBlurEffect.Style? = nil,
+        isModal: Bool = true
+    ) {
+        mainQueue.async {
+            self.mainWindow?.addOverlay(
+                alpha: alpha,
+                activityIndicator: indicatorConfig,
+                backgroundColor: backgroundColor,
+                blurStyle: blurStyle,
+                isModal: isModal
+            )
+        }
+    }
 
     func dismissAlertControllers(animated: Bool = true) {
         mainQueue.async {
@@ -182,6 +224,12 @@ public extension UIApplication {
         return viewControllers.compactMap(\.view) +
             viewControllers.compactMap(\.view).map(\.traversedSubviews).reduce([], +) +
             viewControllers.compactMap(\.view).map(\.traversedSuperviews).reduce([], +)
+    }
+
+    func removeOverlay(animated: Bool = true) {
+        mainQueue.async {
+            self.mainWindow?.removeOverlay(animated: animated)
+        }
     }
 
     func resignFirstResponders(in view: UIView? = nil) {

@@ -11,6 +11,32 @@ import UIKit
 
 public extension CoreKit {
     struct UI: Sendable {
+        // MARK: - Types
+
+        public struct OverlayActivityIndicatorConfiguration: Sendable {
+            /* MARK: Properties */
+
+            public let color: UIColor
+            public let style: UIActivityIndicatorView.Style
+
+            /* MARK: Computed Properties */
+
+            public static let largeWhite: OverlayActivityIndicatorConfiguration = .init(
+                style: .large,
+                color: .white
+            )
+
+            /* MARK: Init */
+
+            public init(
+                style: UIActivityIndicatorView.Style,
+                color: UIColor
+            ) {
+                self.style = style
+                self.color = color
+            }
+        }
+
         // MARK: - Dependencies
 
         @Dependency(\.mainQueue) private var mainQueue: DispatchQueue
@@ -23,6 +49,32 @@ public extension CoreKit {
         // MARK: - Init
 
         private init() {}
+
+        // MARK: - Full Screen Overlay
+
+        public func addOverlay(
+            alpha: CGFloat = 1,
+            activityIndicator indicatorConfig: OverlayActivityIndicatorConfiguration?,
+            backgroundColor: UIColor = .black,
+            blurStyle: UIBlurEffect.Style? = nil,
+            isModal: Bool = true
+        ) {
+            mainQueue.async {
+                uiApplication.mainWindow?.addOverlay(
+                    alpha: alpha,
+                    activityIndicator: indicatorConfig,
+                    backgroundColor: backgroundColor,
+                    blurStyle: blurStyle,
+                    isModal: isModal
+                )
+            }
+        }
+
+        public func removeOverlay(animated: Bool = true) {
+            mainQueue.async {
+                uiApplication.mainWindow?.removeOverlay(animated: animated)
+            }
+        }
 
         // MARK: - View Controller Presentation
 

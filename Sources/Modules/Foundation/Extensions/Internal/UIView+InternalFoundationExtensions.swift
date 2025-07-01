@@ -18,7 +18,7 @@ extension UIView {
 
     func addOverlay(
         alpha: CGFloat,
-        activityIndicator indicatorConfig: UIApplication.OverlayActivityIndicatorConfiguration?,
+        activityIndicator indicatorConfig: CoreKit.UI.OverlayActivityIndicatorConfiguration?,
         backgroundColor: UIColor,
         blurStyle: UIBlurEffect.Style?,
         isModal: Bool

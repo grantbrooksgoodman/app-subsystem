@@ -20,7 +20,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
     @Dependency(\.coreKit) private var core: CoreKit
     @Dependency(\.timestampDateFormatter) private var dateFormatter: DateFormatter
     @Dependency(\.fileManager) private var fileManager: FileManager
-    @Dependency(\.uiApplication.keyViewController?.frontmostViewController) private var frontmostViewController: UIViewController?
+    @Dependency(\.uiApplication.keyViewController?.leafViewController) private var leafViewController: UIViewController?
     @Dependency(\.jsonEncoder) private var jsonEncoder: JSONEncoder
     @Dependency(\.mailComposer) private var mailComposer: MailComposer
 
@@ -234,8 +234,8 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             "timestamp": dateFormatter.string(from: .now),
         ]
 
-        if let frontmostViewController {
-            sections["view_id"] = String(type(of: frontmostViewController))
+        if let leafViewController {
+            sections["view_id"] = String(type(of: leafViewController))
         }
 
         guard let error else { return attachmentData(sections) }

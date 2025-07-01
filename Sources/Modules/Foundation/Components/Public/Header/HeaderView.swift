@@ -91,9 +91,8 @@ public struct HeaderView: View {
 
     // MARK: - Computed Properties
 
-    private var imageMaxWidth: CGFloat { mainWindowSize.width / Floats.mainWindowSizeWidthDivisor }
+    private var imageMaxWidth: CGFloat { uiApplication.mainScreen.bounds.size.width / Floats.mainWindowSizeWidthDivisor }
     private var isThemed: Bool { attributes.appearance == .themed }
-    private var mainWindowSize: CGSize { uiApplication.mainScreen?.bounds.size ?? UIScreen.main.bounds.size }
 
     // MARK: - Init
 

@@ -36,8 +36,8 @@ final class Breadcrumbs {
         let timeString = dateFormatter.string(from: .now)
 
         var fileName: String!
-        if let frontmostViewController = uiApplication.keyViewController?.frontmostViewController {
-            fileName = "\(build.codeName)_\(String(type(of: frontmostViewController))) @ \(timeString).png"
+        if let leafViewController = uiApplication.keyViewController?.leafViewController {
+            fileName = "\(build.codeName)_\(String(type(of: leafViewController))) @ \(timeString).png"
         } else {
             let fileNamePrefix = "\(build.codeName)_\(String(build.buildNumber))"
             let fileNameSuffix = "\(build.milestone.shortString) | \(build.bundleRevision) @ \(timeString).png"

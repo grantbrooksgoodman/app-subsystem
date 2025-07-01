@@ -46,9 +46,8 @@ public extension UIApplication {
         keyViewController(mainWindow?.rootViewController)
     }
 
-    // TODO: Make non-optional.
-    var mainScreen: UIScreen? {
-        mainWindow?.screen
+    var mainScreen: UIScreen {
+        mainWindow?.screen ?? .main
     }
 
     var mainWindow: UIWindow? {
@@ -67,7 +66,6 @@ public extension UIApplication {
 
     var snapshot: UIImage? {
         #if targetEnvironment(simulator)
-        guard let mainScreen else { return nil }
         let snapshotView = mainScreen.snapshotView(afterScreenUpdates: true)
         snapshotView.bounds = .init(origin: .zero, size: mainScreen.bounds.size)
 

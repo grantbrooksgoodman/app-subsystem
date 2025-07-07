@@ -30,11 +30,11 @@ private struct StatusBarStyleViewModifier: ViewModifier {
     public func body(content: Content) -> some View {
         if restoreOnDisappear {
             content
-                .onAppear { StatusBarStyle.override(preferredStatusBarStyle) }
-                .onDisappear { StatusBarStyle.restore() }
+                .onAppear { StatusBar.overrideStyle(preferredStatusBarStyle) }
+                .onDisappear { StatusBar.restoreStyle() }
         } else {
             content
-                .onAppear { StatusBarStyle.override(preferredStatusBarStyle) }
+                .onAppear { StatusBar.overrideStyle(preferredStatusBarStyle) }
         }
     }
 }

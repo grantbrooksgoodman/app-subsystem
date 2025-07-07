@@ -64,7 +64,10 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
 
         filePaths = paths
         previewItemTitle = title
+
+        StatusBar.overrideStyle(.lightContent)
         coreUI.present(previewController, embedded: embedded)
+
         return nil
     }
 
@@ -89,6 +92,8 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
     // MARK: - QLPreviewControllerDelegate Conformance
 
     public func previewControllerDidDismiss(_ controller: QLPreviewController) {
+        StatusBar.restoreStyle()
+
         _onDismiss?()
         _onDismiss = nil
     }

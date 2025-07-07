@@ -14,10 +14,6 @@ public extension AppSubsystem.Delegates {
     protocol BuildInfoOverlayDotIndicatorColorDelegate {
         var developerModeIndicatorDotColor: Color { get }
     }
-
-    struct DefaultBuildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate {
-        public let developerModeIndicatorDotColor = Color.orange
-    }
 }
 
 // swiftlint:enable type_name

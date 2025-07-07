@@ -14,7 +14,8 @@ final class RootWindowStatus: ObservableObject {
 
     enum RootView {
         case appContent
-        case expiryOverlay
+        case expiryPage
+        case forcedUpdateModalPage
     }
 
     // MARK: - Dependencies
@@ -36,7 +37,7 @@ final class RootWindowStatus: ObservableObject {
     private init() {
         if build.isTimebombActive,
            build.expiryDate.comparator <= Date.now.comparator {
-            rootView = .expiryOverlay
+            rootView = .expiryPage
         }
     }
 }
@@ -58,8 +59,15 @@ struct RootWindow: View {
 
     var body: some View {
         switch status.rootView {
-        case .appContent: AnyView(view)
-        case .expiryOverlay: ExpiryOverlayView()
+        case .appContent: view.eraseToAnyView()
+        case .expiryPage: ExpiryPageView()
+        case .forcedUpdateModalPage:
+            ForcedUpdateModalPageView(
+                .init(
+                    initialState: .init(),
+                    reducer: ForcedUpdateModalPageReducer()
+                )
+            )
         }
     }
 }

@@ -50,9 +50,9 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
         // Root overlay window
 
-        let rootOverlayWindow: UIWindow = UIApplication.iOS19IsAvailable ? UIWindow() : PassthroughWindow(windowScene: windowScene)
-        if UIApplication.iOS19IsAvailable {
-            rootOverlayWindow.frame = .zero
+        let rootOverlayWindow: UIWindow = UIApplication.iOS27IsAvailable ? UIWindow() : PassthroughWindow(windowScene: windowScene)
+        if UIApplication.iOS27IsAvailable {
+            rootOverlayWindow.frame = RootOverlayView.fallbackFrame
         }
 
         rootOverlayWindow.rootViewController = UIHostingController(
@@ -86,6 +86,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
         rootWindow.addSubview(statusBarWindow)
 
+        UIViewController.swizzleUIAlertControllerDismiss
         guard buildMilestone != .generalRelease else { return rootWindow }
 
         // Tap gesture recognizer
@@ -94,7 +95,6 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         tapGesture.delegate = self
         rootWindow.addGestureRecognizer(tapGesture)
 
-        UIViewController.swizzleUIAlertControllerDismiss
         return rootWindow
     }
 

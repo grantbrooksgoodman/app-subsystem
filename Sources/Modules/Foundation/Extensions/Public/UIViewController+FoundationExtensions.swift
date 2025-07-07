@@ -13,7 +13,7 @@ public extension UIViewController {
     // MARK: - Properties
 
     /// Recursively resolves the last child view controller among its `children` in the view controller hierarchy.
-    var frontmostViewController: UIViewController {
+    var leafViewController: UIViewController {
         descendants(type: UIViewController.self).last ?? self
     }
 

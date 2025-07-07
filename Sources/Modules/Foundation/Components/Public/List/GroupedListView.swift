@@ -72,18 +72,19 @@ public struct GroupedListView: View {
     private var listView: some View {
         VStack(spacing: 0) {
             ForEach(0 ..< rows.count, id: \.self) { index in
-                if index == rows.count - 1 {
-                    ListRowView(rows[index])
-                } else {
-                    ListRowView(rows[index])
-                        .overlay(
-                            Divider().padding(
-                                .leading,
-                                rows[index].imageView == nil ? Floats.dividerLeadingPadding : Floats.dividerAlternateLeadingPadding
-                            ),
-                            alignment: .bottom
-                        )
-                }
+                ListRowView(rows[index])
+                    .if(index != rows.count - 1) {
+                        $0
+                            .overlay(
+                                Divider()
+                                    .padding(
+                                        .leading,
+                                        rows[index].imageView == nil ? Floats.dividerLeadingPadding : Floats.dividerAlternateLeadingPadding
+                                    )
+                                    .if(UIApplication.isFullyV26Compatible) { $0.padding(.trailing, Floats.dividerTrailingPadding) },
+                                alignment: .bottom
+                            )
+                    }
             }
         }
         .cornerRadius(Floats.cornerRadius)

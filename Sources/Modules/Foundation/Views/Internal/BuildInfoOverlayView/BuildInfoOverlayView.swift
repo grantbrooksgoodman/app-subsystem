@@ -39,13 +39,14 @@ struct BuildInfoOverlayView: View {
             statsView
             buildInfoButton
         }
+        .if(UIApplication.iOS26IsAvailable && !UIApplication.iOS27IsAvailable) {
+            $0
+                .fixedSize()
+                .background { TouchProxy() }
+        }
         .animation(
             .easeIn.speed(Floats.translucencyAnimationSpeed),
             value: viewModel.shouldUseTranslucentAppearance
-        )
-        .frame(
-            maxWidth: .infinity,
-            alignment: .trailing
         )
         .offset(x: Floats.xOffset, y: viewModel.yOffset)
         .onFirstAppear {

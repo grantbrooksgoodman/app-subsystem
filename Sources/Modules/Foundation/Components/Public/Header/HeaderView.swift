@@ -91,9 +91,8 @@ public struct HeaderView: View {
 
     // MARK: - Computed Properties
 
-    private var imageMaxWidth: CGFloat { mainWindowSize.width / Floats.mainWindowSizeWidthDivisor }
+    private var imageMaxWidth: CGFloat { uiApplication.mainScreen.bounds.size.width / Floats.mainWindowSizeWidthDivisor }
     private var isThemed: Bool { attributes.appearance == .themed }
-    private var mainWindowSize: CGSize { uiApplication.mainScreen?.bounds.size ?? UIScreen.main.bounds.size }
 
     // MARK: - Init
 
@@ -178,35 +177,27 @@ public struct HeaderView: View {
     // MARK: - Center Image
 
     private func centerImage(for attributes: ImageAttributes) -> some View {
-        let image = attributes.image
+        attributes.image
             .renderingMode(.template)
             .resizable()
             .foregroundStyle(isThemed ? .navigationBarTitle : attributes.foregroundColor)
-
-        if let size = attributes.size {
-            return AnyView(
-                image
-                    .frame(
-                        width: size.width > imageMaxWidth ? nil : size.width,
-                        height: size.height > Floats.imageMaxHeight ? nil : size.height
-                    )
-                    .frame(
-                        maxWidth: imageMaxWidth,
-                        maxHeight: Floats.imageMaxHeight,
-                        alignment: .center
-                    )
+            .ifLet(
+                attributes.size,
+                { image, size in
+                    image
+                        .frame(
+                            width: size.width > imageMaxWidth ? nil : size.width,
+                            height: size.height > Floats.imageMaxHeight ? nil : size.height
+                        )
+                },
+                else: { $0.scaledToFit() }
             )
-        }
-
-        return AnyView(
-            image
-                .scaledToFit()
-                .frame(
-                    maxWidth: imageMaxWidth,
-                    maxHeight: Floats.imageMaxHeight,
-                    alignment: .center
-                )
-        )
+            .frame(
+                maxWidth: imageMaxWidth,
+                maxHeight: Floats.imageMaxHeight,
+                alignment: .center
+            )
+            .eraseToAnyView() // NIT: Carried over; unsure of efficacy as code compiles without this line.
     }
 
     // MARK: - Center Text
@@ -245,31 +236,23 @@ public struct HeaderView: View {
                 Button {
                     attributes.action()
                 } label: {
-                    let image = attributes.image.image
+                    attributes.image.image
                         .resizable()
                         .scaledToFit()
                         .fontWeight(attributes.image.weight)
                         .foregroundStyle(isThemed ? (attributes.isEnabled ? .accent : .disabled) : attributes.image.foregroundColor)
-
-                    if let size = attributes.image.size {
-                        image
-                            .frame(
-                                width: size.width > imageMaxWidth ? nil : size.width,
-                                height: size.height > Floats.imageMaxHeight ? nil : size.height
-                            )
-                            .frame(
-                                maxWidth: imageMaxWidth,
-                                maxHeight: Floats.imageMaxHeight,
-                                alignment: alignment == .left ? .leading : .trailing
-                            )
-                    } else {
-                        image
-                            .frame(
-                                maxWidth: imageMaxWidth,
-                                maxHeight: Floats.imageMaxHeight,
-                                alignment: alignment == .left ? .leading : .trailing
-                            )
-                    }
+                        .ifLet(attributes.image.size) { image, size in
+                            image
+                                .frame(
+                                    width: size.width > imageMaxWidth ? nil : size.width,
+                                    height: size.height > Floats.imageMaxHeight ? nil : size.height
+                                )
+                        }
+                        .frame(
+                            maxWidth: imageMaxWidth,
+                            maxHeight: Floats.imageMaxHeight,
+                            alignment: alignment == .left ? .leading : .trailing
+                        )
                 }
                 .disabled(!attributes.isEnabled)
 

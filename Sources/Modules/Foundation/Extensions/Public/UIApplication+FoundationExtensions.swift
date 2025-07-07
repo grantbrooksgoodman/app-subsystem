@@ -20,16 +20,34 @@ public extension UIApplication {
         mainWindow?.overrideUserInterfaceStyle
     }
 
+    static var iOS26IsAvailable: Bool {
+        if #available(iOS 26, *) { return true }
+        return false
+    }
+
+    static var iOS27IsAvailable: Bool {
+        if #available(iOS 27, *) { return true }
+        return false
+    }
+
+    static var isFullyV26Compatible: Bool {
+        UIApplication.iOS26IsAvailable && UIApplication.isCompiledForV26OrLater
+    }
+
     var isPresentingAlertController: Bool {
         presentedViewControllers.contains(where: { $0 is UIAlertController })
+    }
+
+    var isPresentingSheet: Bool {
+        presentedViewControllers.contains(where: { $0.activePresentationController is UISheetPresentationController })
     }
 
     var keyViewController: UIViewController? {
         keyViewController(mainWindow?.rootViewController)
     }
 
-    var mainScreen: UIScreen? {
-        mainWindow?.screen
+    var mainScreen: UIScreen {
+        mainWindow?.screen ?? .main
     }
 
     var mainWindow: UIWindow? {
@@ -48,7 +66,6 @@ public extension UIApplication {
 
     var snapshot: UIImage? {
         #if targetEnvironment(simulator)
-        guard let mainScreen else { return nil }
         let snapshotView = mainScreen.snapshotView(afterScreenUpdates: true)
         snapshotView.bounds = .init(origin: .zero, size: mainScreen.bounds.size)
 
@@ -87,6 +104,15 @@ public extension UIApplication {
             guard self.isPresentingAlertController else { return }
             self.presentedViewControllers
                 .compactMap { $0 as? UIAlertController }
+                .forEach { $0.dismiss(animated: animated) }
+        }
+    }
+
+    func dismissSheets(animated: Bool = true) {
+        mainQueue.async {
+            guard self.isPresentingSheet else { return }
+            self.presentedViewControllers
+                .filter { $0.activePresentationController is UISheetPresentationController }
                 .forEach { $0.dismiss(animated: animated) }
         }
     }
@@ -163,6 +189,14 @@ public extension UIApplication {
             guard let firstResponder = self.firstResponder(in: view) else { return }
             firstResponder.resignFirstResponder()
         }
+    }
+
+    private static var isCompiledForV26OrLater: Bool {
+        #if compiler(>=6.2)
+        return true
+        #else
+        return false
+        #endif
     }
 
     private func keyViewController(_ baseVC: UIViewController?) -> UIViewController? {

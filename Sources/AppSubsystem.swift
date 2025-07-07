@@ -129,10 +129,11 @@ public extension AppSubsystem {
     final class Delegates {
         /* MARK: Properties */
 
-        public private(set) var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate = DefaultBuildInfoOverlayDotIndicatorColorDelegate()
+        public private(set) var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate?
         public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
         public private(set) var devModeAppActions: DevModeAppActionDelegate?
         public private(set) var exceptionMetadata: ExceptionMetadataDelegate?
+        public private(set) var forcedUpdateModal: ForcedUpdateModalDelegate?
         public private(set) var localizedStrings: LocalizedStringsDelegate = DefaultLocalizedStringsDelegate()
         public private(set) var loggerDomainSubscription: LoggerDomainSubscriptionDelegate = DefaultLoggerDomainSubscriptionDelegate()
         public private(set) var permanentUserDefaultsKeys: PermanentUserDefaultsKeyDelegate?
@@ -152,6 +153,7 @@ public extension AppSubsystem {
             cacheDomainListDelegate: CacheDomainListDelegate? = nil,
             devModeAppActionDelegate: DevModeAppActionDelegate? = nil,
             exceptionMetadataDelegate: ExceptionMetadataDelegate? = nil,
+            forcedUpdateModalDelegate: ForcedUpdateModalDelegate? = nil,
             localizedStringsDelegate: LocalizedStringsDelegate? = nil,
             loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate? = nil,
             permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate? = nil,
@@ -161,6 +163,7 @@ public extension AppSubsystem {
                 cacheDomainListDelegate != nil ||
                 devModeAppActionDelegate != nil ||
                 exceptionMetadataDelegate != nil ||
+                forcedUpdateModalDelegate != nil ||
                 localizedStringsDelegate != nil ||
                 loggerDomainSubscriptionDelegate != nil ||
                 permanentUserDefaultsKeyDelegate != nil ||
@@ -175,6 +178,7 @@ public extension AppSubsystem {
             if let cacheDomainListDelegate { cacheDomainList = cacheDomainListDelegate }
             if let devModeAppActionDelegate { devModeAppActions = devModeAppActionDelegate }
             if let exceptionMetadataDelegate { exceptionMetadata = exceptionMetadataDelegate }
+            if let forcedUpdateModalDelegate { forcedUpdateModal = forcedUpdateModalDelegate }
             if let localizedStringsDelegate { localizedStrings = localizedStringsDelegate }
             if let loggerDomainSubscriptionDelegate { loggerDomainSubscription = loggerDomainSubscriptionDelegate }
             if let permanentUserDefaultsKeyDelegate { permanentUserDefaultsKeys = permanentUserDefaultsKeyDelegate }
@@ -184,35 +188,39 @@ public extension AppSubsystem {
         }
 
         public func registerBuildInfoOverlayDotIndicatorColorDelegate(_ buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate) {
-            buildInfoOverlayDotIndicatorColor = buildInfoOverlayDotIndicatorColorDelegate
+            register(buildInfoOverlayDotIndicatorColorDelegate: buildInfoOverlayDotIndicatorColorDelegate)
         }
 
         public func registerCacheDomainListDelegate(_ cacheDomainListDelegate: CacheDomainListDelegate) {
-            cacheDomainList = cacheDomainListDelegate
+            register(cacheDomainListDelegate: cacheDomainListDelegate)
         }
 
         public func registerDevModeAppActionDelegate(_ devModeAppActionDelegate: DevModeAppActionDelegate) {
-            devModeAppActions = devModeAppActionDelegate
+            register(devModeAppActionDelegate: devModeAppActionDelegate)
         }
 
         public func registerExceptionMetadataDelegate(_ exceptionMetadataDelegate: ExceptionMetadataDelegate) {
-            exceptionMetadata = exceptionMetadataDelegate
+            register(exceptionMetadataDelegate: exceptionMetadataDelegate)
+        }
+
+        public func registerForcedUpdateModalDelegate(_ forcedUpdateModalDelegate: ForcedUpdateModalDelegate) {
+            register(forcedUpdateModalDelegate: forcedUpdateModalDelegate)
         }
 
         public func registerLocalizedStringsDelegate(_ localizedStringsDelegate: LocalizedStringsDelegate) {
-            localizedStrings = localizedStringsDelegate
+            register(localizedStringsDelegate: localizedStringsDelegate)
         }
 
         public func registerLoggerDomainSubscriptionDelegate(_ loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate) {
-            loggerDomainSubscription = loggerDomainSubscriptionDelegate
+            register(loggerDomainSubscriptionDelegate: loggerDomainSubscriptionDelegate)
         }
 
         public func registerPermanentUserDefaultsKeyDelegate(_ permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate) {
-            permanentUserDefaultsKeys = permanentUserDefaultsKeyDelegate
+            register(permanentUserDefaultsKeyDelegate: permanentUserDefaultsKeyDelegate)
         }
 
         public func registerUIThemeListDelegate(_ uiThemeListDelegate: UIThemeListDelegate) {
-            uiThemeList = uiThemeListDelegate
+            register(uiThemeListDelegate: uiThemeListDelegate)
         }
     }
 }

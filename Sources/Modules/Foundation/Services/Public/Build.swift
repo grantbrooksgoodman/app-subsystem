@@ -6,6 +6,7 @@
 //
 
 /* Native */
+import Combine
 import Foundation
 
 public final class Build {
@@ -58,6 +59,8 @@ public final class Build {
     public let loggingEnabled: Bool
     public let milestone: Milestone
 
+    private var cancellables = Set<AnyCancellable>()
+
     // MARK: - Computed Properties
 
     // Bool
@@ -100,11 +103,15 @@ public final class Build {
         self.finalName = finalName
         self.loggingEnabled = loggingEnabled
         self.milestone = milestone
+
+        Task.background { @MainActor in
+            listenForForcedUpdateStatusChanges()
+        }
     }
 
     // MARK: - Setters
 
-    public func setIsDeveloperModeEnabled(_ isDeveloperModeEnabled: Bool) {
+    func setIsDeveloperModeEnabled(_ isDeveloperModeEnabled: Bool) {
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         if !isDeveloperModeEnabled,
            let hidesBuildInfoOverlay,
@@ -117,7 +124,7 @@ public final class Build {
         setIsTimebombActive(isDeveloperModeEnabled ? isTimebombActive : milestone == .generalRelease ? false : true)
     }
 
-    public func setIsTimebombActive(_ isTimebombActive: Bool) {
+    func setIsTimebombActive(_ isTimebombActive: Bool) {
         @Persistent(.isTimebombActive) var persistedValue: Bool?
         persistedValue = isTimebombActive
     }
@@ -130,10 +137,7 @@ public final class Build {
 
     private func getBuildDateUnixDouble() -> TimeInterval {
         guard let cfBuildDate = infoDictionary["CFBuildDate"] as? String,
-              cfBuildDate != "1183100400" else {
-            return floor(Date.now.timeIntervalSince1970)
-        }
-
+              cfBuildDate != "1183100400" else { return floor(Date.now.timeIntervalSince1970) }
         return .init(cfBuildDate) ?? 0
     }
 
@@ -170,10 +174,20 @@ public final class Build {
 
         if revisionMilestone >= alphabet.count {
             var remainder = revisionMilestone
-            while remainder > alphabet.count {
-                remainder /= alphabet.count
+            var revisionLetters = "Z"
+
+            while remainder >= alphabet.count {
+                remainder -= alphabet.count
+                guard remainder < alphabet.count else {
+                    revisionLetters += "Z"
+                    continue
+                }
+
+                revisionLetters += letterRepresentation(remainder)
             }
-            return letterRepresentation(remainder)
+
+            let zCount = revisionLetters.components.count(of: "Z")
+            return zCount > 3 ? "Z\(zCount)\(revisionLetters.filter { $0 != "Z" })" : revisionLetters
         } else {
             return letterRepresentation(revisionMilestone)
         }
@@ -244,59 +258,83 @@ public final class Build {
     }
 
     private func getProjectID() -> String {
+        // Parse first compile date
+
         let firstCompileDate = projectIDDateFormatter.date(from: dmyFirstCompileDateString) ?? projectIDDateFormatter.date(from: "29062007")!
 
-        let codeName = codeName.lowercasedTrimmingWhitespaceAndNewlines.isEmpty ? "Template" : codeName.lowercasedTrimmingWhitespaceAndNewlines
-        let firstLetterPosition = String(codeName.first!).alphabeticalPosition ?? 13
-        let lastLetterPosition = String(codeName.last!).alphabeticalPosition ?? 13
+        // Normalize code name
+
+        let codeName = codeName.lowercasedTrimmingWhitespaceAndNewlines
+        let rawName = codeName.isEmpty ? "template" : codeName
+
+        // Get code name letter positions
+
+        let firstLetterPosition = rawName.components.first?.alphabeticalPosition ?? 13
+        let lastLetterPosition = rawName.components.last?.alphabeticalPosition ?? 13
+        let middleLetter = String(rawName.components.itemAt(
+            rawName.distance(
+                to: rawName.index(
+                    rawName.startIndex,
+                    offsetBy: rawName.count / 2
+                )
+            )
+        ) ?? "A")
+        let middleLetterPosition = middleLetter.alphabeticalPosition ?? 13
+
+        // Calculate numeric ID
 
         let dateComponents = calendar.dateComponents(
             [.day, .month, .year],
             from: firstCompileDate
         )
 
-        let offset = Int((Double(codeName.count) / 2).rounded(.down))
-        let middleLetterIndex = codeName.index(codeName.startIndex, offsetBy: offset)
-        let middleLetter = String(codeName[middleLetterIndex])
-        let middleLetterPosition = middleLetter.alphabeticalPosition ?? 13
+        let dateProduct = (dateComponents.day! * dateComponents.month! * dateComponents.year!)
+        let letterProduct = firstLetterPosition * middleLetterPosition * lastLetterPosition
+        let numericID = String(letterProduct * dateProduct).digits
 
-        let multipliedLetterPositions = firstLetterPosition * middleLetterPosition * lastLetterPosition
-        let multipliedDateComponents = dateComponents.day! * dateComponents.month! * dateComponents.year!
-        let multipliedConstants = String(multipliedLetterPositions * multipliedDateComponents).map { String($0) }
+        // Build alphanumeric ID
 
-        var projectIDComponents = [String]()
-
-        for integerString in multipliedConstants {
-            projectIDComponents.append(integerString)
-
-            guard let integer = Int(integerString) else { continue }
-            let cipheredMiddleLetter = middleLetter.ciphered(by: integer).uppercased()
-            projectIDComponents.append(cipheredMiddleLetter)
+        var alphanumericIDComponents = [String]()
+        numericID.compactMap { Int(String($0)) }.forEach { digit in
+            alphanumericIDComponents.append(String(digit))
+            alphanumericIDComponents.append(middleLetter.ciphered(by: digit).uppercased())
         }
 
-        projectIDComponents = Array(NSOrderedSet(array: projectIDComponents)) as? [String] ?? []
+        alphanumericIDComponents = Array(alphanumericIDComponents.unique.prefix(8))
 
-        if projectIDComponents.count > 8 {
-            while projectIDComponents.count > 8 {
-                projectIDComponents.removeLast()
-            }
-        } else if projectIDComponents.count < 8 {
-            var currentLetter = middleLetter
+        // If ID is too short, continuously add ciphered middle letter until 8 characters
 
-            while projectIDComponents.count < 8 {
-                guard let position = currentLetter.alphabeticalPosition else { continue }
-                currentLetter = currentLetter.ciphered(by: position)
+        var currentLetter = middleLetter
+        while alphanumericIDComponents.count < 8 {
+            guard let position = currentLetter.alphabeticalPosition else { break }
+            currentLetter = currentLetter.ciphered(by: position)
 
-                guard !projectIDComponents.contains(currentLetter) else { continue }
-                projectIDComponents.append(currentLetter)
-            }
+            guard !alphanumericIDComponents.contains(currentLetter) else { continue }
+            alphanumericIDComponents.append(currentLetter)
         }
 
-        return (Array(NSOrderedSet(array: projectIDComponents)) as? [String] ?? []).joined()
+        return alphanumericIDComponents.joined()
     }
 
     private func getRevisionBuildNumber() -> Int {
         buildNumber - appStoreBuildNumber < 0 ? 0 : buildNumber - appStoreBuildNumber
+    }
+
+    // MARK: - Forced Update Modal Listener
+
+    @MainActor
+    private func listenForForcedUpdateStatusChanges() {
+        guard let forcedUpdateModalDelegate = AppSubsystem.delegates.forcedUpdateModal else { return }
+        forcedUpdateModalDelegate
+            .forcedUpdateRequiredPublisher
+            .filter { $0 } // Only pass through `true`
+            .prefix(1) // Automatically cancel after the first `true`
+            .receive(on: DispatchQueue.main)
+            .sink { _ in
+                BuildExpiryAlert.shared.dismiss()
+                RootWindowStatus.shared.rootView = .forcedUpdateModalPage
+            }
+            .store(in: &cancellables)
     }
 }
 

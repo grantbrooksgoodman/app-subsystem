@@ -13,21 +13,32 @@ import UIKit
 import AlertKit
 
 final class BuildExpiryAlert {
+    // MARK: - Dependencies
+
+    @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
+    @Dependency(\.build) private var build: Build
+    @Dependency(\.coreKit) private var core: CoreKit
+    @Dependency(\.uiApplication) private var uiApplication: UIApplication
+
     // MARK: - Properties
 
     // String
-    private static var expiryAlertMessage = ""
-    private static var incorrectOverrideCodeHUDText = "Incorrect Override Code"
-    private static var timeExpiredAlertMessage = "The application will now exit."
-    private static var timeExpiredAlertTitle = "Time Expired"
+    private var expiryAlertMessage = ""
+    private var incorrectOverrideCodeHUDText = "Incorrect Override Code"
+    private var timeExpiredAlertMessage = "The application will now exit."
+    private var timeExpiredAlertTitle = "Time Expired"
 
     // Other
-    private static var exitTimer: Timer?
-    private static var remainingSeconds = 30
+    public static let shared = BuildExpiryAlert()
+
+    private var exitTimer: Timer?
+    private var remainingSeconds = 30
+
+    private let oldTranslationTimeoutConfig: AlertKit.TranslationTimeoutConfig
 
     // MARK: - Computed Properties
 
-    private static var messageAttributes: AttributedStringConfig {
+    private var messageAttributes: AttributedStringConfig {
         let messageComponents = expiryAlertMessage.components(separatedBy: ":")
         let attributeRange = messageComponents[1 ... messageComponents.count - 1].joined(separator: ":")
         return .init(
@@ -43,17 +54,15 @@ final class BuildExpiryAlert {
 
     // MARK: - Init
 
-    private init() {}
+    private init() {
+        oldTranslationTimeoutConfig = Dependency(\.alertKitConfig.translationTimeoutConfig).wrappedValue
+    }
 
-    // MARK: - Present
+    // MARK: - Present / Dismiss
 
     @MainActor
-    static func present() async {
-        @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-        @Dependency(\.build) var build: Build
-        @Dependency(\.coreKit) var core: CoreKit
-
-        let oldTranslationTimeoutConfig = alertKitConfig.translationTimeoutConfig
+    func present() async {
+        guard RootWindowStatus.shared.rootView != .forcedUpdateModalPage else { return }
         alertKitConfig.overrideTranslationTimeoutConfig(
             .init(.seconds(60), returnsInputsOnFailure: true)
         )
@@ -113,7 +122,6 @@ final class BuildExpiryAlert {
 
             @MainActor
             func disableAction() {
-                @Dependency(\.uiApplication) var uiApplication: UIApplication
                 guard uiApplication.isPresentingAlertController else {
                     return core.gcd.after(.milliseconds(100)) { disableAction() }
                 }
@@ -137,21 +145,22 @@ final class BuildExpiryAlert {
                 return
             }
 
-            exitTimer?.invalidate()
-            exitTimer = nil
-
-            alertKitConfig.overrideTranslationTimeoutConfig(oldTranslationTimeoutConfig)
-            RootWindowStatus.shared.buildExpiryOverrideTriggered = true
+            dismiss()
         }
+    }
+
+    func dismiss() {
+        exitTimer?.invalidate()
+        exitTimer = nil
+
+        alertKitConfig.overrideTranslationTimeoutConfig(oldTranslationTimeoutConfig)
+        RootWindowStatus.shared.buildExpiryOverrideTriggered = true
     }
 
     // MARK: - Auxiliary
 
     @objc
-    private static func decrementSecond() {
-        @Dependency(\.coreKit) var core: CoreKit
-        @Dependency(\.uiApplication) var uiApplication: UIApplication
-
+    private func decrementSecond() {
         remainingSeconds -= 1
 
         guard remainingSeconds < 0 else {
@@ -178,12 +187,9 @@ final class BuildExpiryAlert {
         core.gcd.after(.seconds(5)) { fatalError("Evaluation period ended") }
     }
 
-    private static func setTimer() {
-        @Dependency(\.coreKit.gcd) var coreGCD: CoreKit.GCD
-        @Dependency(\.uiApplication) var uiApplication: UIApplication
-
+    private func setTimer() {
         guard uiApplication.isPresentingAlertController else {
-            return coreGCD.after(.milliseconds(100)) { setTimer() }
+            return core.gcd.after(.milliseconds(100)) { self.setTimer() }
         }
 
         guard let exitTimer = exitTimer,

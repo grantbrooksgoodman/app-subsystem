@@ -1,5 +1,5 @@
 //
-//  RootOverlayObserver.swift
+//  RootOverlayViewObserver.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -9,7 +9,7 @@
 import Foundation
 import SwiftUI
 
-struct RootOverlayObserver: Observer {
+struct RootOverlayViewObserver: Observer {
     // MARK: - Type Aliases
 
     typealias R = RootOverlayReducer
@@ -34,7 +34,7 @@ struct RootOverlayObserver: Observer {
     // MARK: - Observer Conformance
 
     func linkObservables() {
-        Observers.link(RootOverlayObserver.self, with: observedValues)
+        Observers.link(RootOverlayViewObserver.self, with: observedValues)
     }
 
     func onChange(of observable: Observable<Any>) {

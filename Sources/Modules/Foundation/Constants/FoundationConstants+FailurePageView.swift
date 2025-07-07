@@ -13,16 +13,16 @@ import SwiftUI
 
 public extension FoundationConstants.CGFloats {
     enum FailureView {
-        public static let buttonLabelFontSize: CGFloat = 14
+        public static let exceptionLabelBottomPadding: CGFloat = 10
+        public static let exceptionLabelFontSize: CGFloat = 22.5
+        public static let exceptionLabelHorizontalPadding: CGFloat = 20
 
-        public static let exceptionLabelHorizontalPadding: CGFloat = 2
-        public static let exceptionLabelVerticalPadding: CGFloat = 5
+        public static let imageBottomPadding: CGFloat = 10
+        public static let imageFrameMaxHeight: CGFloat = 120
+        public static let imageFrameMaxWidth: CGFloat = 120
 
-        public static let imageBottomPadding: CGFloat = 5
-        public static let imageFrameMaxHeight: CGFloat = 60
-        public static let imageFrameMaxWidth: CGFloat = 60
-
-        public static let reportBugButtonTopPadding: CGFloat = 5
+        public static let retryButtonBottomPadding: CGFloat = 5
+        public static let retryButtonLabelFontSize: CGFloat = 15
     }
 }
 

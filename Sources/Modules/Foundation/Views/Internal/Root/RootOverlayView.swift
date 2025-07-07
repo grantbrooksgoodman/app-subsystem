@@ -17,8 +17,38 @@ struct RootOverlayView: View {
 
     // MARK: - Properties
 
-    @StateObject private var observer: ViewObserver<RootOverlayObserver>
+    @StateObject private var observer: ViewObserver<RootOverlayViewObserver>
     @StateObject private var viewModel: ViewModel<RootOverlayReducer>
+
+    // MARK: - Computed Properties
+
+    public static var fallbackFrame: CGRect {
+        @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
+        guard let mainWindow else { return .zero }
+
+        let size: CGSize = .init(
+            width: Floats.fallbackFrameWidth,
+            height: Floats.fallbackFrameHeight
+        )
+
+        var xOrigin = mainWindow.bounds.maxX - (size.width - Floats.fallbackFrameOperand)
+        var yOrigin = mainWindow.bounds.maxY - (size.height + Floats.fallbackFrameOperand)
+
+        if mainWindow.safeAreaInsets.bottom > 0 {
+            xOrigin = mainWindow.bounds.maxX - max(size.width + mainWindow.safeAreaInsets.right, Floats.fallbackFrameWidth)
+            yOrigin = mainWindow.bounds.maxY - max(
+                size.height + max(mainWindow.safeAreaInsets.bottom, Floats.fallbackFrameYOriginSafeAreaInsetsOperand),
+                Floats.fallbackFrameYOriginMaxYOperand
+            )
+        }
+
+        return .init(
+            x: xOrigin,
+            y: yOrigin,
+            width: size.width,
+            height: size.height
+        )
+    }
 
     // MARK: - Bindings
 

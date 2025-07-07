@@ -36,8 +36,8 @@ final class Breadcrumbs {
         let timeString = dateFormatter.string(from: .now)
 
         var fileName: String!
-        if let frontmostViewController = uiApplication.keyViewController?.frontmostViewController {
-            fileName = "\(build.codeName)_\(String(type(of: frontmostViewController))) @ \(timeString).png"
+        if let leafViewController = uiApplication.keyViewController?.leafViewController {
+            fileName = "\(build.codeName)_\(String(type(of: leafViewController))) @ \(timeString).png"
         } else {
             let fileNamePrefix = "\(build.codeName)_\(String(build.buildNumber))"
             let fileNameSuffix = "\(build.milestone.shortString) | \(build.bundleRevision) @ \(timeString).png"
@@ -99,9 +99,15 @@ final class Breadcrumbs {
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
         if uniqueViewsOnly {
-            guard let frontmostViewController = uiApplication.keyViewController?.frontmostViewController,
-                  !fileHistory.contains(String(type(of: frontmostViewController))) else { return }
-            fileHistory.append(String(type(of: frontmostViewController)))
+            let viewHierarchyID = uiApplication
+                .presentedViews
+                .map { String(type(of: $0)) }
+                .sorted()
+                .joined()
+                .encodedHash
+
+            guard !fileHistory.contains(viewHierarchyID) else { return }
+            fileHistory.append(viewHierarchyID)
             saveImage()
         } else {
             saveImage()

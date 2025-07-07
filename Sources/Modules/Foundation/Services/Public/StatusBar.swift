@@ -1,5 +1,5 @@
 //
-//  StatusBarStyle.swift
+//  StatusBar.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -9,33 +9,46 @@
 import Foundation
 import UIKit
 
-public enum StatusBarStyle {
+public enum StatusBar {
     // MARK: - Properties
 
-    private static var statusBarViewController: StatusBarViewController? { statusBarWindow?.rootViewController as? StatusBarViewController }
-    private static var statusBarWindow: UIWindow? {
+    private static var statusBarViewController: StatusBarViewController? {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         @Dependency(\.uiApplication.windows) var windows: [UIWindow]?
-        return windows?.first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") })
+
+        return (windows?
+            .first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") }))?
+                    .rootViewController as? StatusBarViewController
     }
 
-    // MARK: - Override
+    // MARK: - Override Style
 
-    public static func override(_ style: UIStatusBarStyle) {
+    public static func overrideStyle(_ style: UIStatusBarStyle) {
         @Dependency(\.mainQueue) var mainQueue: DispatchQueue
         mainQueue.async { statusBarViewController?.statusBarStyle = style }
     }
 
-    // MARK: - Restore
+    // MARK: - Restore Style
 
-    public static func restore() {
+    public static func restoreStyle() {
         @Dependency(\.mainQueue) var mainQueue: DispatchQueue
         mainQueue.async { statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent }
+    }
+
+    // MARK: - Set Is Hidden
+
+    public static func setIsHidden(_ isHidden: Bool) {
+        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
+        mainQueue.async { statusBarViewController?.isStatusBarHidden = isHidden }
     }
 }
 
 final class StatusBarViewController: UIViewController {
     // MARK: - Properties
+
+    public var isStatusBarHidden: Bool = false {
+        didSet { setNeedsStatusBarAppearanceUpdate() }
+    }
 
     public var statusBarStyle: UIStatusBarStyle = .default {
         didSet { setNeedsStatusBarAppearanceUpdate() }
@@ -44,6 +57,7 @@ final class StatusBarViewController: UIViewController {
     // MARK: - Computed Properties
 
     override public var preferredStatusBarStyle: UIStatusBarStyle { statusBarStyle }
+    override public var prefersStatusBarHidden: Bool { isStatusBarHidden }
 
     // MARK: - Init
 

@@ -79,7 +79,7 @@ struct RootOverlayReducer: Reducer {
         switch action {
         case .viewAppeared:
             rootWindowService.startRaisingWindow()
-            guard UIApplication.iOS19IsAvailable else { return .none }
+            guard UIApplication.iOS27IsAvailable else { return .none }
             rootWindowService.addKeyboardAppearanceObservers()
 
         case .didShakeDevice:

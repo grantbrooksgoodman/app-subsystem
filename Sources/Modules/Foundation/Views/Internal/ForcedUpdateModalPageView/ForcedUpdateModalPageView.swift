@@ -113,7 +113,7 @@ struct ForcedUpdateModalPageView: View {
                 Components.capsuleButton(
                     viewModel.strings.value(for: .installButtonText),
                     font: .systemSemibold,
-                    foregroundColor: Colors.installButtonTextForeground
+                    foregroundColor: .background
                 ) {
                     viewModel.send(.installButtonTapped)
                 }

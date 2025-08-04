@@ -37,20 +37,24 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 
     public var wrappedValue: ObjectType? {
         get {
-            guard let value = value(forKey: key) as? ObjectType else { return nil }
-            log(.getValue, key: key)
-            return value
+            Cache.lock.sync {
+                guard let value = value(forKey: key) as? ObjectType else { return nil }
+                log(.getValue, key: key)
+                return value
+            }
         }
 
         set {
-            guard let newValue else {
-                removeObject(forKey: key)
-                log(.removeValue, key: key)
-                return
-            }
+            Cache.lock.sync {
+                guard let newValue else {
+                    removeObject(forKey: key)
+                    log(.removeValue, key: key)
+                    return
+                }
 
-            set(newValue, forKey: key)
-            log(.setValue, key: key)
+                set(newValue, forKey: key)
+                log(.setValue, key: key)
+            }
         }
     }
 
@@ -67,6 +71,37 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 }
 
 private enum Cache {
+    fileprivate static let lock = NSRecursiveLock()
+
+    @LockIsolated fileprivate static var didReachMemoryCeiling = false {
+        didSet {
+            guard didReachMemoryCeiling != oldValue else { return }
+            @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
+
+            switch didReachMemoryCeiling {
+            case true:
+                Logger.log(
+                    .init(
+                        "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
+                        extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
+                        metadata: [AppSubsystem.self, #file, #function, #line]
+                    ),
+                    domain: .caches
+                )
+
+            case false:
+                Logger.log(
+                    .init(
+                        "Memory footprint sufficiently low; caching re-enabled.",
+                        extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
+                        metadata: [AppSubsystem.self, #file, #function, #line]
+                    ),
+                    domain: .caches
+                )
+            }
+        }
+    }
+
     @LockIsolated fileprivate static var value: NSCache<NSString, AnyObject> = .init()
 }
 
@@ -81,7 +116,7 @@ extension Cached: Cacheable {
         @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
         let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
         let currentMemoryUsage = appMemoryFootprint ?? 0
-        didReachMemoryCeiling = currentMemoryUsage >= memoryUsageCeiling
+        Cache.didReachMemoryCeiling = currentMemoryUsage >= memoryUsageCeiling
         return currentMemoryUsage < memoryUsageCeiling
     }
 
@@ -92,47 +127,24 @@ extension Cached: Cacheable {
     }
 
     public func removeObject(forKey key: KeyType) {
-        guard let keyString = key.rawValue as? NSString else { return }
-        Cache.value.removeObject(forKey: keyString)
+        Cache.lock.sync {
+            guard let keyString = key.rawValue as? NSString else { return }
+            Cache.value.removeObject(forKey: keyString)
+        }
     }
 
     public func set(_ value: Any, forKey key: KeyType) {
-        guard let keyString = key.rawValue as? NSString,
-              canCacheNewValue else { return }
-        Cache.value.setObject(value as AnyObject, forKey: keyString)
+        Cache.lock.sync {
+            guard let keyString = key.rawValue as? NSString,
+                  canCacheNewValue else { return }
+            Cache.value.setObject(value as AnyObject, forKey: keyString)
+        }
     }
 
     public func value(forKey key: KeyType) -> Any? {
-        guard let keyString = key.rawValue as? NSString else { return nil }
-        return Cache.value.object(forKey: keyString)
-    }
-}
-
-private var didReachMemoryCeiling = false {
-    didSet {
-        guard didReachMemoryCeiling != oldValue else { return }
-        @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-
-        switch didReachMemoryCeiling {
-        case true:
-            Logger.log(
-                .init(
-                    "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
-                    extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                    metadata: [AppSubsystem.self, #file, #function, #line]
-                ),
-                domain: .caches
-            )
-
-        case false:
-            Logger.log(
-                .init(
-                    "Memory footprint sufficiently low; caching re-enabled.",
-                    extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                    metadata: [AppSubsystem.self, #file, #function, #line]
-                ),
-                domain: .caches
-            )
+        Cache.lock.sync {
+            guard let keyString = key.rawValue as? NSString else { return nil }
+            return Cache.value.object(forKey: keyString)
         }
     }
 }

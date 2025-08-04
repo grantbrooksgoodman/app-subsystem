@@ -12,6 +12,8 @@ import UIKit
 public extension UIView {
     // MARK: - Properties
 
+    var descriptor: String { .init(type(of: self)) }
+
     /// Recursively traverses the view hierarchy to resolve all associated subviews.
     var traversedSubviews: [UIView] {
         var subviews = [UIView]()

@@ -12,6 +12,8 @@ import UIKit
 public extension UIViewController {
     // MARK: - Properties
 
+    var descriptor: String { .init(type(of: self)) }
+
     /// Recursively resolves the last child view controller among its `children` in the view controller hierarchy.
     var leafViewController: UIViewController {
         descendants(type: UIViewController.self).last ?? self

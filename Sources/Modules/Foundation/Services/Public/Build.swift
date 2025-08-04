@@ -331,7 +331,7 @@ public final class Build {
             .prefix(1) // Automatically cancel after the first `true`
             .receive(on: DispatchQueue.main)
             .sink { _ in
-                BuildExpiryAlert.shared.dismiss()
+                BuildExpiryAlert.shared.dismiss(triggerBuildExpiryOverride: false)
                 RootWindowStatus.shared.rootView = .forcedUpdateModalPage
             }
             .store(in: &cancellables)

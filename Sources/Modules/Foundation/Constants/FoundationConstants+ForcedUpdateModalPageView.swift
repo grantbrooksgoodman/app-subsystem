@@ -39,7 +39,6 @@ public extension FoundationConstants.Colors {
     enum ForcedUpdateModalPageView {
         public static let appIconImageOverlayForeground: Color = .white
         public static let appIconImageOverlaySecondaryForeground: Color = .yellow
-        public static let installButtonTextForeground: Color = .white
         public static let versionLabelTextForeground: Color = .init(uiColor: .systemGray2)
     }
 }

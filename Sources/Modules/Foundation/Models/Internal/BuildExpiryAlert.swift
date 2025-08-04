@@ -149,11 +149,12 @@ final class BuildExpiryAlert {
         }
     }
 
-    func dismiss() {
+    func dismiss(triggerBuildExpiryOverride: Bool = true) {
         exitTimer?.invalidate()
         exitTimer = nil
 
         alertKitConfig.overrideTranslationTimeoutConfig(oldTranslationTimeoutConfig)
+        guard triggerBuildExpiryOverride else { return }
         RootWindowStatus.shared.buildExpiryOverrideTriggered = true
     }
 

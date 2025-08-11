@@ -34,7 +34,6 @@ public enum AppSubsystem {
         loggingEnabled: Bool
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-        @Dependency(\.breadcrumbs) var breadcrumbs: Breadcrumbs
         @Dependency(\.coreKit) var core: CoreKit
         @Dependency(\.translatorConfig) var translatorConfig: Translator.Config
 
@@ -69,14 +68,15 @@ public enum AppSubsystem {
         /* MARK: Breadcrumbs Capture Setup */
 
         @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
-        @Persistent(.breadcrumbsCapturesAllViews) var breadcrumbsCapturesAllViews: Bool?
+        @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
+
         if _build.milestone == .generalRelease {
             breadcrumbsCaptureEnabled = false
-            breadcrumbsCapturesAllViews = nil
+            breadcrumbsCaptureSavesToPhotos = nil
         } else if let breadcrumbsCaptureEnabled,
-                  let breadcrumbsCapturesAllViews,
+                  let breadcrumbsCaptureSavesToPhotos,
                   breadcrumbsCaptureEnabled {
-            breadcrumbs.startCapture(uniqueViewsOnly: !breadcrumbsCapturesAllViews)
+            delegates.breadcrumbsCapture.startCapture(saveToPhotos: breadcrumbsCaptureSavesToPhotos)
         }
 
         /* MARK: Build Info Overlay Setup */
@@ -129,6 +129,7 @@ public extension AppSubsystem {
     final class Delegates {
         /* MARK: Properties */
 
+        public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs()
         public private(set) var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate?
         public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
         public private(set) var devModeAppActions: DevModeAppActionDelegate?
@@ -149,6 +150,7 @@ public extension AppSubsystem {
 
         @discardableResult
         public func register(
+            breadcrumbsCaptureDelegate: BreadcrumbsCaptureDelegate? = nil,
             buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate? = nil,
             cacheDomainListDelegate: CacheDomainListDelegate? = nil,
             devModeAppActionDelegate: DevModeAppActionDelegate? = nil,
@@ -159,7 +161,8 @@ public extension AppSubsystem {
             permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate? = nil,
             uiThemeListDelegate: UIThemeListDelegate? = nil
         ) -> Exception? {
-            guard buildInfoOverlayDotIndicatorColorDelegate != nil ||
+            guard breadcrumbsCaptureDelegate != nil ||
+                buildInfoOverlayDotIndicatorColorDelegate != nil ||
                 cacheDomainListDelegate != nil ||
                 devModeAppActionDelegate != nil ||
                 exceptionMetadataDelegate != nil ||
@@ -174,6 +177,7 @@ public extension AppSubsystem {
                 )
             }
 
+            if let breadcrumbsCaptureDelegate { breadcrumbsCapture = breadcrumbsCaptureDelegate }
             if let buildInfoOverlayDotIndicatorColorDelegate { buildInfoOverlayDotIndicatorColor = buildInfoOverlayDotIndicatorColorDelegate }
             if let cacheDomainListDelegate { cacheDomainList = cacheDomainListDelegate }
             if let devModeAppActionDelegate { devModeAppActions = devModeAppActionDelegate }
@@ -185,6 +189,10 @@ public extension AppSubsystem {
             if let uiThemeListDelegate { uiThemeList = uiThemeListDelegate }
 
             return nil
+        }
+
+        public func registerBreadcrumbsCaptureDelegate(_ breadcrumbsCaptureDelegate: BreadcrumbsCaptureDelegate) {
+            register(breadcrumbsCaptureDelegate: breadcrumbsCapture)
         }
 
         public func registerBuildInfoOverlayDotIndicatorColorDelegate(_ buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate) {

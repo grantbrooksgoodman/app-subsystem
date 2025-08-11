@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-final class Breadcrumbs {
+final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
     // MARK: - Dependencies
 
     @Dependency(\.build) private var build: Build
@@ -20,13 +20,20 @@ final class Breadcrumbs {
 
     // MARK: - Properties
 
-    // Array
-    private var fileHistory = [String]()
-
-    // Bool
     private(set) var isCapturing = false
 
-    private var uniqueViewsOnly = true
+    private var fileHistory: [String] {
+        get {
+            @Persistent(.breadcrumbsFileHistory) var persistedValue: [String]?
+            return persistedValue ?? []
+        }
+
+        set {
+            @Persistent(.breadcrumbsFileHistory) var persistedValue: [String]?
+            persistedValue = newValue
+        }
+    }
+
     private var savesToPhotos = true
 
     // MARK: - Computed Properties
@@ -37,7 +44,7 @@ final class Breadcrumbs {
 
         var fileName: String!
         if let leafViewController = uiApplication.keyViewController?.leafViewController {
-            fileName = "\(build.codeName)_\(String(type(of: leafViewController))) @ \(timeString).png"
+            fileName = "\(build.codeName)_\(leafViewController.descriptor) @ \(timeString).png"
         } else {
             let fileNamePrefix = "\(build.codeName)_\(String(build.buildNumber))"
             let fileNameSuffix = "\(build.milestone.shortString) | \(build.bundleRevision) @ \(timeString).png"
@@ -50,16 +57,12 @@ final class Breadcrumbs {
     // MARK: - Capture
 
     @discardableResult
-    func startCapture(
-        saveToPhotos: Bool = true,
-        uniqueViewsOnly doesExclude: Bool = true
-    ) -> Exception? {
+    func startCapture(saveToPhotos: Bool) -> Exception? {
         guard !isCapturing else {
             return .init("Breadcrumbs capture is already running.", metadata: [self, #file, #function, #line])
         }
 
         savesToPhotos = saveToPhotos
-        uniqueViewsOnly = doesExclude
         isCapturing = true
 
         func continuallyCapture() {
@@ -89,6 +92,7 @@ final class Breadcrumbs {
             guard let image = uiApplication.snapshot,
                   let pngData = image.pngData() else { return }
 
+            let filePath = filePath
             try? pngData.write(to: filePath)
 
             Observables.breadcrumbsDidCapture.trigger()
@@ -98,20 +102,16 @@ final class Breadcrumbs {
 
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
-        if uniqueViewsOnly {
-            let viewHierarchyID = uiApplication
-                .presentedViews
-                .map { String(type(of: $0)) }
-                .sorted()
-                .joined()
-                .encodedHash
+        let viewHierarchyID = uiApplication
+            .presentedViews
+            .map(\.descriptor)
+            .sorted()
+            .joined()
+            .encodedHash
 
-            guard !fileHistory.contains(viewHierarchyID) else { return }
-            fileHistory.append(viewHierarchyID)
-            saveImage()
-        } else {
-            saveImage()
-        }
+        guard !fileHistory.contains(viewHierarchyID) else { return }
+        fileHistory.append(viewHierarchyID)
+        saveImage()
     }
 }
 

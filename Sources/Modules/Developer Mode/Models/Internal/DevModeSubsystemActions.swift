@@ -230,16 +230,14 @@ extension DevModeAction {
         }
 
         private static var toggleBreadcrumbsAction: DevModeAction {
-            @Dependency(\.breadcrumbs) var breadcrumbs: Breadcrumbs
-
             func toggleBreadcrumbs() {
                 Task {
                     @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
                     @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
-                    @Persistent(.breadcrumbsCapturesAllViews) var breadcrumbsCapturesAllViews: Bool?
+                    @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
 
-                    guard !breadcrumbs.isCapturing else {
+                    guard !AppSubsystem.delegates.breadcrumbsCapture.isCapturing else {
                         let confirmed = await AKConfirmationAlert(
                             message: "Stop breadcrumbs capture?",
                             confirmButtonStyle: .destructivePreferred
@@ -248,7 +246,7 @@ extension DevModeAction {
                         guard confirmed else { return }
                         breadcrumbsCaptureEnabled = false
 
-                        if let exception = breadcrumbs.stopCapture() {
+                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.stopCapture() {
                             Logger.log(exception, with: .errorAlert)
                         } else {
                             coreHUD.showSuccess()
@@ -259,8 +257,8 @@ extension DevModeAction {
                         return
                     }
 
-                    func startCapture(_ uniqueViewsOnly: Bool) {
-                        if let exception = breadcrumbs.startCapture(uniqueViewsOnly: uniqueViewsOnly) {
+                    func startCapture(_ saveToPhotos: Bool) {
+                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture(saveToPhotos: saveToPhotos) {
                             Logger.log(exception, with: .errorAlert)
                         } else {
                             coreHUD.showSuccess()
@@ -269,32 +267,36 @@ extension DevModeAction {
                         }
                     }
 
-                    let allViewsAction: AKAction = .init("All Views") {
+                    let documentsDirectoryOnlyAction: AKAction = .init("Documents Directory Only", style: .preferred) {
                         breadcrumbsCaptureEnabled = true
-                        breadcrumbsCapturesAllViews = true
+                        breadcrumbsCaptureSavesToPhotos = false
                         startCapture(false)
                     }
 
-                    let uniqueViewsOnlyAction: AKAction = .init("Unique Views Only", style: .preferred) {
+                    let saveToPhotoLibraryAction: AKAction = .init("Save to Photo Library") {
                         breadcrumbsCaptureEnabled = true
-                        breadcrumbsCapturesAllViews = false
+                        breadcrumbsCaptureSavesToPhotos = true
                         startCapture(true)
                     }
 
                     await AKAlert(
                         title: "Start Breadcrumbs Capture", // swiftlint:disable:next line_length
-                        message: "Starting breadcrumbs capture will periodically take snapshots of the current view and save them to the device's photo library.\n\nSelect the capture granularity to begin.",
+                        message: "Starting breadcrumbs capture will periodically take snapshots of the current view.\n\nSelect the desired file destination to begin.",
                         actions: [
-                            allViewsAction,
-                            uniqueViewsOnlyAction,
+                            saveToPhotoLibraryAction,
+                            documentsDirectoryOnlyAction,
                             .cancelAction(title: "Cancel"),
                         ]
                     ).present(translating: [])
                 }
             }
 
-            let command = breadcrumbs.isCapturing ? "Stop" : "Start"
-            return .init(title: "\(command) Breadcrumbs Capture", isDestructive: command == "Stop", perform: toggleBreadcrumbs)
+            let command = AppSubsystem.delegates.breadcrumbsCapture.isCapturing ? "Stop" : "Start"
+            return .init(
+                title: "\(command) Breadcrumbs Capture",
+                isDestructive: command == "Stop",
+                perform: toggleBreadcrumbs
+            )
         }
 
         private static var toggleBuildInfoOverlayAction: DevModeAction {

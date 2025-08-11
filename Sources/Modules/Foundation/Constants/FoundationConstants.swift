@@ -85,7 +85,8 @@ public extension StoredItemKey {
 extension UserDefaultsKey {
     static let subsystemKeys: [UserDefaultsKey] = [
         .breadcrumbsCaptureEnabled,
-        .breadcrumbsCapturesAllViews,
+        .breadcrumbsCaptureSavesToPhotos,
+        .breadcrumbsFileHistory,
         .currentThemeID,
         .hidesBuildInfoOverlay,
         .isDeveloperModeEnabled,
@@ -95,7 +96,8 @@ extension UserDefaultsKey {
     ]
 
     static let breadcrumbsCaptureEnabled: UserDefaultsKey = .init("breadcrumbsCaptureEnabled")
-    static let breadcrumbsCapturesAllViews: UserDefaultsKey = .init("breadcrumbsCapturesAllViews")
+    static let breadcrumbsCaptureSavesToPhotos: UserDefaultsKey = .init("breadcrumbsCaptureSavesToPhotos")
+    static let breadcrumbsFileHistory: UserDefaultsKey = .init("breadcrumbsFileHistory")
     static let currentThemeID: UserDefaultsKey = .init("currentThemeID")
     static let hidesBuildInfoOverlay: UserDefaultsKey = .init("hidesBuildInfoOverlay")
     static let isDeveloperModeEnabled: UserDefaultsKey = .init("isDeveloperModeEnabled")

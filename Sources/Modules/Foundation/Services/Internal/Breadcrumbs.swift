@@ -9,34 +9,31 @@
 import Foundation
 import UIKit
 
-final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
+@MainActor
+final class Breadcrumbs: @preconcurrency AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
     // MARK: - Dependencies
 
     @Dependency(\.build) private var build: Build
-    @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
     @Dependency(\.breadcrumbsDateFormatter) private var dateFormatter: DateFormatter
     @Dependency(\.fileManager) private var fileManager: FileManager
     @Dependency(\.uiApplication) private var uiApplication: UIApplication
 
     // MARK: - Properties
 
-    private(set) var isCapturing = false
+    nonisolated static let shared = Breadcrumbs()
 
-    private var fileHistory: [String] {
-        get {
-            @Persistent(.breadcrumbsFileHistory) var persistedValue: [String]?
-            return persistedValue ?? []
-        }
+    private(set) var savesToPhotos = true
 
-        set {
-            @Persistent(.breadcrumbsFileHistory) var persistedValue: [String]?
-            persistedValue = newValue
-        }
-    }
-
-    private var savesToPhotos = true
+    private var captureTask: Task<Void, Never>?
 
     // MARK: - Computed Properties
+
+    var isCapturing: Bool { captureTask != nil }
+
+    private var captureHistory: Set<String> {
+        get { @Persistent(.breadcrumbsCaptureHistory) var persistedValue: Set<String>?; return persistedValue ?? .init() }
+        set { @Persistent(.breadcrumbsCaptureHistory) var persistedValue: Set<String>?; persistedValue = newValue }
+    }
 
     private var filePath: URL {
         let documents = fileManager.documentsDirectoryURL
@@ -54,64 +51,82 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
         return documents.appending(path: fileName)
     }
 
+    // MARK: - Object Lifecycle
+
+    private nonisolated init() {}
+
+    deinit {
+        captureTask?.cancel()
+        captureTask = nil
+    }
+
     // MARK: - Capture
 
     @discardableResult
-    func startCapture(saveToPhotos: Bool) -> Exception? {
+    func startCapture() -> Exception? {
         guard !isCapturing else {
-            return .init("Breadcrumbs capture is already running.", metadata: [self, #file, #function, #line])
+            return .init(
+                "Breadcrumbs capture is already running.",
+                metadata: [self, #file, #function, #line]
+            )
         }
 
-        savesToPhotos = saveToPhotos
-        isCapturing = true
-
-        func continuallyCapture() {
-            guard isCapturing else { return }
-            capture()
-            coreGCD.after(.seconds(10)) { continuallyCapture() }
+        captureTask = Task { @MainActor in
+            while !Task.isCancelled,
+                  isCapturing {
+                capture()
+                try? await Task.sleep(for: .seconds(10))
+            }
         }
 
-        continuallyCapture()
         return nil
     }
 
     @discardableResult
     func stopCapture() -> Exception? {
         guard isCapturing else {
-            return .init("Breadcrumbs capture is not running.", metadata: [self, #file, #function, #line])
+            return .init(
+                "Breadcrumbs capture is not running.",
+                metadata: [self, #file, #function, #line]
+            )
         }
 
-        isCapturing = false
+        captureTask?.cancel()
+        captureTask = nil
         return nil
+    }
+
+    // MARK: - Set Saves to Photos
+
+    func setSavesToPhotos(_ savesToPhotos: Bool) {
+        self.savesToPhotos = savesToPhotos
     }
 
     // MARK: - Auxiliary
 
     private func capture() {
-        func saveImage() {
-            guard let image = uiApplication.snapshot,
-                  let pngData = image.pngData() else { return }
-
-            let filePath = filePath
-            try? pngData.write(to: filePath)
-
-            Observables.breadcrumbsDidCapture.trigger()
-            guard savesToPhotos else { return }
-            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-        }
-
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
-        let viewHierarchyID = uiApplication
+        let viewHierarchyID = (uiApplication
             .presentedViews
-            .map(\.descriptor)
+            .map(\.descriptor) + ["\(build.buildNumber)\(build.milestone.shortString)"])
             .sorted()
             .joined()
             .encodedHash
 
-        guard !fileHistory.contains(viewHierarchyID) else { return }
-        fileHistory.append(viewHierarchyID)
-        saveImage()
+        var captureHistory = captureHistory
+        guard !captureHistory.contains(viewHierarchyID),
+              let image = uiApplication.snapshot,
+              let pngData = image.pngData() else { return }
+
+        captureHistory.insert(viewHierarchyID)
+        self.captureHistory = captureHistory
+
+        let filePath = filePath; Task.detached { try? pngData.write(to: filePath) }
+        Observables.breadcrumbsDidCapture.trigger()
+
+        guard savesToPhotos else { return }
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 }
 

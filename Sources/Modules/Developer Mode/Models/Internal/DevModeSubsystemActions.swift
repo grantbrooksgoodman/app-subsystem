@@ -257,8 +257,9 @@ extension DevModeAction {
                         return
                     }
 
-                    func startCapture(_ saveToPhotos: Bool) {
-                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture(saveToPhotos: saveToPhotos) {
+                    func startCapture(_ savesToPhotos: Bool) {
+                        AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
+                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
                             Logger.log(exception, with: .errorAlert)
                         } else {
                             coreHUD.showSuccess()

@@ -68,15 +68,18 @@ public enum AppSubsystem {
         /* MARK: Breadcrumbs Capture Setup */
 
         @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
+        @Persistent(.breadcrumbsCaptureHistory) var breadcrumbsCaptureHistory: Set<String>?
         @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
 
         if _build.milestone == .generalRelease {
             breadcrumbsCaptureEnabled = false
+            breadcrumbsCaptureHistory = nil
             breadcrumbsCaptureSavesToPhotos = nil
         } else if let breadcrumbsCaptureEnabled,
                   let breadcrumbsCaptureSavesToPhotos,
                   breadcrumbsCaptureEnabled {
-            delegates.breadcrumbsCapture.startCapture(saveToPhotos: breadcrumbsCaptureSavesToPhotos)
+            delegates.breadcrumbsCapture.setSavesToPhotos(breadcrumbsCaptureSavesToPhotos)
+            delegates.breadcrumbsCapture.startCapture()
         }
 
         /* MARK: Build Info Overlay Setup */
@@ -129,7 +132,7 @@ public extension AppSubsystem {
     final class Delegates {
         /* MARK: Properties */
 
-        public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs()
+        public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared
         public private(set) var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate?
         public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
         public private(set) var devModeAppActions: DevModeAppActionDelegate?

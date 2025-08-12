@@ -13,11 +13,14 @@ public extension AppSubsystem.Delegates {
         // MARK: - Properties
 
         var isCapturing: Bool { get }
+        var savesToPhotos: Bool { get }
 
         // MARK: - Methods
 
+        func setSavesToPhotos(_ savesToPhotos: Bool)
+
         @discardableResult
-        func startCapture(saveToPhotos: Bool) -> Exception?
+        func startCapture() -> Exception?
 
         @discardableResult
         func stopCapture() -> Exception?

@@ -57,7 +57,8 @@ public struct FailurePageView: View {
                     retryButton
                 }
 
-                if viewModel.exception.isReportable {
+                if !Logger.reportsErrorsAutomatically,
+                   viewModel.exception.isReportable {
                     reportBugButton
                 }
             }

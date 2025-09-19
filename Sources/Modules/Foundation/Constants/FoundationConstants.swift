@@ -85,8 +85,8 @@ public extension StoredItemKey {
 extension UserDefaultsKey {
     static let subsystemKeys: [UserDefaultsKey] = [
         .breadcrumbsCaptureEnabled,
+        .breadcrumbsCaptureHistory,
         .breadcrumbsCaptureSavesToPhotos,
-        .breadcrumbsFileHistory,
         .currentThemeID,
         .hidesBuildInfoOverlay,
         .isDeveloperModeEnabled,
@@ -96,8 +96,8 @@ extension UserDefaultsKey {
     ]
 
     static let breadcrumbsCaptureEnabled: UserDefaultsKey = .init("breadcrumbsCaptureEnabled")
+    static let breadcrumbsCaptureHistory: UserDefaultsKey = .init("breadcrumbsCaptureHistory")
     static let breadcrumbsCaptureSavesToPhotos: UserDefaultsKey = .init("breadcrumbsCaptureSavesToPhotos")
-    static let breadcrumbsFileHistory: UserDefaultsKey = .init("breadcrumbsFileHistory")
     static let currentThemeID: UserDefaultsKey = .init("currentThemeID")
     static let hidesBuildInfoOverlay: UserDefaultsKey = .init("hidesBuildInfoOverlay")
     static let isDeveloperModeEnabled: UserDefaultsKey = .init("isDeveloperModeEnabled")
@@ -109,7 +109,8 @@ extension UserDefaultsKey {
 // MARK: - Observable Registry
 
 public enum Observables {
-    static let breadcrumbsDidCapture: Observable<Nil> = .init(key: .breadcrumbsDidCapture)
+    public static let breadcrumbsDidCapture: Observable<Nil> = .init(key: .breadcrumbsDidCapture)
+
     static let isBuildInfoOverlayHidden: Observable<Bool> = .init(.isBuildInfoOverlayHidden, true)
     static let rootViewSheet: Observable<AnyView?> = .init(.rootViewSheet, nil)
     static let rootViewTapped: Observable<Nil> = .init(key: .rootViewTapped)

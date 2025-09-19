@@ -23,10 +23,12 @@ public extension Toast {
 
     // MARK: - Properties
 
+    package private(set) static var overrideColorPalette: Toast.ColorPalette?
+
     private static var isHidden = true
     private static var keyboardHeight: CGFloat = 0
 
-    // MARK: - Methods
+    // MARK: - Show / Hide
 
     static func show(
         _ toast: Toast,
@@ -99,6 +101,18 @@ public extension Toast {
             isHidden = true
         }
     }
+
+    // MARK: - Override Default Color Palette
+
+    static func overrideDefaultColorPalette(_ colorPalette: Toast.ColorPalette) {
+        Toast.overrideColorPalette = colorPalette
+    }
+
+    static func restoreDefaultColorPalette() {
+        Toast.overrideColorPalette = nil
+    }
+
+    // MARK: - Auxiliary
 
     package static func updateFrameForKeyboardAppearance(_ keyboardHeight: CGFloat) {
         Task { @MainActor in

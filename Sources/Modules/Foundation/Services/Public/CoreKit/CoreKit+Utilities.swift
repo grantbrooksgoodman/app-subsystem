@@ -29,7 +29,8 @@ public extension CoreKit {
 
         /// The current memory usage of the application in megabytes.
         public var appMemoryFootprint: Int? { getAppMemoryFootprint() }
-        public var localizedLanguageCodeDictionary: [String: String]? { getLocalizedLanguageCodeDictionary() }
+        /// The mapping of supported language codes to language names, localized based on the value of `RuntimeStorage.languageCode`.
+        public var localizedLanguageCodeDictionary: [String: String]? { localizedLanguageCodeDictionary(for: RuntimeStorage.languageCode) }
 
         // MARK: - Init
 
@@ -63,6 +64,30 @@ public extension CoreKit {
             GCD.shared.after(duration) { exit(0) }
         }
 
+        /// The mapping of supported language codes to language names, localized based on provided value.
+        public func localizedLanguageCodeDictionary(for languageCode: String) -> [String: String]? {
+            guard let languageCodeDictionary = RuntimeStorage.languageCodeDictionary else { return nil }
+            let locale = Locale(languageCode: .init(languageCode))
+            return languageCodeDictionary.reduce(into: [String: String]()) { partialResult, keyPair in
+                let code = keyPair.key
+                let name = keyPair.value
+
+                if let localizedName = locale.localizedString(forLanguageCode: code) {
+                    let components = name.components(separatedBy: "(")
+                    if components.count == 2 {
+                        let endonym = components[1]
+                        let suffix = localizedName.lowercased() == endonym.lowercased().dropSuffix() ? "" : "(\(endonym)"
+                        partialResult[code] = "\(localizedName.firstUppercase) \(suffix)".trimmingBorderedWhitespace
+                    } else {
+                        let suffix = localizedName.lowercased() == name.lowercased() ? "" : "(\(name))"
+                        partialResult[code] = "\(localizedName.firstUppercase) \(suffix)".trimmingBorderedWhitespace
+                    }
+                } else {
+                    partialResult[code] = name.trimmingBorderedWhitespace
+                }
+            }
+        }
+
         public func restoreDeviceLanguageCode() {
             setLanguageCode(Locale.systemLanguageCode)
         }
@@ -94,29 +119,6 @@ public extension CoreKit {
                   kernelReturnCode == KERN_SUCCESS else { return nil }
 
             return Int(UInt64(Float(taskVmInfo.phys_footprint)) / 1024 / 1024)
-        }
-
-        private func getLocalizedLanguageCodeDictionary() -> [String: String]? {
-            guard let languageCodeDictionary = RuntimeStorage.languageCodeDictionary else { return nil }
-            let locale = Locale(languageCode: .init(RuntimeStorage.languageCode))
-            return languageCodeDictionary.reduce(into: [String: String]()) { partialResult, keyPair in
-                let code = keyPair.key
-                let name = keyPair.value
-
-                if let localizedName = locale.localizedString(forLanguageCode: code) {
-                    let components = name.components(separatedBy: "(")
-                    if components.count == 2 {
-                        let endonym = components[1]
-                        let suffix = localizedName.lowercased() == endonym.lowercased().dropSuffix() ? "" : "(\(endonym)"
-                        partialResult[code] = "\(localizedName.firstUppercase) \(suffix)".trimmingBorderedWhitespace
-                    } else {
-                        let suffix = localizedName.lowercased() == name.lowercased() ? "" : "(\(name))"
-                        partialResult[code] = "\(localizedName.firstUppercase) \(suffix)".trimmingBorderedWhitespace
-                    }
-                } else {
-                    partialResult[code] = name.trimmingBorderedWhitespace
-                }
-            }
         }
 
         // MARK: - Auxiliary

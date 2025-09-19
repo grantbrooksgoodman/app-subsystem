@@ -38,7 +38,7 @@ struct ToastView: View {
 
     // MARK: - Computed Properties
 
-    private var accentColor: Color? { type.colorPalette?.accent ?? type.style.defaultColor }
+    private var accentColor: Color? { (Toast.overrideColorPalette ?? type.colorPalette)?.accent ?? type.style.defaultColor }
 
     // MARK: - Init
 
@@ -61,7 +61,11 @@ struct ToastView: View {
     var body: some View {
         switch type {
         case let .banner(style: style, appearanceEdge: _, colorPalette: colorPalette, showsDismissButton: showsDismissButton):
-            bannerContentView(style: style, colorPalette: colorPalette, showsDismissButton: showsDismissButton)
+            bannerContentView(
+                style: style,
+                colorPalette: Toast.overrideColorPalette ?? colorPalette,
+                showsDismissButton: showsDismissButton
+            )
 
         case let .capsule(style: style):
             capsuleContentView(style: style)

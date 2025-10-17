@@ -23,7 +23,7 @@ public extension Toast {
 
     // MARK: - Properties
 
-    package private(set) static var overrideColorPalette: Toast.ColorPalette?
+    private(set) static var overrideColorPalette: Toast.ColorPalette?
 
     private static var isHidden = true
     private static var keyboardHeight: CGFloat = 0
@@ -68,7 +68,7 @@ public extension Toast {
                 )
 
             case let .failure(error):
-                Logger.log(.init(error, metadata: [self, #file, #function, #line]))
+                Logger.log(.init(error, metadata: .init(sender: self)))
                 Toast.show(toast, onTap: onTap)
             }
         }
@@ -114,7 +114,7 @@ public extension Toast {
 
     // MARK: - Auxiliary
 
-    package static func updateFrameForKeyboardAppearance(_ keyboardHeight: CGFloat) {
+    static func updateFrameForKeyboardAppearance(_ keyboardHeight: CGFloat) {
         Task { @MainActor in
             @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
 

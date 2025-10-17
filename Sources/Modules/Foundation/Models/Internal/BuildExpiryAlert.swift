@@ -93,7 +93,11 @@ final class BuildExpiryAlert {
             await presentAlert()
 
         case let .failure(error):
-            Logger.log(.init(error, metadata: [self, #file, #function, #line]), domain: .translation)
+            Logger.log(
+                .init(error, metadata: .init(sender: self)),
+                domain: .translation
+            )
+
             await presentAlert()
         }
 

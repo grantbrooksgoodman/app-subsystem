@@ -50,7 +50,7 @@ enum Localization {
         if RuntimeStorage.languageCodeDictionary?[RuntimeStorage.languageCode] == nil || supportedLanguages.isEmpty {
             Logger.log(.init(
                 "Unsupported language code; reverting to English.",
-                metadata: [self, #file, #function, #line]
+                metadata: .init(sender: self)
             ))
 
             coreUtilities.setLanguageCode("en")

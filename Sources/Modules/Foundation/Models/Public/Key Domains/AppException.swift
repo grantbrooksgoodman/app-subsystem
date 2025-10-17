@@ -11,11 +11,11 @@ import Foundation
 public struct AppException: Hashable {
     // MARK: - Properties
 
-    public let hashletValue: String
+    public let errorCode: String
 
     // MARK: - Init
 
-    public init(_ hashletValue: String) {
-        self.hashletValue = hashletValue
+    public init(_ errorCode: String) {
+        self.errorCode = errorCode
     }
 }

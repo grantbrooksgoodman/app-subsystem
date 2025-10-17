@@ -10,7 +10,7 @@ import Foundation
 
 public extension AppSubsystem.Delegates {
     protocol ExceptionMetadataDelegate {
-        func isReportable(_ hashlet: String) -> Bool
+        func isReportable(_ errorCode: String) -> Bool
         func userFacingDescriptor(for descriptor: String) -> String?
     }
 }

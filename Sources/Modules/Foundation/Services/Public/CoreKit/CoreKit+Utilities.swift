@@ -134,7 +134,7 @@ public extension CoreKit {
                     try fileManager.removeItem(at: path)
                 }
             } catch {
-                return .init(error, metadata: [self, #file, #function, #line])
+                return .init(error, metadata: .init(sender: self))
             }
 
             return nil

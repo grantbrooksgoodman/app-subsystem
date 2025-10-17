@@ -40,7 +40,7 @@ final class BuildInfoOverlayViewObserver: Observer {
         Logger.log(
             "\(observable.value is Nil ? "Triggered" : "Observed change of") .\(observable.key.rawValue).",
             domain: .observer,
-            metadata: [self, #file, #function, #line]
+            sender: self
         )
 
         switch observable.key {

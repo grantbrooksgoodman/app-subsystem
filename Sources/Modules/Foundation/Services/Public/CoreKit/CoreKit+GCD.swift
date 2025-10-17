@@ -29,5 +29,13 @@ public extension CoreKit {
                 effect()
             }
         }
+
+        public func syncOnMain(do effect: @escaping () -> Void) {
+            guard Thread.isMainThread else {
+                return mainQueue.sync { effect() }
+            }
+
+            effect()
+        }
     }
 }

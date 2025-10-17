@@ -16,17 +16,6 @@ public extension Array {
     }
 }
 
-public extension Array where Element == Any {
-    var isValidMetadata: Bool {
-        guard count == 4,
-              !String(self[0]).isEmpty,
-              self[1] is String,
-              self[2] is String,
-              self[3] is Int else { return false }
-        return true
-    }
-}
-
 public extension Array where Element == Exception {
     // MARK: - Properties
 
@@ -41,6 +30,7 @@ public extension Array where Element == Exception {
         return finalException
     }
 
+    // TODO: Audit this – consider removing/replacing.
     /**
      Returns an array of identifier strings for each `Exception` in the array.
      */
@@ -48,12 +38,14 @@ public extension Array where Element == Exception {
         var codes = [String]()
 
         for (index, exception) in enumerated() {
-            let suffix = codes.contains(where: { $0.hasPrefix(exception.hashlet!.lowercased()) }) ? "x\(index)" : ""
-            codes.append("\(exception.hashlet!)x\(exception.metaID!)\(suffix)".lowercased())
+            let suffix = codes.contains(where: { $0.hasPrefix(exception.code.lowercased()) }) ? "x\(index)" : ""
+            codes.append("\(exception.code)x\(exception.metadata.id)\(suffix)".lowercased())
 
-            for (index, underlyingException) in exception.traversedUnderlyingExceptions.enumerated() {
-                let suffix = codes.contains(where: { $0.hasPrefix(underlyingException.hashlet!.lowercased()) }) ? "x\(index)" : ""
-                codes.append("\(underlyingException.hashlet!)x\(underlyingException.metaID!)\(suffix)".lowercased())
+            if let underlyingExceptions = exception.underlyingExceptions {
+                for (index, underlyingException) in underlyingExceptions.enumerated() {
+                    let suffix = codes.contains(where: { $0.hasPrefix(underlyingException.code.lowercased()) }) ? "x\(index)" : ""
+                    codes.append("\(underlyingException.code)x\(underlyingException.metadata.id)\(suffix)".lowercased())
+                }
             }
         }
 

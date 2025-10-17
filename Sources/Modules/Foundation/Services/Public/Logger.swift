@@ -27,6 +27,25 @@ public enum Logger {
         /* MARK: Properties */
 
         public static let toast: AlertType = .toast(style: nil)
+
+        /* MARK: Computed Properties */
+
+        public static var toastInPrerelease: AlertType? {
+            @Dependency(\.build.milestone) var buildMilestone: Build.Milestone
+            guard buildMilestone != .generalRelease else { return nil }
+            return .toast
+        }
+
+        /* MARK: Methods */
+
+        public static func toastInPrerelease(
+            style: Toast.Style?,
+            isPersistent: Bool = true
+        ) -> AlertType? {
+            @Dependency(\.build.milestone) var buildMilestone: Build.Milestone
+            guard buildMilestone != .generalRelease else { return nil }
+            return .toast(style: style, isPersistent: isPersistent)
+        }
     }
 
     private enum NewlinePlacement {
@@ -93,18 +112,32 @@ public enum Logger {
         _ error: Error,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
-        metadata: [Any]
+        metadata: ExceptionMetadata
     ) {
-        log(.init(error, metadata: metadata), domain: domain, with: alertType)
+        log(
+            .init(
+                error,
+                metadata: metadata
+            ),
+            domain: domain,
+            with: alertType
+        )
     }
 
     public static func log(
         _ error: NSError,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
-        metadata: [Any]
+        metadata: ExceptionMetadata
     ) {
-        log(.init(error, metadata: metadata), domain: domain, with: alertType)
+        log(
+            .init(
+                error,
+                metadata: metadata
+            ),
+            domain: domain,
+            with: alertType
+        )
     }
 
     public static func log(
@@ -115,15 +148,15 @@ public enum Logger {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
-        let typeName = String(exception.metadata[0]) // swiftlint:disable force_cast
-        let fileName = fileName(for: exception.metadata[1] as! String)
-        let functionName = (exception.metadata[2] as! String).components(separatedBy: "(")[0]
-        let lineNumber = exception.metadata[3] as! Int // swiftlint:enable force_cast
+        let sender = String(exception.metadata.sender)
+        let fileName = exception.metadata.fileName
+        let functionName = exception.metadata.function.components(separatedBy: "(")[0]
+        let lineNumber = exception.metadata.line
 
         defer {
             if exception.isReportable,
                Logger.reportsErrorsAutomatically {
-                alertKitConfig.reportDelegate?.fileReport(exception)
+                alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
             }
         }
 
@@ -135,18 +168,18 @@ public enum Logger {
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
         log(
-            "\n\(header)\n\(typeName).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(exception.descriptor) (\(exception.hashlet!))",
+            "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(exception.descriptor) (\(exception.code))",
             domain: domain
         )
 
-        if let params = exception.extraParams {
-            printExtraParams(params, domain: domain)
+        if let userInfo = exception.userInfo {
+            printUserInfo(userInfo, domain: domain)
         }
 
         log(
             "\(footer)\n",
             domain: domain,
-            addingNewline: exception.extraParams == nil ? .preceding : nil
+            addingNewline: exception.userInfo == nil ? .preceding : nil
         )
 
         currentTimeLastCalled = Date.now
@@ -162,19 +195,23 @@ public enum Logger {
         _ text: String,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
-        metadata: [Any]
+        sender: Any,
+        fileName: String = #fileID,
+        function: String = #function,
+        line: Int = #line
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
+        let metadata = ExceptionMetadata(
+            sender: sender,
+            fileName: fileName,
+            function: function,
+            line: line
+        )
 
-        guard metadata.isValidMetadata else {
-            fallbackLog(text, domain: domain, with: alertType)
-            return
-        }
-
-        let typeName = String(metadata[0]) // swiftlint:disable force_cast
-        let fileName = fileName(for: metadata[1] as! String)
-        let functionName = (metadata[2] as! String).components(separatedBy: "(")[0]
-        let lineNumber = metadata[3] as! Int // swiftlint:enable force_cast
+        let sender = String(metadata.sender)
+        let fileName = metadata.fileName
+        let functionName = metadata.function.components(separatedBy: "(")[0]
+        let lineNumber = metadata.line
 
         guard !streamOpen else {
             logToStream(text, domain: domain, line: lineNumber)
@@ -184,7 +221,7 @@ public enum Logger {
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
         log(
-            "\n\(header)\n\(typeName).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(text)\n\(footer)\n",
+            "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(text)\n\(footer)\n",
             domain: domain
         )
 
@@ -202,33 +239,38 @@ public enum Logger {
     public static func openStream(
         message: String? = nil,
         domain: LoggerDomain = .general,
-        metadata: [Any]
+        sender: Any,
+        fileName: String = #fileID,
+        function: String = #function,
+        line: Int = #line
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
-        guard metadata.isValidMetadata else {
-            fallbackLog(message ?? "Improperly formatted metadata.", domain: domain)
-            return
-        }
+        let metadata = ExceptionMetadata(
+            sender: sender,
+            fileName: fileName,
+            function: function,
+            line: line
+        )
 
-        let typeName = String(metadata[0]) // swiftlint:disable force_cast
-        let fileName = fileName(for: metadata[1] as! String)
-        let functionName = (metadata[2] as! String).components(separatedBy: "(")[0]
-        let lineNumber = metadata[3] as! Int // swiftlint:enable force_cast
+        let sender = String(metadata.sender)
+        let fileName = metadata.fileName
+        let functionName = metadata.function.components(separatedBy: "(")[0]
+        let lineNumber = metadata.line
 
         streamOpen = true
         currentTimeLastCalled = Date.now
 
         guard let message else {
             log( // swiftlint:disable:next line_length
-                "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\(elapsedTime)",
+                "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(sender).\(functionName)()\(elapsedTime)",
                 domain: domain
             )
             return
         }
 
         log( // swiftlint:disable:next line_length
-            "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(typeName).\(functionName)()\n[\(lineNumber)]: \(message)\(elapsedTime)",
+            "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(sender).\(functionName)()\n[\(lineNumber)]: \(message)\(elapsedTime)",
             domain: domain
         )
     }
@@ -239,7 +281,7 @@ public enum Logger {
         line: Int
     ) {
         guard streamOpen else {
-            log(message, metadata: [self, #file, #function, #line])
+            log(message, sender: self)
             return
         }
 
@@ -255,7 +297,7 @@ public enum Logger {
 
         guard streamOpen else {
             guard let message else { return }
-            log(message, metadata: [self, #file, #function, #line])
+            log(message, sender: self)
             return
         }
 
@@ -284,14 +326,6 @@ public enum Logger {
         guard build.loggingEnabled,
               subscribedDomains.contains(domain) else { return false }
         return true
-    }
-
-    private static func fileName(for path: String) -> String {
-        path
-            .components(separatedBy: "/")
-            .last?
-            .components(separatedBy: ".")
-            .first ?? path
     }
 
     private static func fallbackLog(
@@ -352,7 +386,7 @@ public enum Logger {
         } catch { return }
     }
 
-    private static func printExtraParams(_ parameters: [String: Any], domain: LoggerDomain) {
+    private static func printUserInfo(_ parameters: [String: Any], domain: LoggerDomain) {
         guard !parameters.isEmpty else { return }
         guard parameters.count > 1 else {
             log("[\(parameters.first!.key): \(parameters.first!.value)]", domain: domain, addingNewline: .surrounding)
@@ -384,8 +418,8 @@ public enum Logger {
             guard let userFacingDescriptor = exception?.userFacingDescriptor ?? text else { return }
             core.hud.hide()
 
-            let mockGenericException: Exception = .init(metadata: [self, #file, #function, #line])
-            let mockTimedOutException: Exception = .timedOut([self, #file, #function, #line])
+            let mockGenericException: Exception = .init(metadata: .init(sender: self))
+            let mockTimedOutException: Exception = .timedOut(metadata: .init(sender: self))
             let notGenericDescriptor = userFacingDescriptor != mockGenericException.userFacingDescriptor
             let notTimedOutDescriptor = userFacingDescriptor != mockTimedOutException.userFacingDescriptor
             let hasUserFacingDescriptor = exception?.descriptor != exception?.userFacingDescriptor
@@ -400,7 +434,7 @@ public enum Logger {
                 }
 
                 let errorAlert = AKErrorAlert(
-                    exception,
+                    exception.hydrated,
                     dismissButtonTitle: AppSubsystem.delegates.localizedStrings.dismiss
                 )
 
@@ -438,7 +472,7 @@ public enum Logger {
                     guard let exception,
                           exception.isReportable,
                           !Logger.reportsErrorsAutomatically else { return nil }
-                    return { alertKitConfig.reportDelegate?.fileReport(exception) }
+                    return { alertKitConfig.reportDelegate?.fileReport(exception.hydrated) }
                 }
 
                 Toast.show(
@@ -462,11 +496,20 @@ extension Logger {
     struct AlertKitLogger: AlertKit.LoggerDelegate {
         public init() {}
         public var reportsErrorsAutomatically: Bool { Logger.reportsErrorsAutomatically }
-        public func log(_ text: String, metadata: [Any]) {
+        public func log(
+            _ text: String,
+            sender: Any,
+            fileName: String = #fileID,
+            function: String = #function,
+            line: Int = #line
+        ) {
             Logger.log(
                 text,
                 domain: .alertKit,
-                metadata: metadata
+                sender: sender,
+                fileName: fileName,
+                function: function,
+                line: line
             )
         }
     }
@@ -477,11 +520,20 @@ extension Logger {
 extension Logger {
     struct TranslationLogger: TranslationLoggerDelegate {
         public init() {}
-        public func log(_ text: String, metadata: [Any]) {
+        public func log(
+            _ text: String,
+            sender: Any,
+            fileName: String = #fileID,
+            function: String = #function,
+            line: Int = #line
+        ) {
             Logger.log(
                 text,
                 domain: .translation,
-                metadata: metadata
+                sender: sender,
+                fileName: fileName,
+                function: function,
+                line: line
             )
         }
     }
@@ -501,6 +553,17 @@ private extension DependencyValues {
     var loggerDateFormatter: DateFormatter {
         get { self[LoggerDateFormatterDependency.self] }
         set { self[LoggerDateFormatterDependency.self] = newValue }
+    }
+}
+
+/* MARK: Auxiliary */
+
+private extension Exception {
+    var hydrated: Exception {
+        appending(userInfo: [
+            CommonParameter.descriptor.rawValue: descriptor,
+            CommonParameter.errorCode.rawValue: code,
+        ])
     }
 }
 

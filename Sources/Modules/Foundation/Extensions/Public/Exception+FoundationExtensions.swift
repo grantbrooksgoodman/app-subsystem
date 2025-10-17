@@ -17,36 +17,61 @@ extension Exception: AlertKit.Errorable {
         set { descriptor = newValue }
     }
 
-    public var id: String { "\(hashlet!)\(metaID!)".lowercased() }
+    public var id: String { "\(code)\(metadata.id)".lowercased() }
+    public var metadataArray: [Any] {
+        [
+            metadata.sender,
+            metadata.fileName,
+            metadata.function,
+            metadata.line,
+        ]
+    }
+}
+
+extension Exception: CustomNSError {
+    public static var errorDomain: String { "exception" }
+
+    public var errorCode: Int { Int(code) ?? 0 }
+    public var errorUserInfo: [String: Any] { userInfo ?? [:] }
+}
+
+extension Exception: LocalizedError {
+    public var errorDescription: String? { descriptor }
 }
 
 public extension Exception {
-    init(_ error: Error?, metadata: [Any]) {
+    init(
+        _ error: Error?,
+        metadata: ExceptionMetadata
+    ) {
         guard let error else {
             self.init(metadata: metadata)
             return
         }
 
-        self.init(error, metadata: metadata)
+        self.init(
+            error,
+            metadata: metadata
+        )
     }
 
-    static func internetConnectionOffline(_ metadata: [Any]) -> Exception {
+    static func internetConnectionOffline(metadata: ExceptionMetadata) -> Exception {
         .init(
             "Internet connection is offline.",
             isReportable: false,
-            extraParams: [
-                CommonParamKeys.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.internetConnectionOffline,
+            userInfo: [
+                CommonParameter.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.internetConnectionOffline,
             ],
             metadata: metadata
         )
     }
 
-    static func timedOut(_ metadata: [Any]) -> Exception {
+    static func timedOut(metadata: ExceptionMetadata) -> Exception {
         .init(
             "The operation timed out. Please try again later.",
             isReportable: false,
-            extraParams: [
-                CommonParamKeys.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.timedOut,
+            userInfo: [
+                CommonParameter.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.timedOut,
             ],
             metadata: metadata
         )

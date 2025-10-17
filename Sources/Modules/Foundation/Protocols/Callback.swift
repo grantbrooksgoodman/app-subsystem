@@ -14,13 +14,12 @@ public enum Callback<Success, Failure> where Failure: Exceptionable {
 }
 
 public protocol Exceptionable {
+    var code: String { get }
     var descriptor: String { get }
-    var extraParams: [String: Any]? { get }
-    var hashlet: String! { get }
     var isReportable: Bool { get }
-    var metadata: [Any] { get }
-    var metaID: String! { get }
+    var metadata: ExceptionMetadata { get }
     var underlyingExceptions: [Exception]? { get }
+    var userInfo: [String: Any]? { get }
 }
 
 public extension Callback {
@@ -33,28 +32,12 @@ public extension Callback {
             let exception: Exception = .init(
                 exceptionable.descriptor,
                 isReportable: exceptionable.isReportable,
-                extraParams: exceptionable.extraParams,
+                userInfo: exceptionable.userInfo,
                 underlyingExceptions: exceptionable.underlyingExceptions,
                 metadata: exceptionable.metadata
             )
 
-            Logger.log(exception)
-            guard let hashlet = exception.hashlet else { throw _Failure.exceptionDescriptor(exception.descriptor) }
-            throw _Failure.exceptionDescriptor("\(exception.descriptor) (\(hashlet))")
-        }
-    }
-}
-
-private enum _Failure: LocalizedError {
-    // MARK: - Cases
-
-    case exceptionDescriptor(String)
-
-    // MARK: - Properties
-
-    var errorDescription: String? {
-        switch self {
-        case let .exceptionDescriptor(descriptor): return descriptor
+            throw exception
         }
     }
 }

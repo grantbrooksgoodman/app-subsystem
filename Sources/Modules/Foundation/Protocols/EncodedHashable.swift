@@ -29,7 +29,7 @@ public extension EncodedHashable {
             EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
             return encodedHash
         } catch {
-            Logger.log(.init(error, metadata: [self, #file, #function, #line]))
+            Logger.log(.init(error, metadata: .init(sender: self)))
             return Data().encodedHash
         }
     }

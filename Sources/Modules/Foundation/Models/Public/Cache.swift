@@ -61,7 +61,7 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
         Logger.log(
             "\(type.rawValue) cached value for key \"\(key.rawValue)\".",
             domain: .caches,
-            metadata: [self, #file, #function, #line]
+            sender: self
         )
     }
 }
@@ -118,8 +118,8 @@ private var didReachMemoryCeiling = false {
             Logger.log(
                 .init(
                     "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
-                    extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                    metadata: [AppSubsystem.self, #file, #function, #line]
+                    userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
+                    metadata: .init(sender: AppSubsystem.self)
                 ),
                 domain: .caches
             )
@@ -128,8 +128,8 @@ private var didReachMemoryCeiling = false {
             Logger.log(
                 .init(
                     "Memory footprint sufficiently low; caching re-enabled.",
-                    extraParams: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                    metadata: [AppSubsystem.self, #file, #function, #line]
+                    userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
+                    metadata: .init(sender: AppSubsystem.self)
                 ),
                 domain: .caches
             )

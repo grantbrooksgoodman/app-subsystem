@@ -72,7 +72,7 @@ struct BuildInfoOverlayViewService {
                     .init("Report Bug") { reportDelegate.reportBug() },
                 ],
                 cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel
-            ).present(translating: [.actions([]), .title])
+            ).present(translating: [.actions(), .title])
         }
     }
 

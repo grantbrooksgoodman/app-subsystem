@@ -69,7 +69,7 @@ struct ForcedUpdateModalPageViewService {
               let lookupURL = URL(string: "https://itunes.apple.com/lookup?bundleId=\(bundleIdentifier)") else {
             return completion(.failure(.init(
                 "Failed to resolve bundle identifier and/or lookup URL.",
-                metadata: [self, #file, #function, #line]
+                metadata: .init(sender: self)
             )))
         }
 
@@ -86,8 +86,8 @@ struct ForcedUpdateModalPageViewService {
                 return completion(.failure(
                     error == nil ? .init(
                         "Failed to resolve standard resolution image.",
-                        metadata: [self, #file, #function, #line]
-                    ) : .init(error, metadata: [self, #file, #function, #line])
+                        metadata: .init(sender: self)
+                    ) : .init(error, metadata: .init(sender: self))
                 ))
             }
 
@@ -96,8 +96,8 @@ struct ForcedUpdateModalPageViewService {
                     return completion(.failure(
                         error == nil ? .init(
                             "Failed to resolve high resolution image.",
-                            metadata: [self, #file, #function, #line]
-                        ) : .init(error, metadata: [self, #file, #function, #line])
+                            metadata: .init(sender: self)
+                        ) : .init(error, metadata: .init(sender: self))
                     ))
                 }
 

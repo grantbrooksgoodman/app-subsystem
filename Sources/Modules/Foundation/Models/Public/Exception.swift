@@ -9,44 +9,42 @@
 import CryptoKit
 import Foundation
 
-public struct Exception: Equatable, Exceptionable {
+public struct Exception: Equatable, Exceptionable, Swift.Error {
     // MARK: - Types
 
-    public enum CommonParamKeys: String {
+    enum CommonParameter: String {
+        case descriptor = "Descriptor"
+        case errorCode = "ErrorCode"
+        case nsErrorCode = "NSErrorCode"
+        case nsErrorDomain = "NSErrorDomain"
+        case nsLocalizedDescription = "NSLocalizedDescription"
+        case staticErrorCode = "StaticErrorCode"
         case userFacingDescriptor = "UserFacingDescriptor"
     }
 
     // MARK: - Properties
 
-    // Array
-    public var metadata: [Any]
-    public var underlyingExceptions: [Exception]?
+    public let code: String
+    public let isReportable: Bool
+    public let metadata: ExceptionMetadata
+    public let userInfo: [String: Any]?
 
-    // String
-    public var descriptor: String
-    public var hashlet: String!
-    public var metaID: String!
+    public internal(set) var descriptor: String
 
-    // Other
-    public var extraParams: [String: Any]?
-    public var isReportable: Bool
+    public private(set) var underlyingExceptions: [Exception]? {
+        get { traversedUnderlyingExceptions }
+        set { _underlyingExceptions = newValue }
+    }
+
+    private var _underlyingExceptions: [Exception]?
 
     // MARK: - Computed Properties
-
-    /// The recursively traversed value of all underlying `Exception`s for this instance.
-    public var traversedUnderlyingExceptions: [Exception] {
-        guard let underlyingExceptions else { return [] }
-        var allExceptions = underlyingExceptions
-        underlyingExceptions.forEach { allExceptions.append(contentsOf: $0.traversedUnderlyingExceptions) }
-        return allExceptions
-    }
 
     public var userFacingDescriptor: String {
         @Dependency(\.build) var build: Build
 
-        if let params = extraParams,
-           let laymanDescriptor = params[CommonParamKeys.userFacingDescriptor.rawValue] as? String {
-            return laymanDescriptor
+        if let userFacingDescriptor = userInfo?[CommonParameter.userFacingDescriptor.rawValue] as? String {
+            return userFacingDescriptor
         }
 
         guard let descriptor = AppSubsystem.delegates.exceptionMetadata?.userFacingDescriptor(for: descriptor) else {
@@ -56,45 +54,45 @@ public struct Exception: Equatable, Exceptionable {
         return descriptor
     }
 
+    /// The recursively traversed value of all underlying `Exception`s for this instance.
+    private var traversedUnderlyingExceptions: [Exception]? {
+        guard let underlyingExceptions = _underlyingExceptions else { return nil }
+        var allExceptions = underlyingExceptions
+        underlyingExceptions.forEach { allExceptions.append(contentsOf: $0.traversedUnderlyingExceptions ?? []) }
+        return allExceptions
+    }
+
     // MARK: - Init
 
     public init(
         _ descriptor: String = "An unknown error occurred.",
         isReportable: Bool? = nil,
-        extraParams: [String: Any]? = nil,
+        userInfo: [String: Any]? = nil,
         underlyingExceptions: [Exception]? = nil,
-        metadata: [Any]
+        metadata: ExceptionMetadata
     ) {
-        guard metadata.isValidMetadata else { fatalError("Improperly formatted metadata") }
+        let errorCode = (userInfo?[CommonParameter.staticErrorCode.rawValue] as? String) ?? descriptor.errorCode
+        code = errorCode
 
         self.descriptor = descriptor
-        self.isReportable = true // Set initial value.
-        self.extraParams = extraParams
+        self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(errorCode) ?? true
         self.metadata = metadata
+        self.userInfo = userInfo?.isEmpty == false ? userInfo!.withCapitalizedKeys : nil
 
-        if let staticHashlet = extraParams?["StaticHashlet"] as? String {
-            hashlet = staticHashlet
-        } else {
-            guard let hashlet = getHashlet(for: self.descriptor) else { fatalError("Failed to generate hashlet") }
-            self.hashlet = hashlet
-        }
-
-        self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(hashlet) ?? true
-        metaID = getMetaID(for: metadata)
-        self.underlyingExceptions = underlyingExceptions?.unique.filter { $0 != self }
+        self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil
     }
 
     public init(
         _ error: Error,
         isReportable: Bool? = nil,
-        extraParams: [String: Any]? = nil,
+        userInfo: [String: Any]? = nil,
         underlyingExceptions: [Exception]? = nil,
-        metadata: [Any]
+        metadata: ExceptionMetadata
     ) {
         self.init(
             error as NSError,
             isReportable: isReportable,
-            extraParams: extraParams,
+            userInfo: userInfo,
             underlyingExceptions: underlyingExceptions,
             metadata: metadata
         )
@@ -103,83 +101,77 @@ public struct Exception: Equatable, Exceptionable {
     public init(
         _ error: NSError,
         isReportable: Bool? = nil,
-        extraParams: [String: Any]? = nil,
+        userInfo: [String: Any]? = nil,
         underlyingExceptions: [Exception]? = nil,
-        metadata: [Any]
+        metadata: ExceptionMetadata
     ) {
-        guard metadata.isValidMetadata else { fatalError("Improperly formatted metadata") }
+        let errorCode = error.staticIdentifier.errorCode
+        code = errorCode
 
         descriptor = error.localizedDescription
-        self.isReportable = true // Set initial value.
+        self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(errorCode) ?? true
         self.metadata = metadata
 
-        var params: [String: Any] = error.userInfo.filter { $0.key != "NSLocalizedDescription" }
-        params["NSErrorCode"] = error.code
-        params["NSErrorDomain"] = error.domain
+        var concatenatedUserInfo: [String: Any] = error.userInfo.filter { $0.key != CommonParameter.nsLocalizedDescription.rawValue }
+        concatenatedUserInfo[CommonParameter.nsErrorCode.rawValue] = error.code
+        concatenatedUserInfo[CommonParameter.nsErrorDomain.rawValue] = error.domain
 
-        if let extraParams,
-           !extraParams.isEmpty {
-            for param in extraParams {
-                guard param.key != "NSLocalizedDescription" else { continue }
-                params[param.key] = param.value
-            }
+        if let userInfo,
+           !userInfo.isEmpty {
+            concatenatedUserInfo.merge(
+                userInfo.filter { $0.key != CommonParameter.nsLocalizedDescription.rawValue },
+                uniquingKeysWith: { $1 }
+            )
         }
 
-        guard let hashlet = getHashlet(for: error.staticIdentifier) else { fatalError("Failed to generate hashlet") }
-        self.hashlet = hashlet
-        self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(hashlet) ?? true
-        metaID = getMetaID(for: metadata)
+        concatenatedUserInfo[CommonParameter.staticErrorCode.rawValue] = errorCode
+        self.userInfo = concatenatedUserInfo.isEmpty ? nil : concatenatedUserInfo.withCapitalizedKeys
 
-        params["StaticHashlet"] = self.hashlet
-        self.extraParams = params.withCapitalizedKeys
-
-        self.underlyingExceptions = underlyingExceptions?.unique.filter { $0 != self }
+        self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil
     }
 
     // MARK: - Append
 
-    public func appending(extraParams: [String: Any]) -> Exception {
-        guard let currentParams = self.extraParams,
-              !currentParams.isEmpty else {
+    public func appending(userInfo: [String: Any]) -> Exception {
+        guard var currentUserInfo = self.userInfo,
+              !currentUserInfo.isEmpty else {
             return .init(
                 descriptor,
                 isReportable: isReportable,
-                extraParams: extraParams.withCapitalizedKeys,
+                userInfo: userInfo.withCapitalizedKeys,
+                underlyingExceptions: underlyingExceptions,
                 metadata: metadata
             )
         }
 
-        var params: [String: Any] = currentParams
-        extraParams.forEach { params[$0.key] = $0.value }
-
+        userInfo.forEach { currentUserInfo[$0.key] = $0.value }
         return .init(
             descriptor,
             isReportable: isReportable,
-            extraParams: params.withCapitalizedKeys,
+            userInfo: currentUserInfo.withCapitalizedKeys,
+            underlyingExceptions: underlyingExceptions,
             metadata: metadata
         )
     }
 
     public func appending(underlyingException: Exception) -> Exception {
-        guard let currentUnderlyingExceptions = underlyingExceptions,
+        guard var currentUnderlyingExceptions = _underlyingExceptions,
               !currentUnderlyingExceptions.isEmpty else {
             return .init(
                 descriptor,
                 isReportable: isReportable,
-                extraParams: extraParams,
+                userInfo: userInfo,
                 underlyingExceptions: [underlyingException],
                 metadata: metadata
             )
         }
 
-        var exceptions = currentUnderlyingExceptions
-        exceptions.append(underlyingException)
-
+        currentUnderlyingExceptions.append(underlyingException)
         return .init(
             descriptor,
             isReportable: isReportable,
-            extraParams: extraParams,
-            underlyingExceptions: exceptions,
+            userInfo: userInfo,
+            underlyingExceptions: currentUnderlyingExceptions,
             metadata: metadata
         )
     }
@@ -187,106 +179,69 @@ public struct Exception: Equatable, Exceptionable {
     // MARK: - AppException Equality Comparison
 
     public func isEqual(to cataloggedException: AppException) -> Bool {
-        hashlet == cataloggedException.hashletValue
+        code == cataloggedException.errorCode
     }
 
     public func isEqual(toAny in: [AppException]) -> Bool {
-        !`in`.filter { $0.hashletValue == hashlet }.isEmpty
+        !`in`.filter { $0.errorCode == code }.isEmpty
     }
 
     // MARK: - Equatable Conformance
 
     public static func == (left: Exception, right: Exception) -> Bool {
-        let leftMetaID = left.metaID
-        let leftHashlet = left.hashlet
-        let leftDescriptor = left.descriptor
-        let leftIsReportable = left.isReportable
-        let leftUnderlyingExceptions = left.underlyingExceptions
-        let leftTraversedUnderlyingExceptions = left.traversedUnderlyingExceptions
+        let sameCode = left.code == right.code
+        let sameDescriptor = left.descriptor == right.descriptor
+        let sameIsReportable = left.isReportable == right.isReportable
+        let sameMetadata = AnyHashable(left.metadata) == AnyHashable(right.metadata)
+        let sameUnderlyingExceptions = left.underlyingExceptions == right.underlyingExceptions
 
-        let rightMetaID = right.metaID
-        let rightHashlet = right.hashlet
-        let rightDescriptor = right.descriptor
-        let rightIsReportable = right.isReportable
-        let rightUnderlyingExceptions = right.underlyingExceptions
-        let rightTraversedUnderlyingExceptions = right.traversedUnderlyingExceptions
+        let leftStringBasedUserInfo = left.userInfo?.compactMapValues { $0 as? String }
+        let rightStringBasedUserInfo = right.userInfo?.compactMapValues { $0 as? String }
 
-        var leftStringBasedParams = [String: String]()
-        left.extraParams?.forEach { parameter in
-            if let stringValue = parameter.value as? String {
-                leftStringBasedParams[parameter.key] = stringValue
-            }
-        }
+        let leftNonStringBasedUserInfoCount = (left.userInfo?.count ?? 0) - (leftStringBasedUserInfo?.count ?? 0)
+        let rightNonStringBasedUserInfoCount = (right.userInfo?.count ?? 0) - (rightStringBasedUserInfo?.count ?? 0)
 
-        var rightStringBasedParams = [String: String]()
-        right.extraParams?.forEach { parameter in
-            if let stringValue = parameter.value as? String {
-                rightStringBasedParams[parameter.key] = stringValue
-            }
-        }
+        let sameStringBasedUserInfo = leftStringBasedUserInfo == rightStringBasedUserInfo
+        let sameNonStringBasedUserInfoCount = leftNonStringBasedUserInfoCount == rightNonStringBasedUserInfoCount
 
-        let leftNonStringBasedParamsCount = (left.extraParams?.count ?? 0) - leftStringBasedParams.count
-        let rightNonStringBasedParamsCount = (right.extraParams?.count ?? 0) - rightStringBasedParams.count
-
-        guard leftMetaID == rightMetaID,
-              leftHashlet == rightHashlet,
-              leftDescriptor == rightDescriptor,
-              leftIsReportable == rightIsReportable,
-              leftUnderlyingExceptions == rightUnderlyingExceptions,
-              leftTraversedUnderlyingExceptions == rightTraversedUnderlyingExceptions,
-              leftStringBasedParams == rightStringBasedParams,
-              leftNonStringBasedParamsCount == rightNonStringBasedParamsCount else { return false }
+        guard sameCode,
+              sameDescriptor,
+              sameIsReportable,
+              sameMetadata,
+              sameUnderlyingExceptions,
+              sameStringBasedUserInfo,
+              sameNonStringBasedUserInfoCount else { return false }
 
         return true
     }
+}
 
-    // MARK: - Auxiliary
+private extension String {
+    var errorCode: String {
+        guard !isEmpty else { return "0000" }
 
-    private func getHashlet(for descriptor: String) -> String? {
-        var hashlet = ""
+        let stopWords: Set<String> = [
+            "a",
+            "an",
+            "is",
+            "that",
+            "the",
+            "this",
+            "was",
+        ]
 
-        let stripWords = ["a", "an", "is", "that", "the", "this", "was"]
-        for word in descriptor.components(separatedBy: " ") where !stripWords.contains(word.lowercased()) {
-            hashlet.append("\(word)\(word.lowercased() == "not" ? "" : " ")")
-        }
+        let joinedWords = split(separator: " ")
+            .filter { !stopWords.contains($0.lowercased()) }
+            .joined()
 
-        let alphabetSet = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-        hashlet = hashlet.filter { alphabetSet.contains($0) }
+        let lettersOnly = joinedWords.replacingOccurrences(
+            of: "[^A-Za-z]",
+            with: "",
+            options: .regularExpression
+        ).lowercased()
 
-        hashlet = hashlet.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        hashlet = hashlet.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\u{00A0}", with: "")
-        hashlet = SHA256.hash(data: Data(hashlet.utf8)).compactMap { String(format: "%02x", $0) }.joined()
-
-        guard !hashlet.isEmpty,
-              hashlet.count > 2 else { return nil }
-
-        let count = hashlet.components.count
-        let prefix = hashlet.components[0 ... 1]
-        let suffix = hashlet.components[count - 2 ... count - 1]
-
-        return "\(prefix.joined())\(suffix.joined())".uppercased()
-    }
-
-    private func getMetaID(for metadata: [Any]) -> String {
-        // swiftlint:disable force_cast
-        let unformattedFileName = metadata[1] as! String
-        let fileName = unformattedFileName.components(separatedBy: "/").last!.components(separatedBy: ".")[0]
-        let lineNumber = metadata[3] as! Int
-        // swiftlint:enable force_cast
-
-        var hexChars = [String]()
-
-        for character in fileName {
-            guard let asciiValue = character.asciiValue else { continue }
-            hexChars.append(.init(format: "%02X", asciiValue))
-        }
-
-        if hexChars.count > 3 {
-            var subsequence = Array(hexChars[0 ... 3])
-            subsequence.append(hexChars.last!)
-            hexChars = subsequence
-        }
-
-        return "\(hexChars.joined())x\(lineNumber)".lowercased()
+        let dataDigest = SHA256.hash(data: Data(lettersOnly.utf8))
+        let hexString = dataDigest.map { String(format: "%02x", $0) }.joined()
+        return (hexString.prefix(2) + hexString.suffix(2)).uppercased()
     }
 }

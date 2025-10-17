@@ -44,7 +44,7 @@ public extension TranslationService {
             return .success(outputs)
 
         case let .failure(error):
-            return .failure(.init(error, metadata: [self, #file, #function, #line]))
+            return .failure(.init(error, metadata: .init(sender: self)))
         }
     }
 
@@ -63,7 +63,7 @@ public extension TranslationService {
 
         switch getTranslationsResult {
         case let .success(translations):
-            guard let translation = translations.first else { return .failure(.init(metadata: [self, #file, #function, #line])) }
+            guard let translation = translations.first else { return .failure(.init(metadata: .init(sender: self))) }
             return .success(translation)
 
         case let .failure(exception):
@@ -74,8 +74,8 @@ public extension TranslationService {
     private func getTranslations(
         _ inputs: [TranslationInput],
         languagePair: LanguagePair,
-        hud hudConfig: (appearsAfter: Duration, isModal: Bool)? = nil,
-        timeout timeoutConfig: (duration: Duration, returnsInputs: Bool) = (.seconds(10), true),
+        hud hudConfig: (appearsAfter: Duration, isModal: Bool)?,
+        timeout timeoutConfig: (duration: Duration, returnsInputs: Bool),
         completion: @escaping (Callback<[Translation], Exception>) -> Void
     ) {
         @Dependency(\.coreKit) var core: CoreKit
@@ -101,7 +101,7 @@ public extension TranslationService {
         var translations = [Translation]()
 
         func handleExceptionAndComplete() {
-            let exception = exceptions.compiledException ?? .init(metadata: [self, #file, #function, #line])
+            let exception = exceptions.compiledException ?? .init(metadata: .init(sender: self))
             guard timeoutConfig.returnsInputs else { return completion(.failure(exception)) }
 
             Logger.log(exception, domain: .translation)
@@ -122,12 +122,12 @@ public extension TranslationService {
             guard translations.count == inputs.count else {
                 return completion(.failure(.init(
                     "Mismatched ratio returned.",
-                    metadata: [self, #file, #function, #line]
+                    metadata: .init(sender: self)
                 )))
             }
 
-            guard timeoutConfig.returnsInputs else { return completion(.failure(.timedOut([self, #file, #function, #line]))) }
-            Logger.log(.timedOut([self, #file, #function, #line]), domain: .translation)
+            guard timeoutConfig.returnsInputs else { return completion(.failure(.timedOut(metadata: .init(sender: self)))) }
+            Logger.log(.timedOut(metadata: .init(sender: self)), domain: .translation)
             completion(.success(translations))
         }
 
@@ -148,7 +148,7 @@ public extension TranslationService {
                     translations.append(translation)
 
                 case let .failure(error):
-                    exceptions.append(.init(error, metadata: [self, #file, #function, #line]))
+                    exceptions.append(.init(error, metadata: .init(sender: self)))
                 }
             }
 
@@ -157,7 +157,7 @@ public extension TranslationService {
             guard translations.count == inputs.count else {
                 return completion(.failure(.init(
                     "Mismatched ratio returned.",
-                    metadata: [self, #file, #function, #line]
+                    metadata: .init(sender: self)
                 )))
             }
 

@@ -141,8 +141,8 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             let exception: Exception = .init(
                 "Device is not configured for e-mail.",
                 isReportable: false,
-                extraParams: [Exception.CommonParamKeys.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.noEmail],
-                metadata: [self, #file, #function, #line]
+                userInfo: [Exception.CommonParameter.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.noEmail],
+                metadata: .init(sender: self)
             )
 
             Logger.log(exception)
@@ -175,7 +175,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             )
 
         case let .failure(error):
-            Logger.log(.init(error, metadata: [self, #file, #function, #line]))
+            Logger.log(.init(error, metadata: .init(sender: self)))
             compose(body: body, prompt: prompt)
         }
     }
@@ -184,7 +184,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
         switch result {
         case let .failure(error):
             Logger.log(
-                .init(error, metadata: [self, #file, #function, #line]),
+                .init(error, metadata: .init(sender: self)),
                 with: .toast
             )
 
@@ -192,7 +192,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             switch result {
             case .failed:
                 Logger.log(
-                    .init(metadata: [self, #file, #function, #line]),
+                    .init(metadata: .init(sender: self)),
                     with: .toast
                 )
 
@@ -217,7 +217,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
                     mimeType: "application/json"
                 )
             } catch {
-                Logger.log(.init(error, metadata: [self, #file, #function, #line]))
+                Logger.log(.init(error, metadata: .init(sender: self)))
                 return nil
             }
         }
@@ -235,23 +235,23 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
         ]
 
         if let leafViewController {
-            sections["view_id"] = String(type(of: leafViewController))
+            sections["view_id"] = leafViewController.descriptor
         }
 
         guard let error else { return attachmentData(sections) }
 
         var errorDescription = error.description
-        if let descriptor = error.extraParams?["Descriptor"] as? String,
-           let hashlet = error.extraParams?["Hashlet"] as? String {
-            errorDescription = "\(descriptor) (\(hashlet.uppercased()))"
+        if let descriptor = error.userInfo?[Exception.CommonParameter.descriptor.rawValue] as? String,
+           let code = error.userInfo?[Exception.CommonParameter.errorCode.rawValue] as? String {
+            errorDescription = "\(descriptor) (\(code.uppercased()))"
         }
 
         sections["error_description"] = errorDescription
         sections["error_id"] = error.id
 
-        if let additionalParameters = error.extraParams?
+        if let additionalParameters = error.userInfo?
             .filter({ $0.key != "Descriptor" })
-            .filter({ $0.key != "Hashlet" }),
+            .filter({ $0.key != "ErrorCode" }),
             !additionalParameters.isEmpty {
             sections["error_parameters"] = additionalParameters
                 .withCapitalizedKeys

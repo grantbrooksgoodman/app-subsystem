@@ -52,7 +52,7 @@ public enum Observers {
         Logger.log(
             "\(action) observer with ID: \(id).",
             domain: .observer,
-            metadata: [self, #file, #function, #line]
+            sender: self
         )
     }
 
@@ -60,7 +60,7 @@ public enum Observers {
         Logger.log(
             "Cleared all observers on \(keys).",
             domain: .observer,
-            metadata: [self, #file, #function, #line]
+            sender: self
         )
     }
 
@@ -71,7 +71,7 @@ public enum Observers {
         Logger.log(
             "Linking \(observerIDs) to \(observableKeys).",
             domain: .observer,
-            metadata: [self, #file, #function, #line]
+            sender: self
         )
     }
 }

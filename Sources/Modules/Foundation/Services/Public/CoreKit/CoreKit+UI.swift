@@ -88,20 +88,22 @@ public extension CoreKit {
             mainQueue.async {
                 func forcePresentation() {
                     uiApplication.dismissAlertControllers()
-                    present(viewController, animated: animated, embedded: embedded)
+                    present(
+                        viewController,
+                        animated: animated,
+                        embedded: embedded
+                    )
                 }
 
                 guard !forced else {
-                    guard Thread.isMainThread else { // TODO: Audit this; should now be unnecessary.
-                        mainQueue.sync { forcePresentation() }
-                        return
-                    }
-
-                    forcePresentation()
-                    return
+                    return GCD.shared.syncOnMain { forcePresentation() }
                 }
 
-                queuePresentation(of: viewController, animated: animated, embedded: embedded)
+                queuePresentation(
+                    of: viewController,
+                    animated: animated,
+                    embedded: embedded
+                )
             }
         }
 
@@ -194,16 +196,22 @@ public extension CoreKit {
         ) {
             guard !UIApplication.isBlockingUserInteraction,
                   !uiApplication.isPresentingAlertController else {
-                GCD.shared.after(.milliseconds(100)) { queuePresentation(of: viewController, animated: animated, embedded: embedded) }
-                return
+                return GCD.shared.after(.milliseconds(100)) {
+                    queuePresentation(
+                        of: viewController,
+                        animated: animated,
+                        embedded: embedded
+                    )
+                }
             }
 
-            guard Thread.isMainThread else {
-                mainQueue.sync { present(viewController, animated: animated, embedded: embedded) }
-                return
+            GCD.shared.syncOnMain {
+                present(
+                    viewController,
+                    animated: animated,
+                    embedded: embedded
+                )
             }
-
-            present(viewController, animated: animated, embedded: embedded)
         }
     }
 }

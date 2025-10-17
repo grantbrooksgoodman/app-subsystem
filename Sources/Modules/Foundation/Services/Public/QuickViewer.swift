@@ -50,7 +50,7 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
         guard !paths.isEmpty else {
             return .init(
                 "No file to preview.",
-                metadata: [self, #file, #function, #line]
+                metadata: .init(sender: self)
             )
         }
 

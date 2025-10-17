@@ -43,7 +43,9 @@ private struct InteractivePopGestureRecognizerDisabledViewModifier: ViewModifier
     public func body(content: Content) -> some View {
         content
             .onAppear { InteractivePopGestureRecognizer.setIsEnabled(!isDisabled) }
-            .onChange(of: isDisabled) { InteractivePopGestureRecognizer.setIsEnabled(!$0) }
+            .onChange(of: isDisabled) { _, newValue in
+                InteractivePopGestureRecognizer.setIsEnabled(!newValue)
+            }
             .onDisappear { InteractivePopGestureRecognizer.setIsEnabled(initialValue) }
     }
 }

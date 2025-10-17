@@ -67,7 +67,7 @@ final class Breadcrumbs: @preconcurrency AppSubsystem.Delegates.BreadcrumbsCaptu
         guard !isCapturing else {
             return .init(
                 "Breadcrumbs capture is already running.",
-                metadata: [self, #file, #function, #line]
+                metadata: .init(sender: self)
             )
         }
 
@@ -87,7 +87,7 @@ final class Breadcrumbs: @preconcurrency AppSubsystem.Delegates.BreadcrumbsCaptu
         guard isCapturing else {
             return .init(
                 "Breadcrumbs capture is not running.",
-                metadata: [self, #file, #function, #line]
+                metadata: .init(sender: self)
             )
         }
 

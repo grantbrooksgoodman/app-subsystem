@@ -10,6 +10,17 @@ import Foundation
 import SwiftUI
 
 public extension UIImage {
+    // MARK: - Properties
+
+    static var appIcon: UIImage? {
+        get async {
+            let utility = AppIconImageUtility.shared
+            return (await utility.remoteAppIconImage) ?? utility.localAppIconImage
+        }
+    }
+
+    // MARK: - Methods
+
     static func downloadedFrom(_ link: String) async -> UIImage? {
         guard let url = URL(string: link) else { return nil }
         return await downloadedFrom(url)

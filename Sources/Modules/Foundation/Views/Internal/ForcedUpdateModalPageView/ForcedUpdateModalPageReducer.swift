@@ -19,7 +19,6 @@ struct ForcedUpdateModalPageReducer: Reducer {
     @Dependency(\.coreKit) private var core: CoreKit
     @Dependency(\.translationService) private var translator: TranslationService
     @Dependency(\.uiApplication) private var uiApplication: UIApplication
-    @Dependency(\.forcedUpdateModalPageViewService) private var viewService: ForcedUpdateModalPageViewService
 
     // MARK: - Actions
 
@@ -58,7 +57,7 @@ struct ForcedUpdateModalPageReducer: Reducer {
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .viewAppeared:
-            state.appIconImage = viewService.localAppIconImage.swiftUIImage
+            state.appIconImage = AppIconImageUtility.shared.localAppIconImage.swiftUIImage
             if let installButtonRedirectURL = state.installButtonRedirectURL,
                uiApplication.canOpenURL(installButtonRedirectURL) {
                 state.shouldShowInstallButton = true
@@ -83,7 +82,7 @@ struct ForcedUpdateModalPageReducer: Reducer {
             }; hideInteractiveContent()
 
             let remoteAppIconImageTask: Effect<Action> = .task {
-                let result = await viewService.remoteAppIconImage
+                let result = await AppIconImageUtility.shared.remoteAppIconImage
                 return .remoteAppIconImageReturned(result)
             }
 

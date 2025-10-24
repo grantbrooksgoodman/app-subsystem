@@ -545,6 +545,7 @@ private enum LoggerDateFormatterDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "H:mm:ss.SSSS"
+        formatter.locale = .init(identifier: "en_US_POSIX")
         return formatter
     }
 }

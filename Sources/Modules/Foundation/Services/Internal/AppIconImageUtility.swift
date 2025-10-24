@@ -1,5 +1,5 @@
 //
-//  ForcedUpdateModalPageViewService.swift
+//  AppIconImageUtility.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -9,22 +9,36 @@
 import Foundation
 import UIKit
 
-struct ForcedUpdateModalPageViewService {
-    // MARK: - Dependencies
+final class AppIconImageUtility {
+    // MARK: - Types
 
-    @Dependency(\.mainBundle) private var mainBundle: Bundle
-    @Dependency(\.urlSession) private var urlSession: URLSession
+    private enum CacheKey: String, CaseIterable {
+        case localAppIconImage
+        case remoteAppIconImage
+    }
 
     // MARK: - Properties
+
+    static let shared = AppIconImageUtility()
+
+    @Cached(CacheKey.localAppIconImage) private var cachedLocalAppIconImage: UIImage?
+    @Cached(CacheKey.remoteAppIconImage) private var cachedRemoteAppIconImage: UIImage?
+
+    // MARK: - Computed Properties
 
     var localAppIconImage: UIImage? { getLocalAppIconImage() }
     var remoteAppIconImage: UIImage? {
         get async { try? await getRemoteAppIconImage().get() }
     }
 
-    // MARK: - Methods
+    // MARK: - Init
+
+    private init() {}
+
+    // MARK: - Computed Property Getters
 
     private func getLocalAppIconImage() -> UIImage? {
+        @Dependency(\.mainBundle) var mainBundle: Bundle
         func upscale(_ image: UIImage, by scaleFactor: CGFloat) -> UIImage? {
             guard let input = CIImage(image: image),
                   let coreImageFilter = CIFilter(name: "CILanczosScaleTransform") else { return nil }
@@ -47,13 +61,20 @@ struct ForcedUpdateModalPageViewService {
             )
         }
 
+        if let cachedLocalAppIconImage {
+            return cachedLocalAppIconImage
+        }
+
         guard let iconsDictionary = mainBundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
               let primaryIcon = iconsDictionary["CFBundlePrimaryIcon"] as? [String: Any],
               let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String] else { return nil }
 
         let images = iconFiles.compactMap(UIImage.init(named:))
-        guard let largestImage = images.max(by: { $0.pixelCount < $1.pixelCount }) else { return nil }
-        return upscale(largestImage, by: 2)
+        guard let largestImage = images.max(by: { $0.pixelCount < $1.pixelCount }),
+              let upscaledImage = upscale(largestImage, by: 2) else { return nil }
+
+        cachedLocalAppIconImage = upscaledImage
+        return upscaledImage
     }
 
     private func getRemoteAppIconImage() async -> Callback<UIImage, Exception> {
@@ -65,6 +86,13 @@ struct ForcedUpdateModalPageViewService {
     }
 
     private func getRemoteAppIconImage(completion: @escaping (Callback<UIImage, Exception>) -> Void) {
+        @Dependency(\.mainBundle) var mainBundle: Bundle
+        @Dependency(\.urlSession) var urlSession: URLSession
+
+        if let cachedRemoteAppIconImage {
+            return completion(.success(cachedRemoteAppIconImage))
+        }
+
         guard let bundleIdentifier = mainBundle.bundleIdentifier,
               let lookupURL = URL(string: "https://itunes.apple.com/lookup?bundleId=\(bundleIdentifier)") else {
             return completion(.failure(.init(
@@ -92,7 +120,7 @@ struct ForcedUpdateModalPageViewService {
             }
 
             urlSession.dataTask(with: highResolutionURL) { data, _, error in
-                guard let image = data.flatMap({ UIImage(data: $0) }) else {
+                guard let image = data.flatMap(UIImage.init(data:)) else {
                     return completion(.failure(
                         error == nil ? .init(
                             "Failed to resolve high resolution image.",
@@ -101,9 +129,17 @@ struct ForcedUpdateModalPageViewService {
                     ))
                 }
 
+                self.cachedRemoteAppIconImage = image
                 return completion(.success(image))
             }.resume()
         }.resume()
+    }
+
+    // MARK: - Clear Cache
+
+    func clearCache() {
+        cachedLocalAppIconImage = nil
+        cachedRemoteAppIconImage = nil
     }
 }
 

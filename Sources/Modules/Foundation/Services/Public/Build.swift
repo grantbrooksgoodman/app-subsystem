@@ -344,6 +344,7 @@ private enum BuildSKUDateFormatterDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "ddMMyy"
+        formatter.locale = .init(identifier: "en_US_POSIX")
         return formatter
     }
 }
@@ -352,6 +353,7 @@ private enum ExpiryInfoStringDateFormatterDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = .init(identifier: "en_US_POSIX")
         return formatter
     }
 }
@@ -360,6 +362,7 @@ private enum ProjectIDDateFormatterDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "ddMMyyyy"
+        formatter.locale = .init(identifier: "en_US_POSIX")
         return formatter
     }
 }

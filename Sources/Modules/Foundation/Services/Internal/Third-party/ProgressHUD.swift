@@ -115,10 +115,7 @@ extension ProgressHUD {
         set { shared.colorBackground = newValue }
     }
 
-    class var colorHUD: UIColor {
-        get { shared.colorHUD }
-        set { shared.colorHUD = newValue }
-    }
+    class var colorHUD: UIColor { shared.colorHUD }
 
     class var colorStatus: UIColor {
         get { shared.colorStatus }
@@ -292,7 +289,11 @@ class ProgressHUD: UIView {
     private var animationType = AnimationType.systemActivityIndicator
 
     private var colorBackground = UIColor(red: 0, green: 0, blue: 0, alpha: 0.2)
-    private var colorHUD = UIColor.systemGray
+    private var colorHUD: UIColor {
+        (ThemeService.isDarkModeActive ? UIColor.systemGray4 : .init(hex: 0xE5E5EA))
+            .withAlphaComponent(0.99)
+    }
+
     private var colorStatus = UIColor.label
     private var colorProgress = UIColor.lightGray
     private var colorAnimation = UIColor.lightGray

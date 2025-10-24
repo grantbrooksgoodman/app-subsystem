@@ -35,11 +35,16 @@ enum FoundationConstants {
 public extension CacheDomain {
     /* MARK: Properties */
 
+    static let appIconImage: CacheDomain = .init("appIconImage") { clearAppIconImageCache() }
     static let encodedHash: CacheDomain = .init("encodedHash") { clearEncodedHashCache() }
     static let localization: CacheDomain = .init("localization") { clearLocalizationCache() }
     static let localTranslationArchive: CacheDomain = .init("localTranslationArchive") { clearLocalTranslationArchiveCache() }
 
     /* MARK: Methods */
+
+    private static func clearAppIconImageCache() {
+        AppIconImageUtility.shared.clearCache()
+    }
 
     private static func clearEncodedHashCache() {
         EncodedHashStore.clearStore()

@@ -44,7 +44,11 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         // Root window
 
         let rootWindow = UIWindow(windowScene: windowScene)
-        rootWindow.rootViewController = UIHostingController(rootView: RootWindow(rootView))
+        rootWindow.rootViewController = UIHostingController(
+            rootView: RootWindow(rootView)
+                .environment(\.layoutDirection, .leftToRight)
+        )
+        rootWindow.semanticContentAttribute = .forceLeftToRight
         rootWindow.makeKeyAndVisible()
         rootWindow.tag = coreUI.semTag(for: "ROOT_WINDOW")
 
@@ -62,7 +66,9 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
                     reducer: RootOverlayReducer()
                 )
             )
+            .environment(\.layoutDirection, .leftToRight)
         )
+        rootOverlayWindow.semanticContentAttribute = .forceLeftToRight
         rootOverlayWindow.tag = coreUI.semTag(for: "ROOT_OVERLAY_WINDOW")
 
         rootOverlayWindow.backgroundColor = .clear
@@ -86,10 +92,16 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
         rootWindow.addSubview(statusBarWindow)
 
+        // Auxiliary layout
+
+        UINavigationBar.appearance().semanticContentAttribute = .forceLeftToRight
+        UIView.appearance().semanticContentAttribute = .forceLeftToRight
+
         UIViewController.swizzleUIAlertControllerDismiss
-        guard buildMilestone != .generalRelease else { return rootWindow }
 
         // Tap gesture recognizer
+
+        guard buildMilestone != .generalRelease else { return rootWindow }
 
         let tapGesture = UITapGestureRecognizer(target: self, action: nil)
         tapGesture.delegate = self

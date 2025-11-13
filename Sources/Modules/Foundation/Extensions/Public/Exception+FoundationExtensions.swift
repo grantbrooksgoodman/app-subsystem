@@ -31,7 +31,7 @@ extension Exception: AlertKit.Errorable {
 extension Exception: CustomNSError {
     public static var errorDomain: String { "exception" }
 
-    public var errorCode: Int { Int(code) ?? 0 }
+    public var errorCode: Int { 0 }
     public var errorUserInfo: [String: Any] { userInfo ?? [:] }
 }
 

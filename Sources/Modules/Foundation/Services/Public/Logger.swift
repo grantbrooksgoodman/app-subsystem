@@ -48,6 +48,11 @@ public enum Logger {
         }
     }
 
+    public enum Filter {
+        case exceptionsOnly
+        case reportableExceptionsOnly
+    }
+
     private enum NewlinePlacement {
         case preceding
         case succeeding
@@ -57,6 +62,7 @@ public enum Logger {
     // MARK: - Properties
 
     public private(set) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
+    public private(set) static var filter: Filter?
     public private(set) static var reportsErrorsAutomatically = false
     public private(set) static var subscribedDomains = [LoggerDomain]()
 
@@ -100,6 +106,10 @@ public enum Logger {
 
     public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
         self.domainsExcludedFromSessionRecord = domainsExcludedFromSessionRecord
+    }
+
+    public static func setFilter(_ filter: Filter?) {
+        self.filter = filter
     }
 
     public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
@@ -147,6 +157,11 @@ public enum Logger {
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
+
+        if filter == .reportableExceptionsOnly,
+           !exception.isReportable {
+            return
+        }
 
         let sender = String(exception.metadata.sender)
         let fileName = exception.metadata.fileName
@@ -208,6 +223,10 @@ public enum Logger {
             line: line
         )
 
+        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+            return
+        }
+
         let sender = String(metadata.sender)
         let fileName = metadata.fileName
         let functionName = metadata.function.components(separatedBy: "(")[0]
@@ -253,6 +272,10 @@ public enum Logger {
             line: line
         )
 
+        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+            return
+        }
+
         let sender = String(metadata.sender)
         let fileName = metadata.fileName
         let functionName = metadata.function.components(separatedBy: "(")[0]
@@ -280,6 +303,10 @@ public enum Logger {
         domain: LoggerDomain = .general,
         line: Int
     ) {
+        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+            return
+        }
+
         guard streamOpen else {
             log(message, sender: self)
             return
@@ -294,6 +321,10 @@ public enum Logger {
         onLine: Int? = nil
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
+
+        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+            return
+        }
 
         guard streamOpen else {
             guard let message else { return }

@@ -497,6 +497,7 @@ private extension ProgressHUD {
             labelStatus?.textAlignment = .center
             labelStatus?.baselineAdjustment = .alignCenters
             labelStatus?.numberOfLines = 0
+            labelStatus?.tag = CoreKit.UI.shared.semTag(for: "PROGRESS_HUD_LABEL")
             toolbarHUD?.addSubview(labelStatus!)
         }
 

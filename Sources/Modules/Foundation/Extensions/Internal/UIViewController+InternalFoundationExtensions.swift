@@ -18,6 +18,32 @@ extension UIViewController {
         method_exchangeImplementations(original, swizzled)
     }()
 
+    /// Recursively traverses the presented view controller hierarchy to resolve all `presentedViewController` instances.
+    var traversedPresentedViewControllers: [UIViewController] {
+        var presentedViewControllers = [UIViewController]()
+        var currentViewController = presentedViewController
+
+        while let currentVC = currentViewController {
+            presentedViewControllers.append(currentVC)
+            currentViewController = currentVC.presentedViewController
+        }
+
+        return presentedViewControllers
+    }
+
+    /// Recursively traverses the presenting view controller hierarchy to resolve all `presentingViewController` instances.
+    var traversedPresentingViewControllers: [UIViewController] {
+        var presentingViewControllers = [UIViewController]()
+        var currentViewController = presentingViewController
+
+        while let currentVC = currentViewController {
+            presentingViewControllers.append(currentVC)
+            currentViewController = currentVC.presentingViewController
+        }
+
+        return presentingViewControllers
+    }
+
     // MARK: - Methods
 
     @objc

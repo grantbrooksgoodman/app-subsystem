@@ -69,7 +69,7 @@ struct ForcedUpdateModalPageReducer: Reducer {
                 Toast.hide()
 
                 uiApplication
-                    .windows?
+                    .windows
                     .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
                     .alpha = 0
 

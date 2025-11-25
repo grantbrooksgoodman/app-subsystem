@@ -112,7 +112,7 @@ public struct ListRowView: View {
 
             Components.text(
                 configuration.innerText,
-                foregroundColor: configuration.isEnabled ? .titleText : Colors.titleLabelDisabledForeground
+                foregroundColor: configuration.isEnabled ? configuration.innerTextColor : Colors.titleLabelDisabledForeground
             )
             .padding(.leading, image == nil ? 0 : Floats.titleLabelLeadingPadding)
 

@@ -445,7 +445,7 @@ private extension ProgressHUD {
     // -------------------------------------------------------------------------------------------------------------------------------------------
     private func setupBackground(_ interaction: Bool) {
         if viewBackground == nil {
-            let mainWindow = UIApplication.shared.windows?.first ?? UIWindow()
+            let mainWindow = UIApplication.shared.windows.first ?? UIWindow()
             viewBackground = UIView(frame: bounds)
             mainWindow.addSubview(viewBackground!)
         }
@@ -497,7 +497,6 @@ private extension ProgressHUD {
             labelStatus?.textAlignment = .center
             labelStatus?.baselineAdjustment = .alignCenters
             labelStatus?.numberOfLines = 0
-            labelStatus?.tag = CoreKit.UI.shared.semTag(for: "PROGRESS_HUD_LABEL")
             toolbarHUD?.addSubview(labelStatus!)
         }
 
@@ -740,7 +739,7 @@ private extension ProgressHUD {
             heightKeyboard = keyboardHeight()
         }
 
-        let mainWindow = UIApplication.shared.windows?.first ?? UIWindow()
+        let mainWindow = UIApplication.shared.windows.first ?? UIWindow()
         let screen = mainWindow.bounds
         let center = CGPoint(x: screen.size.width / 2, y: (screen.size.height - heightKeyboard) / 2)
 
@@ -755,7 +754,7 @@ private extension ProgressHUD {
         if let keyboardWindowClass = NSClassFromString("UIRemoteKeyboardWindow"),
            let inputSetContainerView = NSClassFromString("UIInputSetContainerView"),
            let inputSetHostView = NSClassFromString("UIInputSetHostView") {
-            for window in UIApplication.shared.windows ?? [] {
+            for window in UIApplication.shared.windows {
                 if window.isKind(of: keyboardWindowClass) {
                     for firstSubView in window.subviews {
                         if firstSubView.isKind(of: inputSetContainerView) {

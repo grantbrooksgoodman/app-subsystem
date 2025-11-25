@@ -123,6 +123,7 @@ private extension Array where Element == ListRowView.Configuration {
                 headerText: nil,
                 innerText: configuration.innerText,
                 footerText: nil,
+                innerTextColor: configuration.innerTextColor,
                 isEnabled: configuration.isEnabled,
                 cornerRadius: 0,
                 imageView: configuration.imageView

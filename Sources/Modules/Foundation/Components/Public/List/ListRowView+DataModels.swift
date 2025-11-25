@@ -21,6 +21,7 @@ public extension ListRowView {
         // Other
         public let cornerRadius: CGFloat
         public let imageView: (() -> (any View))?
+        public let innerTextColor: Color
         public let interaction: Interaction
         public let isEnabled: Bool
 
@@ -31,6 +32,7 @@ public extension ListRowView {
             headerText: String? = nil,
             innerText: String,
             footerText: String? = nil,
+            innerTextColor: Color = .titleText,
             isEnabled: Bool = true,
             cornerRadius: CGFloat = UIApplication.isFullyV26Compatible ? 20 : 10,
             imageView: (() -> any View)? = nil
@@ -39,6 +41,7 @@ public extension ListRowView {
             self.headerText = headerText
             self.innerText = innerText
             self.footerText = footerText
+            self.innerTextColor = innerTextColor
             self.isEnabled = isEnabled
             self.cornerRadius = cornerRadius
             self.imageView = imageView
@@ -52,6 +55,7 @@ public extension ListRowView {
             let sameHeaderText = left.headerText == right.headerText
             let sameImageViewDebugDescription = left.imageView.debugDescription == right.imageView.debugDescription
             let sameInnerText = left.innerText == right.innerText
+            let sameInnerTextColor = left.innerTextColor == right.innerTextColor
             let sameInteraction = left.interaction == right.interaction
             let sameIsEnabled = left.isEnabled == right.isEnabled
 
@@ -60,6 +64,7 @@ public extension ListRowView {
                   sameHeaderText,
                   sameImageViewDebugDescription,
                   sameInnerText,
+                  sameInnerTextColor,
                   sameInteraction,
                   sameIsEnabled else { return false }
 

@@ -51,7 +51,7 @@ public extension UIApplication {
     }
 
     var mainWindow: UIWindow? {
-        windows?.first(where: \.isKeyWindow)
+        windows.first(where: \.isKeyWindow)
     }
 
     /// Recursively resolves all view controllers (including parents & children) associated with all windows in all window scenes.
@@ -88,11 +88,10 @@ public extension UIApplication {
         #endif
     }
 
-    var windows: [UIWindow]? {
+    var windows: [UIWindow] {
         connectedScenes
-            .first(where: { $0 is UIWindowScene })
-            .flatMap { $0 as? UIWindowScene }?
-            .windows
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
     }
 
     private var mainQueue: DispatchQueue { Dependency(\.mainQueue).wrappedValue }
@@ -126,50 +125,25 @@ public extension UIApplication {
     func overrideUserInterfaceStyle(_ style: UIUserInterfaceStyle) {
         mainQueue.async {
             self.presentedViewControllers.forEach { $0.overrideUserInterfaceStyle = style }
-            self.windows?.forEach { $0.overrideUserInterfaceStyle = style }
+            self.windows.forEach { $0.overrideUserInterfaceStyle = style }
         }
     }
 
     /// Recursively resolves all view controllers (including parents & children) associated with either the key window, or all windows in all window scenes.
     func presentedViewControllers(_ mainWindowOnly: Bool = false) -> [UIViewController] {
+        let windows = mainWindowOnly ? (mainWindow.map { [$0] } ?? []) : windows
         var viewControllers = [UIViewController?]()
 
-        guard mainWindowOnly else {
-            guard let windows else { return [] }
-            for window in windows {
-                viewControllers.append(window.rootViewController)
+        for window in windows {
+            guard let rootViewController = window.rootViewController else { continue }
 
-                viewControllers.append(window.rootViewController?.presentedViewController)
-                viewControllers.append(window.rootViewController?.presentingViewController)
-
-                viewControllers.append(contentsOf: window.rootViewController?.ancestors() ?? [])
-                viewControllers.append(contentsOf: window.rootViewController?.descendants() ?? [])
-
-                viewControllers.append(contentsOf: window.rootViewController?.presentedViewController?.ancestors() ?? [])
-                viewControllers.append(contentsOf: window.rootViewController?.presentedViewController?.descendants() ?? [])
-
-                viewControllers.append(contentsOf: window.rootViewController?.presentingViewController?.ancestors() ?? [])
-                viewControllers.append(contentsOf: window.rootViewController?.presentingViewController?.descendants() ?? [])
-            }
-
-            viewControllers.forEach { viewControllers.append(keyViewController($0)) }
-            return viewControllers.compactMap { $0 }.unique
+            viewControllers += [rootViewController]
+                + rootViewController.descendants() as [UIViewController]
+                + (
+                    rootViewController.traversedPresentedViewControllers + rootViewController.traversedPresentingViewControllers
+                )
+                .flatMap { [$0] + $0.ancestors() + $0.descendants() }
         }
-
-        viewControllers = [
-            mainWindow?.rootViewController,
-            mainWindow?.rootViewController?.presentedViewController,
-            mainWindow?.rootViewController?.presentingViewController,
-        ]
-
-        viewControllers += mainWindow?.rootViewController?.ancestors() ?? []
-        viewControllers += mainWindow?.rootViewController?.descendants() ?? []
-
-        viewControllers += mainWindow?.rootViewController?.presentedViewController?.ancestors() ?? []
-        viewControllers += mainWindow?.rootViewController?.presentedViewController?.descendants() ?? []
-
-        viewControllers += mainWindow?.rootViewController?.presentingViewController?.ancestors() ?? []
-        viewControllers += mainWindow?.rootViewController?.presentingViewController?.descendants() ?? []
 
         viewControllers.forEach { viewControllers.append(keyViewController($0)) }
         return viewControllers.compactMap { $0 }.unique
@@ -177,10 +151,14 @@ public extension UIApplication {
 
     /// Recursively resolves all views (including superviews & subviews) associated with either the key window, or all windows in all window scenes.
     func presentedViews(_ mainWindowOnly: Bool = false) -> [UIView] {
-        let viewControllers = presentedViewControllers(mainWindowOnly)
-        return viewControllers.compactMap(\.view) +
-            viewControllers.compactMap(\.view).map(\.traversedSubviews).reduce([], +) +
-            viewControllers.compactMap(\.view).map(\.traversedSuperviews).reduce([], +)
+        let windowAttachedViews = (mainWindowOnly ? (mainWindow.map { [$0] } ?? []) : windows)
+            .flatMap { [$0] + $0.traversedSubviews + $0.traversedSuperviews }
+        let viewControllerViews = presentedViewControllers(mainWindowOnly)
+            .compactMap(\.view)
+        let viewControllerSubtrees = viewControllerViews
+            .flatMap { [$0] + $0.traversedSubviews + $0.traversedSuperviews }
+
+        return (windowAttachedViews + viewControllerViews + viewControllerSubtrees).unique
     }
 
     func resignFirstResponders(in view: UIView? = nil) {

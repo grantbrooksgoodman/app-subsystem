@@ -112,8 +112,7 @@ public extension CoreKit {
         public func overrideUserInterfaceStyle(_ style: UIUserInterfaceStyle) {
             mainQueue.async {
                 StatusBar.overrideStyle(style.statusBarStyle)
-                guard let windows = uiApplication.windows else { return }
-                windows.forEach { $0.overrideUserInterfaceStyle = style }
+                uiApplication.windows.forEach { $0.overrideUserInterfaceStyle = style }
             }
         }
 
@@ -138,7 +137,7 @@ public extension CoreKit {
                 UIApplication.isBlockingUserInteraction = true
 
                 self.uiApplication
-                    .windows?
+                    .windows
                     .filter { $0.tag == self.semTag(for: "ROOT_OVERLAY_WINDOW") || $0.tag == self.semTag(for: "ROOT_WINDOW") }
                     .forEach { $0.isUserInteractionEnabled = false }
 
@@ -154,7 +153,7 @@ public extension CoreKit {
                 UIApplication.isBlockingUserInteraction = false
 
                 self.uiApplication
-                    .windows?
+                    .windows
                     .filter { $0.tag == self.semTag(for: "ROOT_OVERLAY_WINDOW") || $0.tag == self.semTag(for: "ROOT_WINDOW") }
                     .forEach { $0.isUserInteractionEnabled = true }
             }

@@ -31,7 +31,7 @@ extension UIView {
                 UIView.isBlockingUserInteraction = true
                 core.ui.blockUserInteraction()
                 uiApplication
-                    .windows?
+                    .windows
                     .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
                     .alpha = 0
             }
@@ -68,7 +68,7 @@ extension UIView {
                 UIView.isBlockingUserInteraction = false
                 core.ui.unblockUserInteraction()
                 uiApplication
-                    .windows?
+                    .windows
                     .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
                     .alpha = 1
             }

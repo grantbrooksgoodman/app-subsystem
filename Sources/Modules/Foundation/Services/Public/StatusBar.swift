@@ -14,9 +14,9 @@ public enum StatusBar {
 
     private static var statusBarViewController: StatusBarViewController? {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
-        @Dependency(\.uiApplication.windows) var windows: [UIWindow]?
+        @Dependency(\.uiApplication.windows) var windows: [UIWindow]
 
-        return (windows?
+        return (windows
             .first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") }))?
                     .rootViewController as? StatusBarViewController
     }

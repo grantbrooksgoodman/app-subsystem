@@ -31,12 +31,14 @@ public extension ComponentKit {
     func button(
         _ text: String,
         font: ComponentKit.Font = .system,
+        isInspectable: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Components.button(
             text,
             font: font,
             foregroundColor: .accent,
+            isInspectable: isInspectable,
             action: action
         )
     }
@@ -48,13 +50,15 @@ public extension ComponentKit {
         foregroundColor: Color = .background,
         secondaryForegroundColor: Color? = nil,
         usesShadow: Bool = true,
+        isInspectable: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Components.button(
             text,
             font: font,
             foregroundColor: foregroundColor,
-            secondaryForegroundColor: secondaryForegroundColor
+            secondaryForegroundColor: secondaryForegroundColor,
+            isInspectable: isInspectable
         ) {
             action()
         }
@@ -84,11 +88,16 @@ public extension ComponentKit {
         )
     }
 
-    func text(_ text: String, font: ComponentKit.Font = .system) -> some View {
+    func text(
+        _ text: String,
+        font: ComponentKit.Font = .system,
+        isInspectable: Bool = false
+    ) -> some View {
         Components.text(
             text,
             font: font,
-            foregroundColor: .titleText
+            foregroundColor: .titleText,
+            isInspectable: isInspectable
         )
     }
 }

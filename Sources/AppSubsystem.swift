@@ -59,6 +59,7 @@ public enum AppSubsystem {
         alertKitConfig.registerLoggerDelegate(Logger.AlertKitLogger())
         alertKitConfig.registerPresentationDelegate(core)
 
+        InspectionDelegate.registerWithDependencies()
         ReportDelegate.registerWithDependencies()
         TranslationDelegate.registerWithDependencies()
 

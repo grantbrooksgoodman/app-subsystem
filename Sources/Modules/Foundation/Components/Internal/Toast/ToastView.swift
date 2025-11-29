@@ -25,15 +25,10 @@ struct ToastView: View {
 
     // MARK: - Properties
 
-    // Closure
+    private let message: String
     private let onDismiss: () -> Void
     private let onTap: (() -> Void)?
-
-    // String
-    private let message: String
     private let title: String?
-
-    // ToastType
     private let type: Toast.ToastType
 
     // MARK: - Computed Properties

@@ -68,10 +68,15 @@ struct BuildInfoOverlayViewService {
             await AKActionSheet(
                 title: "File a Report",
                 actions: [
-                    .init("Send Feedback") { reportDelegate.sendFeedback() },
-                    .init("Report Bug") { reportDelegate.reportBug() },
+                    .init(AppSubsystem.delegates.localizedStrings.sendFeedback) {
+                        reportDelegate.sendFeedback()
+                    },
+                    .init("Report Bug") {
+                        reportDelegate.reportBug()
+                    },
                 ],
-                cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel
+                cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel,
+                sourceItem: .custom(.string(AppSubsystem.delegates.localizedStrings.sendFeedback))
             ).present(translating: [.actions(), .title])
         }
     }

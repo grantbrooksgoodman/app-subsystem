@@ -13,17 +13,15 @@ public extension ListRowView {
     struct Configuration: Equatable {
         // MARK: - Properties
 
-        // String
+        public let cornerRadius: CGFloat
         public let footerText: String?
         public let headerText: String?
-        public let innerText: String
-
-        // Other
-        public let cornerRadius: CGFloat
         public let imageView: (() -> (any View))?
+        public let innerText: String
         public let innerTextColor: Color
         public let interaction: Interaction
         public let isEnabled: Bool
+        public let isInspectable: Bool
 
         // MARK: - Init
 
@@ -34,6 +32,7 @@ public extension ListRowView {
             footerText: String? = nil,
             innerTextColor: Color = .titleText,
             isEnabled: Bool = true,
+            isInspectable: Bool = false,
             cornerRadius: CGFloat = UIApplication.isFullyV26Compatible ? 20 : 10,
             imageView: (() -> any View)? = nil
         ) {
@@ -43,6 +42,7 @@ public extension ListRowView {
             self.footerText = footerText
             self.innerTextColor = innerTextColor
             self.isEnabled = isEnabled
+            self.isInspectable = isInspectable
             self.cornerRadius = cornerRadius
             self.imageView = imageView
         }
@@ -58,6 +58,7 @@ public extension ListRowView {
             let sameInnerTextColor = left.innerTextColor == right.innerTextColor
             let sameInteraction = left.interaction == right.interaction
             let sameIsEnabled = left.isEnabled == right.isEnabled
+            let sameIsInspectable = left.isInspectable == right.isInspectable
 
             guard sameCornerRadius,
                   sameFooterText,
@@ -66,7 +67,8 @@ public extension ListRowView {
                   sameInnerText,
                   sameInnerTextColor,
                   sameInteraction,
-                  sameIsEnabled else { return false }
+                  sameIsEnabled,
+                  sameIsInspectable else { return false }
 
             return true
         }

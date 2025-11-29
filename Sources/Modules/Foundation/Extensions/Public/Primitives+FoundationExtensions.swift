@@ -7,6 +7,8 @@
 
 /* Native */
 import Foundation
+
+/* Proprietary */
 import Translator
 
 // MARK: - Float

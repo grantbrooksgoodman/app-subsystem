@@ -12,7 +12,7 @@ import Foundation
 import AlertKit
 import Translator
 
-public struct TranslationDelegate: AlertKit.TranslationDelegate {
+struct TranslationDelegate: AlertKit.TranslationDelegate {
     // MARK: - Dependencies
 
     @Dependency(\.translationService) private var translator: TranslationService
@@ -23,14 +23,14 @@ public struct TranslationDelegate: AlertKit.TranslationDelegate {
 
     // MARK: - Register with Dependencies
 
-    public static func registerWithDependencies() {
+    static func registerWithDependencies() {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         alertKitConfig.registerTranslationDelegate(TranslationDelegate())
     }
 
     // MARK: - AKTranslationDelegate Conformance
 
-    public func getTranslations(
+    func getTranslations(
         _ inputs: [TranslationInput],
         languagePair: LanguagePair,
         hud hudConfig: AlertKit.HUDConfig?,

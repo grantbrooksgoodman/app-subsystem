@@ -91,7 +91,8 @@ struct BuildInfoOverlayView: View {
                 ),
                 scale: .custom(Floats.sendFeedbackButtonLabelFontSize)
             ),
-            foregroundColor: Colors.sendFeedbackButtonLabelForeground
+            foregroundColor: Colors.sendFeedbackButtonLabelForeground,
+            isInspectable: true
         ) {
             viewModel.send(.sendFeedbackButtonTapped)
         }

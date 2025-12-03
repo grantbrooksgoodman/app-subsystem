@@ -46,22 +46,22 @@ public enum StatusBar {
 final class StatusBarViewController: UIViewController {
     // MARK: - Properties
 
-    public var isStatusBarHidden: Bool = false {
+    var isStatusBarHidden: Bool = false {
         didSet { setNeedsStatusBarAppearanceUpdate() }
     }
 
-    public var statusBarStyle: UIStatusBarStyle = .default {
+    var statusBarStyle: UIStatusBarStyle = .default {
         didSet { setNeedsStatusBarAppearanceUpdate() }
     }
 
     // MARK: - Computed Properties
 
-    override public var preferredStatusBarStyle: UIStatusBarStyle { statusBarStyle }
-    override public var prefersStatusBarHidden: Bool { isStatusBarHidden }
+    override var preferredStatusBarStyle: UIStatusBarStyle { statusBarStyle }
+    override var prefersStatusBarHidden: Bool { isStatusBarHidden }
 
     // MARK: - Init
 
-    public init() {
+    init() {
         super.init(nibName: nil, bundle: nil)
         view.backgroundColor = .clear
         view.isUserInteractionEnabled = false

@@ -31,7 +31,9 @@ public extension UIApplication {
     }
 
     static var isFullyV26Compatible: Bool {
-        UIApplication.iOS26IsAvailable && UIApplication.isCompiledForV26OrLater
+        !UIApplication.bundleRequiresPreV26Design &&
+            UIApplication.iOS26IsAvailable &&
+            UIApplication.isCompiledForV26OrLater
     }
 
     var isPresentingAlertController: Bool {
@@ -167,6 +169,13 @@ public extension UIApplication {
             guard let firstResponder = self.firstResponder(in: view) else { return }
             firstResponder.resignFirstResponder()
         }
+    }
+
+    private static var bundleRequiresPreV26Design: Bool {
+        @Dependency(\.mainBundle) var mainBundle: Bundle
+        return (mainBundle.object(
+            forInfoDictionaryKey: "UIDesignRequiresCompatibility"
+        ) as? Bool) ?? false
     }
 
     private static var isCompiledForV26OrLater: Bool {

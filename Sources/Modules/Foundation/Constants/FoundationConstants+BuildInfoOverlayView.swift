@@ -11,37 +11,37 @@ import SwiftUI
 
 // MARK: - CGFloat
 
-public extension FoundationConstants.CGFloats {
+extension FoundationConstants.CGFloats {
     enum BuildInfoOverlayView {
-        public static let buildInfoButtonFrameHeight: CGFloat = 15
+        static let buildInfoButtonFrameHeight: CGFloat = 15
 
-        public static let developerModeIndicatorFrameHeight: CGFloat = 8
-        public static let developerModeIndicatorFrameWidth: CGFloat = 8
-        public static let developerModeIndicatorTrailingPadding: CGFloat = -6
+        static let developerModeIndicatorFrameHeight: CGFloat = 8
+        static let developerModeIndicatorFrameWidth: CGFloat = 8
+        static let developerModeIndicatorTrailingPadding: CGFloat = -6
 
-        public static let sendFeedbackButtonFrameHeight: CGFloat = 20
-        public static let sendFeedbackButtonLabelFontSize: CGFloat = 12
+        static let sendFeedbackButtonFrameHeight: CGFloat = 20
+        static let sendFeedbackButtonLabelFontSize: CGFloat = 12
 
-        public static let statsViewFrameHeight: CGFloat = 15
-        public static let translucencyAnimationSpeed: CGFloat = 2
-        public static let xOffset: CGFloat = -20
+        static let statsViewFrameHeight: CGFloat = 15
+        static let translucencyAnimationSpeed: CGFloat = 2
+        static let xOffset: CGFloat = -20
     }
 }
 
 // MARK: - Color
 
-public extension FoundationConstants.Colors {
+extension FoundationConstants.Colors {
     enum BuildInfoOverlayView {
-        public static let buildInfoButtonLabelForeground: Color = .white
-        public static let sendFeedbackButtonLabelForeground: Color = .white
-        public static let statsLabelForeground: Color = .white
+        static let buildInfoButtonLabelForeground: Color = .white
+        static let sendFeedbackButtonLabelForeground: Color = .white
+        static let statsLabelForeground: Color = .white
     }
 }
 
 // MARK: - String
 
-public extension FoundationConstants.Strings {
+extension FoundationConstants.Strings {
     enum BuildInfoOverlayView {
-        public static let sendFeedbackButtonLabelFontName = "Arial"
+        static let sendFeedbackButtonLabelFontName = "Arial"
     }
 }

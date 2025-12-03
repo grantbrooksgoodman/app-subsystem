@@ -10,14 +10,14 @@ import Foundation
 
 // MARK: - CGFloat
 
-public extension FoundationConstants.CGFloats {
+extension FoundationConstants.CGFloats {
     enum RootOverlayView {
-        public static let buildInfoOverlayFrameMaxHeight: CGFloat = 110
+        static let buildInfoOverlayFrameMaxHeight: CGFloat = 110
 
-        public static let fallbackFrameHeight: CGFloat = 100
-        public static let fallbackFrameOperand: CGFloat = 10
-        public static let fallbackFrameWidth: CGFloat = 200
-        public static let fallbackFrameYOriginMaxYOperand: CGFloat = 150 // swiftlint:disable:next identifier_name
-        public static let fallbackFrameYOriginSafeAreaInsetsOperand: CGFloat = 30
+        static let fallbackFrameHeight: CGFloat = 100
+        static let fallbackFrameOperand: CGFloat = 10
+        static let fallbackFrameWidth: CGFloat = 200
+        static let fallbackFrameYOriginMaxYOperand: CGFloat = 150 // swiftlint:disable:next identifier_name
+        static let fallbackFrameYOriginSafeAreaInsetsOperand: CGFloat = 30
     }
 }

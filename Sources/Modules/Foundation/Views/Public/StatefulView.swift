@@ -61,6 +61,8 @@ public struct StatefulView: View {
                 ProgressPageView(backgroundColor: progressPageViewBackgroundColor)
             }
         }
-        .transition(.opacity.animation(.easeIn(duration: 0.2)))
+        .transition(.opacity.animation(.easeIn(
+            duration: FoundationConstants.CGFloats.ForcedUpdateModalPageView.transitionAnimationDuration
+        )))
     }
 }

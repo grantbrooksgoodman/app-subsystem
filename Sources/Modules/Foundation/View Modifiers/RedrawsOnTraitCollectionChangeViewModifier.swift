@@ -17,7 +17,7 @@ private struct RedrawsOnTraitCollectionChangeViewModifier: ViewModifier {
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .id(viewID)
             .onTraitCollectionChange { viewID = UUID() }

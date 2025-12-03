@@ -12,11 +12,11 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
-extension DevModeAction {
+extension DevModeAction { // swiftlint:disable:next type_body_length
     enum Subsystem {
         // MARK: - Available Actions Getter
 
-        public static var available: [DevModeAction] {
+        static var available: [DevModeAction] {
             var availableActions: [DevModeAction] = [
                 eraseContentAndSettingsAction,
                 toggleBuildInfoOverlayAction,
@@ -67,7 +67,7 @@ extension DevModeAction {
                     clearCaches: Bool = false,
                     resetUserDefaults: Bool = false,
                     eraseDocumentsDirectory: Bool = false,
-                    eraseTemporaryDirectory: Bool = false,
+                    eraseTemporaryDirectory: Bool = false
                 ) {
                     if clearCaches {
                         core.utils.clearCaches()

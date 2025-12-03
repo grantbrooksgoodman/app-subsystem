@@ -11,33 +11,33 @@ import SwiftUI
 
 // MARK: - CGFloat
 
-public extension FoundationConstants.CGFloats {
+extension FoundationConstants.CGFloats {
     enum FailureView {
-        public static let exceptionLabelBottomPadding: CGFloat = 10
-        public static let exceptionLabelFontSize: CGFloat = 22.5
-        public static let exceptionLabelHorizontalPadding: CGFloat = 20
+        static let exceptionLabelBottomPadding: CGFloat = 10
+        static let exceptionLabelFontSize: CGFloat = 22.5
+        static let exceptionLabelHorizontalPadding: CGFloat = 20
 
-        public static let imageBottomPadding: CGFloat = 10
-        public static let imageFrameMaxHeight: CGFloat = 120
-        public static let imageFrameMaxWidth: CGFloat = 120
+        static let imageBottomPadding: CGFloat = 10
+        static let imageFrameMaxHeight: CGFloat = 120
+        static let imageFrameMaxWidth: CGFloat = 120
 
-        public static let retryButtonBottomPadding: CGFloat = 5
-        public static let retryButtonLabelFontSize: CGFloat = 15
+        static let retryButtonBottomPadding: CGFloat = 5
+        static let retryButtonLabelFontSize: CGFloat = 15
     }
 }
 
 // MARK: - Color
 
-public extension FoundationConstants.Colors {
+extension FoundationConstants.Colors {
     enum FailureView {
-        public static let imageForegroundColor: Color = .red
+        static let imageForegroundColor: Color = .red
     }
 }
 
 // MARK: - String
 
-public extension FoundationConstants.Strings {
+extension FoundationConstants.Strings {
     enum FailureView {
-        public static let imageSystemName = "exclamationmark.octagon.fill"
+        static let imageSystemName = "exclamationmark.octagon.fill"
     }
 }

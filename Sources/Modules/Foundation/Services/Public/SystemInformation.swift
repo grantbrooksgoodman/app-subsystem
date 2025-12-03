@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-// swiftlint:disable force_try line_length
+// swiftlint:disable line_length
 public enum SystemInformation {
     // MARK: - Types
 
@@ -22,47 +22,47 @@ public enum SystemInformation {
     // MARK: - Properties
 
     public static var activeCPUs: Int64 {
-        return try! informationInteger(withLevels: CTL_HW, HW_AVAILCPU)
+        return (try? informationInteger(withLevels: CTL_HW, HW_AVAILCPU)) ?? .zero
     }
 
     public static var deviceName: String {
-        return try! informationString(withLevels: CTL_KERN, KERN_HOSTNAME)
+        return (try? informationString(withLevels: CTL_KERN, KERN_HOSTNAME)) ?? "Unknown"
     }
 
     public static var kernelVersion: String {
-        return try! informationString(withLevels: CTL_KERN, KERN_VERSION)
+        return (try? informationString(withLevels: CTL_KERN, KERN_VERSION)) ?? "Unknown"
     }
 
     public static var modelCode: String {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
-        return try! informationString(withLevels: CTL_HW, HW_MODEL)
+        return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #else
-        return try! informationString(withLevels: CTL_HW, HW_MACHINE)
+        return try? informationString(withLevels: CTL_HW, HW_MACHINE) ?? "Unknown"
         #endif
     }
 
     public static var modelName: String {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
-        return try! informationString(withLevels: CTL_HW, HW_MACHINE)
+        return (try? informationString(withLevels: CTL_HW, HW_MACHINE)) ?? "Unknown"
         #else
-        return try! informationString(withLevels: CTL_HW, HW_MODEL)
+        return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #endif
     }
 
     public static var osRelease: String {
-        return try! informationString(withLevels: CTL_KERN, KERN_OSRELEASE)
+        return (try? informationString(withLevels: CTL_KERN, KERN_OSRELEASE)) ?? "Unknown"
     }
 
     public static var osRevision: Int64 {
-        return try! informationInteger(withLevels: CTL_KERN, KERN_OSREV)
+        return (try? informationInteger(withLevels: CTL_KERN, KERN_OSREV)) ?? .zero
     }
 
     public static var osType: String {
-        return try! informationString(withLevels: CTL_KERN, KERN_OSTYPE)
+        return (try? informationString(withLevels: CTL_KERN, KERN_OSTYPE)) ?? "Unknown"
     }
 
     public static var osVersion: String {
-        return try! informationString(withLevels: CTL_KERN, KERN_OSVERSION)
+        return (try? informationString(withLevels: CTL_KERN, KERN_OSVERSION)) ?? "Unknown"
     }
 
     // MARK: - Auxiliary
@@ -152,4 +152,4 @@ public enum SystemInformation {
     }
 }
 
-// swiftlint:enable force_try line_length
+// swiftlint:enable line_length

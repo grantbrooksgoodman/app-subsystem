@@ -33,11 +33,8 @@ struct RootOverlayReducer: Reducer {
     struct State: Equatable {
         /* MARK: Properties */
 
-        // Bool
         var isBuildInfoOverlayHidden = Observables.isBuildInfoOverlayHidden.value
         var isPresentingSheet = false
-
-        // Other
         var sheet: AnyView = .init(EmptyView())
         var toast: Toast?
         var toastAction: (() -> Void)?

@@ -17,7 +17,7 @@ private struct StatusBarStyleViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(
+    init(
         style: UIStatusBarStyle,
         restoreOnDisappear: Bool
     ) {
@@ -27,7 +27,7 @@ private struct StatusBarStyleViewModifier: ViewModifier {
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         if restoreOnDisappear {
             content
                 .onAppear { StatusBar.overrideStyle(preferredStatusBarStyle) }

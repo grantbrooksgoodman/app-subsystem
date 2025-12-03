@@ -8,13 +8,13 @@
 /* Native */
 import Foundation
 
-public enum MailComposerDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> MailComposer {
+enum MailComposerDependency: DependencyKey {
+    static func resolve(_: DependencyValues) -> MailComposer {
         .shared
     }
 }
 
-public extension DependencyValues {
+extension DependencyValues {
     var mailComposer: MailComposer {
         get { self[MailComposerDependency.self] }
         set { self[MailComposerDependency.self] = newValue }

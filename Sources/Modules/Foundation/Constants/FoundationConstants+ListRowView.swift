@@ -11,48 +11,48 @@ import SwiftUI
 
 // MARK: - CGFloat
 
-public extension FoundationConstants.CGFloats {
+extension FoundationConstants.CGFloats {
     enum ListRowView {
-        public static let chevronImageFrameMaxHeight: CGFloat = 14
-        public static let chevronImageFrameMaxWidth: CGFloat = 14
+        static let chevronImageFrameMaxHeight: CGFloat = 14
+        static let chevronImageFrameMaxWidth: CGFloat = 14
 
-        public static let footerLabelHorizontalPadding: CGFloat = 16
-        public static let footerLabelSystemFontScale: CGFloat = 13.5
-        public static let frameMinHeight: CGFloat = UIApplication.isFullyV26Compatible ? 48 : 44
+        static let footerLabelHorizontalPadding: CGFloat = 16
+        static let footerLabelSystemFontScale: CGFloat = 13.5
+        static let frameMinHeight: CGFloat = UIApplication.isFullyV26Compatible ? 48 : 44
 
-        public static let headerLabelHorizontalPadding: CGFloat = 16
-        public static let headerLabelSystemFontScale: CGFloat = 13.5
+        static let headerLabelHorizontalPadding: CGFloat = 16
+        static let headerLabelSystemFontScale: CGFloat = 13.5
 
-        public static let imageFrameHeight: CGFloat = 30
-        public static let imageFrameWidth: CGFloat = 30
-        public static let imageLeadingPadding: CGFloat = 3
+        static let imageFrameHeight: CGFloat = 30
+        static let imageFrameWidth: CGFloat = 30
+        static let imageLeadingPadding: CGFloat = 3
 
-        public static let titleLabelLeadingPadding: CGFloat = 5
+        static let titleLabelLeadingPadding: CGFloat = 5
 
-        public static let verticalPadding: CGFloat = UIApplication.isFullyV26Compatible ? 12 : 8
+        static let verticalPadding: CGFloat = UIApplication.isFullyV26Compatible ? 12 : 8
     }
 }
 
 // MARK: - Color
 
-public extension FoundationConstants.Colors {
+extension FoundationConstants.Colors {
     enum ListRowView {
-        public static let buttonStyleDarkNotPressedBackground: Color = .init(uiColor: .init(hex: 0x2A2A2C))
-        public static let buttonStyleDarkPressedBackground: Color = .init(uiColor: .init(hex: 0x3A3A3C))
+        static let buttonStyleDarkNotPressedBackground: Color = .init(uiColor: .init(hex: 0x2A2A2C))
+        static let buttonStyleDarkPressedBackground: Color = .init(uiColor: .init(hex: 0x3A3A3C))
 
-        public static let buttonStyleLightNotPressedBackground: Color = .white
-        public static let buttonStyleLightPressedBackground: Color = .init(uiColor: .init(hex: 0xD1D1D6))
+        static let buttonStyleLightNotPressedBackground: Color = .white
+        static let buttonStyleLightPressedBackground: Color = .init(uiColor: .init(hex: 0xD1D1D6))
 
-        public static let darkBackground: Color = .init(uiColor: .init(hex: 0x2A2A2C))
-        public static let lightBackground: Color = .white
-        public static let titleLabelDisabledForeground: Color = .gray
+        static let darkBackground: Color = .init(uiColor: .init(hex: 0x2A2A2C))
+        static let lightBackground: Color = .white
+        static let titleLabelDisabledForeground: Color = .gray
     }
 }
 
 // MARK: - String
 
-public extension FoundationConstants.Strings {
+extension FoundationConstants.Strings {
     enum ListRowView {
-        public static let chevronImageSystemName = "chevron.forward"
+        static let chevronImageSystemName = "chevron.forward"
     }
 }

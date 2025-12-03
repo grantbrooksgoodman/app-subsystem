@@ -15,12 +15,12 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
     private final class PreviewItem: NSObject, QLPreviewItem {
         // MARK: - Properties
 
-        public var previewItemTitle: String?
-        public var previewItemURL: URL?
+        var previewItemTitle: String?
+        var previewItemURL: URL?
 
         // MARK: - Init
 
-        public init(
+        init(
             title: String? = nil,
             url: URL? = nil
         ) {
@@ -65,7 +65,10 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
         filePaths = paths
         previewItemTitle = title
 
-        StatusBar.overrideStyle(.lightContent)
+        if !UIApplication.isFullyV26Compatible {
+            StatusBar.overrideStyle(.lightContent)
+        }
+
         coreUI.present(previewController, embedded: embedded)
 
         return nil

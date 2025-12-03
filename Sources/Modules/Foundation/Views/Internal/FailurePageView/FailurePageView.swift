@@ -12,7 +12,7 @@ import SwiftUI
 /* Proprietary */
 import ComponentKit
 
-public struct FailurePageView: View {
+struct FailurePageView: View {
     // MARK: - Constants Accessors
 
     private typealias Colors = FoundationConstants.Colors.FailureView
@@ -25,13 +25,13 @@ public struct FailurePageView: View {
 
     // MARK: - Init
 
-    public init(_ viewModel: ViewModel<FailurePageReducer>) {
+    init(_ viewModel: ViewModel<FailurePageReducer>) {
         _viewModel = .init(wrappedValue: viewModel)
     }
 
     // MARK: - View
 
-    public var body: some View {
+    var body: some View {
         ThemedView {
             VStack {
                 Components.symbol(

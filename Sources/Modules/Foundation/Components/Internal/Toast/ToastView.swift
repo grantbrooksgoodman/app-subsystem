@@ -140,7 +140,7 @@ struct ToastView: View {
             bannerContentView
                 .overlay(
                     overlay(accentColor),
-                    alignment: .leading,
+                    alignment: .leading
                 )
         }
         .cornerRadius(Floats.bannerCornerRadius)

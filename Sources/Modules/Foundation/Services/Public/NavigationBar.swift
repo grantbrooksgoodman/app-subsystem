@@ -18,12 +18,9 @@ public enum NavigationBarAppearance: Equatable {
 public struct NavigationBarConfiguration: Equatable {
     // MARK: - Properties
 
-    // Bool
-    public let showsDivider: Bool
-
-    // UIColor
     public let backgroundColor: UIColor
     public let barButtonItemColor: UIColor
+    public let showsDivider: Bool
     public let titleColor: UIColor
 
     // MARK: - Computed Properties

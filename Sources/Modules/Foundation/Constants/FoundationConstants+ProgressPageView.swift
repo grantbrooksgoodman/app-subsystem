@@ -10,9 +10,9 @@ import Foundation
 
 // MARK: - CGFloats
 
-public extension FoundationConstants.CGFloats {
+extension FoundationConstants.CGFloats {
     enum ProgressPageView {
-        public static let fadeInDelayMilliseconds: CGFloat = 500
-        public static let fadeInDurationMilliseconds: CGFloat = 200
+        static let fadeInDelayMilliseconds: CGFloat = 500
+        static let fadeInDurationMilliseconds: CGFloat = 200
     }
 }

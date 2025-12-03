@@ -44,7 +44,7 @@ public extension CoreKit {
 
         // MARK: - Properties
 
-        public static let shared = UI()
+        static let shared = UI()
 
         // MARK: - Init
 

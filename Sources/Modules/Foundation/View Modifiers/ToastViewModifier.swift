@@ -27,14 +27,14 @@ private struct ToastViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(_ toast: Binding<Toast?>, onTap: (() -> Void)?) {
+    init(_ toast: Binding<Toast?>, onTap: (() -> Void)?) {
         _toast = toast
         self.onTap = onTap
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: toast?.type.appearanceEdge == .bottom ? .bottom : .top) {

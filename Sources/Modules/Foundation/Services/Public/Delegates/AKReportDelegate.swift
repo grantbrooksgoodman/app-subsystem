@@ -141,7 +141,7 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
             let exception: Exception = .init(
                 "Device is not configured for e-mail.",
                 isReportable: false,
-                userInfo: [Exception.CommonParameter.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.noEmail],
+                userInfo: [Exception.UserInfo.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.noEmail],
                 metadata: .init(sender: self)
             )
 
@@ -241,8 +241,8 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
         guard let error else { return attachmentData(sections) }
 
         var errorDescription = error.description
-        if let descriptor = error.userInfo?[Exception.CommonParameter.descriptor.rawValue] as? String,
-           let code = error.userInfo?[Exception.CommonParameter.errorCode.rawValue] as? String {
+        if let descriptor = error.userInfo?[Exception.UserInfo.descriptor.rawValue] as? String,
+           let code = error.userInfo?[Exception.UserInfo.errorCode.rawValue] as? String {
             errorDescription = "\(descriptor) (\(code.uppercased()))"
         }
 

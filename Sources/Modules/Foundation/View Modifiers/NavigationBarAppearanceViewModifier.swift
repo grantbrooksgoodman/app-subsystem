@@ -19,14 +19,14 @@ private struct NavigationBarAppearanceViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(_ appearance: NavigationBarAppearance) {
+    init(_ appearance: NavigationBarAppearance) {
         self.appearance = appearance
         previousAppearance = NavigationBar.currentAppearance
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .id(viewID)
             .onAppear {

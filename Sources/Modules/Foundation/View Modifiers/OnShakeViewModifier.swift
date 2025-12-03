@@ -17,17 +17,17 @@ private struct OnShakeViewModifier: ViewModifier {
 
     // MARK: - Properties
 
-    public let action: () -> Void
+    let action: () -> Void
 
     // MARK: - Init
 
-    public init(action: @escaping () -> Void) {
+    init(action: @escaping () -> Void) {
         self.action = action
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .onAppear()
             .onReceive(notificationCenter.publisher(for: UIDevice.deviceDidShakeNotification)) { _ in

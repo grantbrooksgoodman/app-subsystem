@@ -126,7 +126,7 @@ public extension Date {
 
 // swiftlint:disable:next type_name
 private enum FormattedShortStringDateFormatterDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> DateFormatter {
+    static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = RuntimeStorage.languageCode == "en" ? .current : .init(languageCode: .init(RuntimeStorage.languageCode))
         formatter.dateStyle = .short

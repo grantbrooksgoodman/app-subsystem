@@ -49,13 +49,10 @@ public final class Build {
 
     // MARK: - Properties
 
-    // String
+    public let appStoreBuildNumber: Int
     public let codeName: String
     public let dmyFirstCompileDateString: String
     public let finalName: String
-
-    // Other
-    public let appStoreBuildNumber: Int
     public let loggingEnabled: Bool
     public let milestone: Milestone
 
@@ -63,26 +60,19 @@ public final class Build {
 
     // MARK: - Computed Properties
 
-    // Bool
-    public var isDeveloperModeEnabled: Bool { getIsDeveloperModeEnabled() }
-    public var isOnline: Bool { getNetworkStatus() }
-    public var isTimebombActive: Bool { getIsTimebombActive() }
-
-    // Int
     public var appStoreReleaseVersion: Int { getAppStoreReleaseVersion() }
     public var buildNumber: Int { getBuildNumber() }
-    public var revisionBuildNumber: Int { getRevisionBuildNumber() }
-
-    // String
     public var buildSKU: String { getBuildSKU() }
     public var bundleVersion: String { getBundleVersion() }
     public var bundleRevision: String { getBundleRevision() }
     public var expirationOverrideCode: String { getExpirationOverrideCode() }
-    public var expiryInfoString: String { getExpiryInfoString() }
-    public var projectID: String { getProjectID() }
-
-    // Other
     public var expiryDate: Date { getExpiryDate() }
+    public var expiryInfoString: String { getExpiryInfoString() }
+    public var isDeveloperModeEnabled: Bool { getIsDeveloperModeEnabled() }
+    public var isOnline: Bool { getNetworkStatus() }
+    public var isTimebombActive: Bool { getIsTimebombActive() }
+    public var projectID: String { getProjectID() }
+    public var revisionBuildNumber: Int { getRevisionBuildNumber() }
 
     private var buildDateUnixDouble: TimeInterval { getBuildDateUnixDouble() }
     private var infoDictionary: [String: Any] { mainBundle.infoDictionary ?? [:] }
@@ -341,7 +331,7 @@ public final class Build {
 /* MARK: Date Formatter Dependencies */
 
 private enum BuildSKUDateFormatterDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> DateFormatter {
+    static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "ddMMyy"
         formatter.locale = .init(identifier: "en_US_POSIX")
@@ -350,7 +340,7 @@ private enum BuildSKUDateFormatterDependency: DependencyKey {
 }
 
 private enum ExpiryInfoStringDateFormatterDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> DateFormatter {
+    static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.locale = .init(identifier: "en_US_POSIX")
@@ -359,7 +349,7 @@ private enum ExpiryInfoStringDateFormatterDependency: DependencyKey {
 }
 
 private enum ProjectIDDateFormatterDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> DateFormatter {
+    static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "ddMMyyyy"
         formatter.locale = .init(identifier: "en_US_POSIX")

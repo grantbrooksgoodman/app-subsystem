@@ -17,15 +17,15 @@ import Translator
 enum FoundationConstants {
     /* MARK: CGFloat */
 
-    public enum CGFloats {}
+    enum CGFloats {}
 
     /* MARK: Color */
 
-    public enum Colors {}
+    enum Colors {}
 
     /* MARK: String */
 
-    public enum Strings {}
+    enum Strings {}
 }
 
 // MARK: - Included Keys

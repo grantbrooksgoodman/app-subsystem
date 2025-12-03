@@ -34,13 +34,13 @@ private struct InteractivePopGestureRecognizerDisabledViewModifier: ViewModifier
 
     // MARK: - Init
 
-    public init(_ isDisabled: Bool) {
+    init(_ isDisabled: Bool) {
         self.isDisabled = isDisabled
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .onAppear { InteractivePopGestureRecognizer.setIsEnabled(!isDisabled) }
             .onChange(of: isDisabled) { _, newValue in

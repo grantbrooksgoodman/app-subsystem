@@ -12,7 +12,7 @@ import Foundation
 public struct Exception: Equatable, Exceptionable, Swift.Error {
     // MARK: - Types
 
-    enum CommonParameter: String {
+    enum UserInfo: String {
         case descriptor = "Descriptor"
         case errorCode = "ErrorCode"
         case nsErrorCode = "NSErrorCode"
@@ -43,7 +43,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
     public var userFacingDescriptor: String {
         @Dependency(\.build) var build: Build
 
-        if let userFacingDescriptor = userInfo?[CommonParameter.userFacingDescriptor.rawValue] as? String {
+        if let userFacingDescriptor = userInfo?[UserInfo.userFacingDescriptor.rawValue] as? String {
             return userFacingDescriptor
         }
 
@@ -71,7 +71,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
         underlyingExceptions: [Exception]? = nil,
         metadata: ExceptionMetadata
     ) {
-        let errorCode = (userInfo?[CommonParameter.staticErrorCode.rawValue] as? String) ?? descriptor.errorCode
+        let errorCode = (userInfo?[UserInfo.staticErrorCode.rawValue] as? String) ?? descriptor.errorCode
         code = errorCode
 
         self.descriptor = descriptor
@@ -112,19 +112,19 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
         self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(errorCode) ?? true
         self.metadata = metadata
 
-        var concatenatedUserInfo: [String: Any] = error.userInfo.filter { $0.key != CommonParameter.nsLocalizedDescription.rawValue }
-        concatenatedUserInfo[CommonParameter.nsErrorCode.rawValue] = error.code
-        concatenatedUserInfo[CommonParameter.nsErrorDomain.rawValue] = error.domain
+        var concatenatedUserInfo: [String: Any] = error.userInfo.filter { $0.key != UserInfo.nsLocalizedDescription.rawValue }
+        concatenatedUserInfo[UserInfo.nsErrorCode.rawValue] = error.code
+        concatenatedUserInfo[UserInfo.nsErrorDomain.rawValue] = error.domain
 
         if let userInfo,
            !userInfo.isEmpty {
             concatenatedUserInfo.merge(
-                userInfo.filter { $0.key != CommonParameter.nsLocalizedDescription.rawValue },
+                userInfo.filter { $0.key != UserInfo.nsLocalizedDescription.rawValue },
                 uniquingKeysWith: { $1 }
             )
         }
 
-        concatenatedUserInfo[CommonParameter.staticErrorCode.rawValue] = errorCode
+        concatenatedUserInfo[UserInfo.staticErrorCode.rawValue] = errorCode
         self.userInfo = concatenatedUserInfo.isEmpty ? nil : concatenatedUserInfo.withCapitalizedKeys
 
         self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil

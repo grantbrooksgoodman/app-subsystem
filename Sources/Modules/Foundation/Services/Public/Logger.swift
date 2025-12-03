@@ -525,9 +525,9 @@ public enum Logger {
 
 extension Logger {
     struct AlertKitLogger: AlertKit.LoggerDelegate {
-        public init() {}
-        public var reportsErrorsAutomatically: Bool { Logger.reportsErrorsAutomatically }
-        public func log(
+        var reportsErrorsAutomatically: Bool { Logger.reportsErrorsAutomatically }
+        init() {}
+        func log(
             _ text: String,
             sender: Any,
             fileName: String = #fileID,
@@ -550,8 +550,8 @@ extension Logger {
 
 extension Logger {
     struct TranslationLogger: TranslationLoggerDelegate {
-        public init() {}
-        public func log(
+        init() {}
+        func log(
             _ text: String,
             sender: Any,
             fileName: String = #fileID,
@@ -573,7 +573,7 @@ extension Logger {
 /* MARK: DateFormatter Dependency */
 
 private enum LoggerDateFormatterDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> DateFormatter {
+    static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "H:mm:ss.SSSS"
         formatter.locale = .init(identifier: "en_US_POSIX")
@@ -593,8 +593,8 @@ private extension DependencyValues {
 private extension Exception {
     var hydrated: Exception {
         appending(userInfo: [
-            CommonParameter.descriptor.rawValue: descriptor,
-            CommonParameter.errorCode.rawValue: code,
+            UserInfo.descriptor.rawValue: descriptor,
+            UserInfo.errorCode.rawValue: code,
         ])
     }
 }

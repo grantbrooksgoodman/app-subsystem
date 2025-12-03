@@ -18,16 +18,19 @@ public struct Swipe: OptionSet, Equatable {
     // MARK: - Properties
 
     public let rawValue: Int
+
     fileprivate var swiped: ((DragGesture.Value, CGFloat) -> Bool) = { _, _ in false }
 
     // MARK: - Computed Properties
 
-    // Array
-
     public static var all: Swipe { [.down, .left, .right, .up] }
-    fileprivate var array: [Swipe] { [.left, .right, .up, .down].filter { self.contains($0) } }
-
-    // Horizontal Directions
+    public static var down: Swipe {
+        var swipe = Swipe(rawValue: 1 << 3)
+        swipe.swiped = { value, sensitivity in
+            value.translation.height > 0 && value.predictedEndTranslation.height > sensitivity * SwipeModifierConfig.sensitivityFactor
+        }
+        return swipe
+    }
 
     public static var left: Swipe {
         var swipe = Swipe(rawValue: 1 << 0)
@@ -45,16 +48,6 @@ public struct Swipe: OptionSet, Equatable {
         return swipe
     }
 
-    // Vertical Directions
-
-    public static var down: Swipe {
-        var swipe = Swipe(rawValue: 1 << 3)
-        swipe.swiped = { value, sensitivity in
-            value.translation.height > 0 && value.predictedEndTranslation.height > sensitivity * SwipeModifierConfig.sensitivityFactor
-        }
-        return swipe
-    }
-
     public static var up: Swipe {
         var swipe = Swipe(rawValue: 1 << 2)
         swipe.swiped = { value, sensitivity in
@@ -62,6 +55,8 @@ public struct Swipe: OptionSet, Equatable {
         }
         return swipe
     }
+
+    fileprivate var array: [Swipe] { [.left, .right, .up, .down].filter { self.contains($0) } }
 
     // MARK: - Init
 

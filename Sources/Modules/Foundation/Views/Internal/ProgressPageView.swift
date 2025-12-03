@@ -9,7 +9,7 @@
 import Foundation
 import SwiftUI
 
-public struct ProgressPageView: View {
+struct ProgressPageView: View {
     // MARK: - Constants Accessors
 
     private typealias Floats = FoundationConstants.CGFloats.ProgressPageView
@@ -20,13 +20,13 @@ public struct ProgressPageView: View {
 
     // MARK: - Init
 
-    public init(backgroundColor: Color = Color.background) {
+    init(backgroundColor: Color = Color.background) {
         self.backgroundColor = backgroundColor
     }
 
     // MARK: - View
 
-    public var body: some View {
+    var body: some View {
         ThemedView {
             ProgressView()
                 .dynamicTypeSize(.large)

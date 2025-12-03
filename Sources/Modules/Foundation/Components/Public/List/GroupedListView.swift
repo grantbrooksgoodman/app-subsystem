@@ -19,12 +19,9 @@ public struct GroupedListView: View {
 
     // MARK: - Properties
 
-    // Array
-    private let rows: [ListRowView.Configuration]
-
-    // String
     private let footerText: String?
     private let headerText: String?
+    private let rows: [ListRowView.Configuration]
 
     // MARK: - Init
 
@@ -136,7 +133,9 @@ private extension Array where Element == ListRowView.Configuration {
 private extension String {
     var trimmingTrailingNewlines: String {
         var string = self
-        while string.hasSuffix("\n") { string = string.dropSuffix() }
+        while string.hasSuffix("\n") {
+            string = string.dropSuffix()
+        }
         return string
     }
 }

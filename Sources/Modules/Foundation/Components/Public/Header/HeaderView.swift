@@ -81,13 +81,10 @@ public struct HeaderView: View {
 
     // MARK: - Properties
 
-    // PeripheralButtonType
-    public let leftItem: PeripheralButtonType?
-    public let rightItem: PeripheralButtonType?
-
-    // Other
     public let attributes: Attributes
     public let centerItem: CenterItemType?
+    public let leftItem: PeripheralButtonType?
+    public let rightItem: PeripheralButtonType?
 
     // MARK: - Computed Properties
 
@@ -181,17 +178,15 @@ public struct HeaderView: View {
             .renderingMode(.template)
             .resizable()
             .foregroundStyle(isThemed ? .navigationBarTitle : attributes.foregroundColor)
-            .ifLet(
-                attributes.size,
-                { image, size in
-                    image
-                        .frame(
-                            width: size.width > imageMaxWidth ? nil : size.width,
-                            height: size.height > Floats.imageMaxHeight ? nil : size.height
-                        )
-                },
-                else: { $0.scaledToFit() }
-            )
+            .ifLet(attributes.size) { image, size in
+                image
+                    .frame(
+                        width: size.width > imageMaxWidth ? nil : size.width,
+                        height: size.height > Floats.imageMaxHeight ? nil : size.height
+                    )
+            } else: {
+                $0.scaledToFit()
+            }
             .frame(
                 maxWidth: imageMaxWidth,
                 maxHeight: Floats.imageMaxHeight,

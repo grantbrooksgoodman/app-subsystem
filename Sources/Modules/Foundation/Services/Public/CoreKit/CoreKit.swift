@@ -18,7 +18,8 @@ public struct CoreKit {
 
     // MARK: - Init
 
-    public init(
+    // TODO: AUDIT THIS.
+    init(
         gcd: GCD,
         hud: HUD,
         ui: UI,

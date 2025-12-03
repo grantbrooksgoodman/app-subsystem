@@ -55,7 +55,7 @@ private final class ResolverCache: @unchecked Sendable {
 
     // MARK: - Methods
 
-    public func value<Key: DependencyKey>(for key: Key.Type, dependencies: DependencyValues) -> Key.Value {
+    func value<Key: DependencyKey>(for key: Key.Type, dependencies: DependencyValues) -> Key.Value {
         lock.lock()
         defer { lock.unlock() }
 

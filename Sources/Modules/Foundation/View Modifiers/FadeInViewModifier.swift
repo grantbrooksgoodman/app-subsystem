@@ -12,23 +12,21 @@ import SwiftUI
 private struct FadeInViewModifier: ViewModifier {
     // MARK: - Properties
 
-    // Duration
     private let delay: Duration
     private let duration: Duration
 
-    // CGFloat
     @State private var opacity: CGFloat = 0
 
     // MARK: - Init
 
-    public init(_ duration: Duration, delay: Duration) {
+    init(_ duration: Duration, delay: Duration) {
         self.duration = duration
         self.delay = delay
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .opacity(opacity)
             .onAppear {

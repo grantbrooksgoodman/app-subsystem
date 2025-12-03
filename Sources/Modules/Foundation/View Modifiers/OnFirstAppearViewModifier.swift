@@ -17,14 +17,14 @@ private struct OnFirstAppearViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(_ action: @escaping () -> Void) {
+    init(_ action: @escaping () -> Void) {
         self.action = action
         didAppear = false
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content.onAppear {
             guard !didAppear else { return }
             didAppear = true

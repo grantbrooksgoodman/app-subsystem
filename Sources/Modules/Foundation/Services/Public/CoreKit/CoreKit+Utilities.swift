@@ -18,12 +18,12 @@ public extension CoreKit {
 
         @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
         @Dependency(\.fileManager) private var fileManager: FileManager
-        @Dependency(\.uiControl) private var uiControl: UIControl
         @Dependency(\.uiApplication) private var uiApplication: UIApplication
+        @Dependency(\.uiControl) private var uiControl: UIControl
 
         // MARK: - Properties
 
-        public static let shared = Utilities()
+        static let shared = Utilities()
 
         // MARK: - Computed Properties
 
@@ -143,7 +143,7 @@ public extension CoreKit {
 }
 
 private enum UIControlDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> UIControl {
+    static func resolve(_: DependencyValues) -> UIControl {
         .init()
     }
 }

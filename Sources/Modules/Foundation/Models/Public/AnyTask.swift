@@ -11,9 +11,9 @@ import Foundation
 final class AnyTask {
     // MARK: - Properties
 
-    public let options: Options
+    let options: Options
 
-    public var isCancelled: Bool { isCancelledBlock() }
+    var isCancelled: Bool { isCancelledBlock() }
 
     private let assertionFailureHandler: (@autoclosure () -> String, StaticString, UInt) -> Void
     private let hashValueBlock: () -> Int
@@ -34,7 +34,7 @@ final class AnyTask {
         self.assertionFailureHandler = assertionFailureHandler
     }
 
-    public convenience init(
+    convenience init(
         _ task: Task<some Any, some Any>,
         options: Options = .default
     ) {
@@ -54,7 +54,7 @@ final class AnyTask {
 
     // MARK: - Cancel
 
-    public func cancel() {
+    func cancel() {
         guard !isCancelled else { return assertCancellationIfNeeded() }
         onCancel()
     }
@@ -72,26 +72,26 @@ final class AnyTask {
 }
 
 extension AnyTask {
-    public struct Options: OptionSet {
+    struct Options: OptionSet {
         // MARK: - Properties
 
-        public static let automaticallyCancelOnDeinit: Self = .init(rawValue: 1 << 0)
-        public static let assertOnOverCancellation: Self = .init(rawValue: 1 << 1)
-        public static let `default`: Self = [.automaticallyCancelOnDeinit]
+        static let automaticallyCancelOnDeinit: Self = .init(rawValue: 1 << 0)
+        static let assertOnOverCancellation: Self = .init(rawValue: 1 << 1)
+        static let `default`: Self = [.automaticallyCancelOnDeinit]
 
-        public let rawValue: Int
+        let rawValue: Int
 
         // MARK: - Init
 
-        public init(rawValue: Int) {
+        init(rawValue: Int) {
             self.rawValue = rawValue
         }
     }
 }
 
 extension AnyTask: Hashable {
-    public static func == (lhs: AnyTask, rhs: AnyTask) -> Bool { lhs.hashValue == rhs.hashValue }
-    public func hash(into hasher: inout Hasher) { hasher.combine(hashValueBlock()) }
+    static func == (lhs: AnyTask, rhs: AnyTask) -> Bool { lhs.hashValue == rhs.hashValue }
+    func hash(into hasher: inout Hasher) { hasher.combine(hashValueBlock()) }
 }
 
 extension Task {

@@ -39,6 +39,10 @@ public enum AppSubsystem {
 
         /* MARK: Bundle Properties Setup */
 
+        guard !didInitialize else { fatalError(
+            "AppSubsystem.initialize(...) may only be called once per application lifecycle"
+        ) }
+
         didInitialize = true
 
         _build = .init(
@@ -128,7 +132,7 @@ public enum AppSubsystem {
 
 // MARK: - Delegates
 
-// swiftlint:disable identifier_name line_length
+// swiftlint:disable identifier_name
 public extension AppSubsystem {
     final class Delegates {
         /* MARK: Properties */
@@ -237,4 +241,4 @@ public extension AppSubsystem {
     }
 }
 
-// swiftlint:enable identifier_name line_length
+// swiftlint:enable identifier_name

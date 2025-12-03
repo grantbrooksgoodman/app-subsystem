@@ -22,19 +22,16 @@ final class BuildExpiryAlert {
 
     // MARK: - Properties
 
-    // String
-    private var expiryAlertMessage = ""
-    private var incorrectOverrideCodeHUDText = "Incorrect Override Code"
-    private var timeExpiredAlertMessage = "The application will now exit."
-    private var timeExpiredAlertTitle = "Time Expired"
-
-    // Other
-    public static let shared = BuildExpiryAlert()
-
-    private var exitTimer: Timer?
-    private var remainingSeconds = 30
+    static let shared = BuildExpiryAlert()
 
     private let oldTranslationTimeoutConfig: AlertKit.TranslationTimeoutConfig
+
+    private var exitTimer: Timer?
+    private var expiryAlertMessage = ""
+    private var incorrectOverrideCodeHUDText = "Incorrect Override Code"
+    private var remainingSeconds = 30
+    private var timeExpiredAlertMessage = "The application will now exit."
+    private var timeExpiredAlertTitle = "Time Expired"
 
     // MARK: - Computed Properties
 

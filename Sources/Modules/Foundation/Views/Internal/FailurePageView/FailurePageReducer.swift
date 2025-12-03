@@ -11,7 +11,7 @@ import Foundation
 /* Proprietary */
 import AlertKit
 
-public struct FailurePageReducer: Reducer {
+struct FailurePageReducer: Reducer {
     // MARK: - Dependencies
 
     @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
@@ -19,28 +19,25 @@ public struct FailurePageReducer: Reducer {
 
     // MARK: - Actions
 
-    public enum Action {
+    enum Action {
         case executeRetryHandler
         case reportBugButtonTapped
     }
 
     // MARK: - State
 
-    public struct State: Equatable {
+    struct State: Equatable {
         /* MARK: Properties */
 
-        // String
-        public var reportBugButtonText = AppSubsystem.delegates.localizedStrings.reportBug
-        public var retryButtonText = AppSubsystem.delegates.localizedStrings.tryAgain
-
-        // Other
-        public var didReportBug = false
-        public var exception: Exception
-        public var retryHandler: (() -> Void)?
+        var didReportBug = false
+        var exception: Exception
+        var reportBugButtonText = AppSubsystem.delegates.localizedStrings.reportBug
+        var retryButtonText = AppSubsystem.delegates.localizedStrings.tryAgain
+        var retryHandler: (() -> Void)?
 
         /* MARK: Init */
 
-        public init(
+        init(
             _ exception: Exception,
             retryHandler: (() -> Void)? = nil
         ) {
@@ -50,7 +47,7 @@ public struct FailurePageReducer: Reducer {
 
         /* MARK: Equatable Conformance */
 
-        public static func == (left: State, right: State) -> Bool {
+        static func == (left: State, right: State) -> Bool {
             let bothNilRetryHandlers = left.retryHandler == nil && right.retryHandler == nil
             let sameDidReportBug = left.didReportBug == right.didReportBug
             let sameException = left.exception == right.exception
@@ -69,11 +66,11 @@ public struct FailurePageReducer: Reducer {
 
     // MARK: - Init
 
-    public init() {}
+    init() {}
 
     // MARK: - Reduce
 
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
+    func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .executeRetryHandler:
             guard let effect = state.retryHandler else { return .none }

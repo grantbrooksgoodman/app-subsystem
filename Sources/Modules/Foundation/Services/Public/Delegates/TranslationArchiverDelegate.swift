@@ -14,14 +14,11 @@ import Translator
 public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate {
     // MARK: - Properties
 
-    // Array
     @LockIsolated private var archive = [Translation]() {
         didSet { persistedArchive = archive.isEmpty ? nil : archive }
     }
 
     @Persistent(.translationArchive) private var persistedArchive: [Translation]?
-
-    // Dictionary
     @LockIsolated private var translationsForInputValueEncodedHashes = [String: Translation]()
 
     // MARK: - Init

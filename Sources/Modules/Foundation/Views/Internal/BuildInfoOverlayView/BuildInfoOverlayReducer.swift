@@ -34,31 +34,23 @@ struct BuildInfoOverlayReducer: Reducer {
     struct State: Equatable {
         /* MARK: Properties */
 
-        // Bool
-        var shouldUseTranslucentAppearance = false
-
-        // String
         var buildInfoButtonText = ""
-        var statsLabelText = "Calculating..."
-
-        // Other
         var developerModeIndicatorDotColor: Color = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
+        var shouldUseTranslucentAppearance = false
+        var statsLabelText = "Calculating..."
         var yOffset: CGFloat
 
         /* MARK: Computed Properties */
 
-        // Bool
+        var backgroundColor: Color { .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1) }
         var isDeveloperModeEnabled: Bool { Dependency(\.build.isDeveloperModeEnabled).wrappedValue }
         var isUserInteractionDisabled: Bool {
             Dependency(\.uiApplication.isPresentingAlertController).wrappedValue || RootWindowStatus.shared.rootView == .expiryPage
         }
 
-        // Color
-        var backgroundColor: Color { .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1) }
-
-        // String
         var sendFeedbackButtonText: String { AppSubsystem.delegates.localizedStrings.sendFeedback } // swiftlint:disable:next identifier_name
-        var _statsLabelText: String {
+
+        fileprivate var _statsLabelText: String {
             @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
             @Dependency(\.uiApplication.presentedViews.count) var presentedViewsCount: Int
             return "\(presentedViewsCount) views // \(appMemoryFootprint ?? 0)MB in use"

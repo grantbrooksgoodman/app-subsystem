@@ -16,7 +16,7 @@ public extension CoreKit {
 
         // MARK: - Properties
 
-        public static let shared = GCD()
+        static let shared = GCD()
 
         // MARK: - Init
 

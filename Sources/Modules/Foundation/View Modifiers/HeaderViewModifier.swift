@@ -16,18 +16,15 @@ private struct HeaderViewModifier: ViewModifier {
 
     // MARK: - Properties
 
-    // PeripheralButtonType
-    private let leftItem: HeaderView.PeripheralButtonType?
-    private let rightItem: HeaderView.PeripheralButtonType?
-
-    // Other
     private let attributes: HeaderView.Attributes
     private let centerItem: HeaderView.CenterItemType?
+    private let leftItem: HeaderView.PeripheralButtonType?
     private let popGestureAction: (() -> Void)?
+    private let rightItem: HeaderView.PeripheralButtonType?
 
     // MARK: - Init
 
-    public init(
+    init(
         leftItem: HeaderView.PeripheralButtonType?,
         centerItem: HeaderView.CenterItemType?,
         rightItem: HeaderView.PeripheralButtonType?,
@@ -43,7 +40,7 @@ private struct HeaderViewModifier: ViewModifier {
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         let body = Group {
             if attributes.appearance == .themed {
                 VStack {

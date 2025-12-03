@@ -22,7 +22,7 @@ struct RootOverlayView: View {
 
     // MARK: - Computed Properties
 
-    public static var fallbackFrame: CGRect {
+    static var fallbackFrame: CGRect {
         @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
         guard let mainWindow else { return .zero }
 

@@ -9,9 +9,6 @@
 import Foundation
 import SwiftUI
 
-/* Proprietary */
-import Foundation
-
 struct TouchProxy: UIViewRepresentable {
     // MARK: - Make UIView
 

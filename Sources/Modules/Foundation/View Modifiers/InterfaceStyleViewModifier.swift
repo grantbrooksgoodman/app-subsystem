@@ -21,13 +21,13 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(_ interfaceStyle: UIUserInterfaceStyle) {
+    init(_ interfaceStyle: UIUserInterfaceStyle) {
         self.interfaceStyle = interfaceStyle
     }
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .preferredColorScheme(.init(interfaceStyle))
             .onAppear { overrideStyle() }

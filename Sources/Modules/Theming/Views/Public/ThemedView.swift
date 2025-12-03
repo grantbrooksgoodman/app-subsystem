@@ -12,12 +12,9 @@ import SwiftUI
 public struct ThemedView: View {
     // MARK: - Properties
 
-    // Bool
+    private let navigationBarAppearance: NavigationBarAppearance?
     private let redrawsOnAppearanceChange: Bool // swiftlint:disable:next identifier_name
     private let restoresNavigationBarAppearanceOnDisappear: Bool
-
-    // Other
-    private let navigationBarAppearance: NavigationBarAppearance?
     private let viewBody: () -> any View
 
     // MARK: - Init
@@ -59,14 +56,14 @@ private struct Themed: View {
 
     // MARK: - Init
 
-    public init(_ viewModel: ViewModel<ThemedReducer>) {
+    init(_ viewModel: ViewModel<ThemedReducer>) {
         _viewModel = .init(wrappedValue: viewModel)
         _observer = .init(wrappedValue: .init(.init(viewModel)))
     }
 
     // MARK: - View
 
-    public var body: some View {
+    var body: some View {
         viewModel.body()
             .eraseToAnyView()
             .id(viewModel.viewID)

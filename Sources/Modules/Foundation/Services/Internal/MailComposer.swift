@@ -10,22 +10,19 @@ import Foundation
 import MessageUI
 import UIKit
 
-public final class MailComposer: UIViewController, MFMailComposeViewControllerDelegate {
+final class MailComposer: UIViewController, MFMailComposeViewControllerDelegate {
     // MARK: - Types
 
-    public struct AttachmentData {
+    struct AttachmentData {
         /* MARK: Properties */
 
-        // Data
-        public let data: Data
-
-        // String
-        public let fileName: String
-        public let mimeType: String
+        let data: Data
+        let fileName: String
+        let mimeType: String
 
         /* MARK: Init */
 
-        public init(
+        init(
             _ data: Data,
             fileName: String,
             mimeType: String
@@ -44,13 +41,13 @@ public final class MailComposer: UIViewController, MFMailComposeViewControllerDe
 
     // MARK: - Properties
 
-    public static let shared = MailComposer()
+    static let shared = MailComposer()
 
     private var onComposeFinished: ((Result<MFMailComposeResult, Error>) -> Void)?
 
     // MARK: - Computed Properties
 
-    public var canSendMail: Bool { MFMailComposeViewController.canSendMail() }
+    var canSendMail: Bool { MFMailComposeViewController.canSendMail() }
 
     // MARK: - Init
 
@@ -66,7 +63,7 @@ public final class MailComposer: UIViewController, MFMailComposeViewControllerDe
     // MARK: - Compose
 
     @MainActor
-    public func compose(
+    func compose(
         subject: String,
         body: (string: String, isHTML: Bool)?,
         recipients: [String],
@@ -90,19 +87,22 @@ public final class MailComposer: UIViewController, MFMailComposeViewControllerDe
             )
         }
 
-        StatusBar.overrideStyle(.lightContent)
+        if !UIApplication.isFullyV26Compatible {
+            StatusBar.overrideStyle(.lightContent)
+        }
+
         coreUI.present(composeController)
     }
 
     // MARK: - On Compose Finished
 
-    public func onComposeFinished(perform: @escaping (Result<MFMailComposeResult, Error>) -> Void) {
+    func onComposeFinished(perform: @escaping (Result<MFMailComposeResult, Error>) -> Void) {
         onComposeFinished = perform
     }
 
     // MARK: - MFMailComposeViewControllerDelegate Conformance
 
-    public func mailComposeController(
+    func mailComposeController(
         _ controller: MFMailComposeViewController,
         didFinishWith result: MFMailComposeResult,
         error: Error?

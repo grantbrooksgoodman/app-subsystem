@@ -17,7 +17,7 @@ private struct PrefersStatusBarHiddenViewModifier: ViewModifier {
 
     // MARK: - Init
 
-    public init(
+    init(
         _ isHidden: Bool,
         restoreOnDisappear: Bool
     ) {
@@ -27,7 +27,7 @@ private struct PrefersStatusBarHiddenViewModifier: ViewModifier {
 
     // MARK: - Body
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .onAppear {
                 StatusBar.setIsHidden(isHidden)

@@ -11,7 +11,7 @@ import SwiftUI
 
 public extension HeaderView.PeripheralButtonType {
     static func backButton(
-        foregroundColor: Color = .accent,
+        foregroundColor: Color = UIApplication.isFullyV26Compatible ? .white : .accent,
         isEnabled: Bool = true,
         _ action: @escaping () -> Void
     ) -> HeaderView.PeripheralButtonType {
@@ -35,7 +35,7 @@ public extension HeaderView.PeripheralButtonType {
 
     static func cancelButton(
         font: Font = .system(size: 17),
-        foregroundColor: Color = .accent,
+        foregroundColor: Color = UIApplication.isFullyV26Compatible ? .white : .accent,
         isEnabled: Bool = true,
         _ action: @escaping () -> Void
     ) -> HeaderView.PeripheralButtonType {
@@ -58,7 +58,7 @@ public extension HeaderView.PeripheralButtonType {
             size: 17,
             weight: .semibold
         ),
-        foregroundColor: Color = .accent,
+        foregroundColor: Color = UIApplication.isFullyV26Compatible ? .white : .accent,
         isEnabled: Bool = true,
         _ action: @escaping () -> Void
     ) -> HeaderView.PeripheralButtonType {

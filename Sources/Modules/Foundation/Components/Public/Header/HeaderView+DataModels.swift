@@ -15,9 +15,9 @@ public extension HeaderView {
     struct Attributes {
         /* MARK: Properties */
 
-        public let appearance: Appearance
-        public let showsDivider: Bool
-        public let sizeClass: SizeClass
+        let appearance: Appearance
+        let showsDivider: Bool
+        let sizeClass: SizeClass
 
         /* MARK: Init */
 
@@ -37,10 +37,10 @@ public extension HeaderView {
     struct ImageAttributes {
         /* MARK: Properties */
 
-        public let foregroundColor: Color
-        public let image: Image
-        public let size: CGSize?
-        public let weight: Font.Weight
+        let foregroundColor: Color
+        let image: Image
+        let size: CGSize?
+        let weight: Font.Weight
 
         /* MARK: Init */
 
@@ -62,9 +62,9 @@ public extension HeaderView {
     struct ImageButtonAttributes {
         /* MARK: Properties */
 
-        public let action: () -> Void
-        public let image: ImageAttributes
-        public let isEnabled: Bool
+        let action: () -> Void
+        let image: ImageAttributes
+        let isEnabled: Bool
 
         /* MARK: Init */
 
@@ -84,9 +84,9 @@ public extension HeaderView {
     struct TextAttributes {
         /* MARK: Properties */
 
-        public let font: Font
-        public let foregroundColor: Color
-        public let string: String
+        let font: Font
+        let foregroundColor: Color
+        let string: String
 
         /* MARK: Init */
 
@@ -106,9 +106,9 @@ public extension HeaderView {
     struct TextButtonAttributes {
         /* MARK: Properties */
 
-        public let action: () -> Void
-        public let isEnabled: Bool
-        public let text: TextAttributes
+        let action: () -> Void
+        let isEnabled: Bool
+        let text: TextAttributes
 
         /* MARK: Init */
 

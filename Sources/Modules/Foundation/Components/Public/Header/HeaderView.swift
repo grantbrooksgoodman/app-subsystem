@@ -21,7 +21,7 @@ public struct HeaderView: View {
 
         /* MARK: Properties */
 
-        public var backgroundColor: UIColor {
+        var backgroundColor: UIColor {
             switch self {
             case let .custom(backgroundColor: backgroundColor):
                 return backgroundColor
@@ -51,7 +51,7 @@ public struct HeaderView: View {
 
         /* MARK: Properties */
 
-        public var minHeight: CGFloat {
+        var minHeight: CGFloat {
             switch self {
             case let .custom(minHeight: minHeight):
                 return minHeight
@@ -81,10 +81,10 @@ public struct HeaderView: View {
 
     // MARK: - Properties
 
-    public let attributes: Attributes
-    public let centerItem: CenterItemType?
-    public let leftItem: PeripheralButtonType?
-    public let rightItem: PeripheralButtonType?
+    let attributes: Attributes
+    let centerItem: CenterItemType?
+    let leftItem: PeripheralButtonType?
+    let rightItem: PeripheralButtonType?
 
     // MARK: - Computed Properties
 
@@ -93,7 +93,7 @@ public struct HeaderView: View {
 
     // MARK: - Init
 
-    public init(
+    init(
         leftItem: PeripheralButtonType? = nil,
         centerItem: CenterItemType? = nil,
         rightItem: PeripheralButtonType? = nil,

@@ -69,6 +69,18 @@ public enum NavigationBar {
 
     public private(set) static var currentAppearance: NavigationBarAppearance?
 
+    // MARK: - Computed Properties
+
+    public static var height: CGFloat {
+        @Dependency(\.uiApplication.presentedViewControllers) var viewControllers: [UIViewController]
+        return viewControllers
+            .compactMap { $0 as? UINavigationController }
+            .first?
+            .navigationBar
+            .frame
+            .height ?? FoundationConstants.CGFloats.NavigationBar.defaultHeight
+    }
+
     // MARK: - Methods
 
     /// - Note: To be used sparingly and with clear intent; undefined behavior can occur.

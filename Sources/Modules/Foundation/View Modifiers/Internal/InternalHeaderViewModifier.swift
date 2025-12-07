@@ -1,5 +1,5 @@
 //
-//  HeaderViewModifier.swift
+//  InternalHeaderViewModifier.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -41,62 +41,36 @@ private struct HeaderViewModifier: ViewModifier {
     // MARK: - Body
 
     func body(content: Content) -> some View {
-        let body = Group {
-            if attributes.appearance == .themed {
-                VStack {
-                    ThemedView {
-                        HeaderView(
-                            leftItem: leftItem,
-                            centerItem: centerItem,
-                            rightItem: rightItem,
-                            attributes: attributes
-                        )
-                    }
-                    .zIndex(1)
-
-                    Spacer(minLength: 0)
-                    content
-                    Spacer(minLength: 0)
-                }
-            } else {
-                VStack {
-                    HeaderView(
-                        leftItem: leftItem,
-                        centerItem: centerItem,
-                        rightItem: rightItem,
-                        attributes: attributes
-                    )
-                    .zIndex(1)
-
-                    Spacer(minLength: 0)
-                    content
-                    Spacer(minLength: 0)
-                }
+        VStack {
+            HeaderView(
+                leftItem: leftItem,
+                centerItem: centerItem,
+                rightItem: rightItem,
+                attributes: attributes
+            )
+            .if(attributes.appearance == .themed) { headerView in
+                ThemedView { headerView }
             }
-        }
-        .toolbar(.hidden, for: .navigationBar)
+            .zIndex(1)
 
-        if let popGestureAction {
-            body
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(
-                        minimumDistance: Floats.dragGestureMinimumDistance,
-                        coordinateSpace: .global
-                    )
-                    .onChanged { value in
-                        guard value.startLocation.x < Floats.dragGestureValueLeftEdgeThreshold,
-                              value.translation.width > Floats.dragGestureValueRightSwipeThreshold else { return }
-                        popGestureAction()
-                    }
-                )
-        } else {
-            body
+            Spacer(minLength: 0)
+            content
+            Spacer(minLength: 0)
+        }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .ifLet(popGestureAction) { body, popGestureAction in
+            body.popGesture(
+                popGestureAction
+            )
         }
     }
 }
 
-public extension View {
+extension View {
     /// - Parameter attributes: Choosing a themed `appearance` value overrides all color values to those of the system theme.
     func header(
         leftItem: HeaderView.PeripheralButtonType? = nil,

@@ -16,10 +16,6 @@ extension FoundationConstants.CGFloats {
         static let backButtonImageSizeHeight: CGFloat = 20
         static let backButtonImageSizeWidth: CGFloat = 20
 
-        static let dragGestureMinimumDistance: CGFloat = 20
-        static let dragGestureValueLeftEdgeThreshold: CGFloat = 20
-        static let dragGestureValueRightSwipeThreshold: CGFloat = 60
-
         static let fullScreenCoverSizeClassFrameMinHeight: CGFloat = 44
 
         static let horizontalPadding: CGFloat = 16

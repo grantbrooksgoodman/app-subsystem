@@ -43,9 +43,14 @@ private struct HeaderViewModifier: ViewModifier {
     }
 
     private var navigationBarAppearance: NavigationBarAppearance {
+        var backgroundColor = attributes.appearance.backgroundColor
+        if attributes.appearance.backgroundColor == .navigationBarBackground || isThemed {
+            backgroundColor = .clear
+        }
+
         let configuration: NavigationBarConfiguration = .init(
             titleColor: textColor ?? .navigationBarTitle,
-            backgroundColor: .clear,
+            backgroundColor: backgroundColor,
             barButtonItemColor: textColor ?? .accent,
             showsDivider: attributes.showsDivider
         )
@@ -97,8 +102,13 @@ private struct HeaderViewModifier: ViewModifier {
         self.leftItem = leftItem
         self.centerItem = centerItem
         self.rightItem = rightItem
+        // TODO: I don't think we need to do this anymore.
         self.attributes = UIApplication.isFullyV26Compatible && usesV26Attributes ? .init(
-            appearance: .custom(backgroundColor: .clear),
+            appearance: attributes.appearance.backgroundColor == .navigationBarBackground ||
+                attributes.appearance == .themed ?
+                .custom(backgroundColor: .clear) :
+                attributes.appearance,
+            restoreOnDisappear: attributes.restoreOnDisappear,
             showsDivider: false,
             sizeClass: attributes.sizeClass
         ) : attributes
@@ -127,7 +137,10 @@ private struct HeaderViewModifier: ViewModifier {
                             Color.clear
                                 .frame(width: .zero, height: .zero)
                                 .ignoresSafeArea(edges: .top)
-                                .navigationBarAppearance(navigationBarAppearance)
+                                .navigationBarAppearance(
+                                    navigationBarAppearance,
+                                    restoreOnDisappear: attributes.restoreOnDisappear
+                                )
 
                             content
 

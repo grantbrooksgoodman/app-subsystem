@@ -7,6 +7,7 @@
 
 /* Native */
 import Foundation
+import UIKit
 
 /* Proprietary */
 import AlertKit
@@ -104,6 +105,18 @@ public enum AppSubsystem {
                 }
             }
         }
+
+        /* MARK: Glass Tinting Setup */
+
+        @Persistent(.isGlassTintingEnabled) var isGlassTintingEnabled: Bool?
+
+        if !UIApplication.isFullyV26Compatible {
+            isGlassTintingEnabled = false
+        } else if !_build.isDeveloperModeEnabled {
+            isGlassTintingEnabled = true
+        }
+
+        isGlassTintingEnabled = isGlassTintingEnabled ?? true
 
         /* MARK: Localization & Logging Setup */
 

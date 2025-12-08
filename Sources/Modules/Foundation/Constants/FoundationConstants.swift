@@ -95,6 +95,7 @@ extension UserDefaultsKey {
         .currentThemeID,
         .hidesBuildInfoOverlay,
         .isDeveloperModeEnabled,
+        .isGlassTintingEnabled,
         .isTimebombActive,
         .pendingThemeID,
         .translationArchive,
@@ -106,6 +107,7 @@ extension UserDefaultsKey {
     static let currentThemeID: UserDefaultsKey = .init("currentThemeID")
     static let hidesBuildInfoOverlay: UserDefaultsKey = .init("hidesBuildInfoOverlay")
     static let isDeveloperModeEnabled: UserDefaultsKey = .init("isDeveloperModeEnabled")
+    static let isGlassTintingEnabled: UserDefaultsKey = .init("isGlassTintingEnabled")
     static let isTimebombActive: UserDefaultsKey = .init("isTimebombActive")
     static let pendingThemeID: UserDefaultsKey = .init("pendingThemeID")
     static let translationArchive: UserDefaultsKey = .init("translationArchive")

@@ -22,9 +22,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 toggleBuildInfoOverlayAction,
                 overrideLanguageCodeAction,
                 toggleBreadcrumbsAction,
+                toggleGlassTintingAction,
                 toggleTimebombAction,
                 viewLoggerSessionRecordAction,
-            ]
+            ].compactMap { $0 }
 
             if UITheme.allCases.count > 1 {
                 availableActions.insert(changeThemeAction, at: 0)
@@ -226,7 +227,11 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            return .init(title: "Override/Restore Language Code", perform: overrideLanguageCode)
+            let prefix = RuntimeStorage.retrieve(.overriddenLanguageCode) == nil ? "Override" : "Restore"
+            return .init(
+                title: "\(prefix) Language Code",
+                perform: overrideLanguageCode
+            )
         }
 
         private static var toggleBreadcrumbsAction: DevModeAction {
@@ -309,7 +314,31 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            return .init(title: "Show/Hide Build Info Overlay", perform: toggleBuildInfoOverlay)
+            let prefix = Observables.isBuildInfoOverlayHidden.value ? "Show" : "Hide"
+            return .init(
+                title: "\(prefix) Build Info Overlay",
+                perform: toggleBuildInfoOverlay
+            )
+        }
+
+        private static var toggleGlassTintingAction: DevModeAction? {
+            func toggleGlassTintingAction() {
+                @Dependency(\.coreKit) var core: CoreKit
+
+                @Persistent(.isGlassTintingEnabled) var persistedValue: Bool?
+                core.ui.toggleGlassTinting(on: !(persistedValue == true))
+
+                core.hud.showSuccess(
+                    text: "Glass Tinting \(persistedValue == true ? "Enabled" : "Disabled")"
+                )
+            }
+
+            guard UIApplication.isFullyV26Compatible else { return nil }
+            let prefix = UIApplication.isGlassTintingEnabled ? "Disable" : "Enable"
+            return .init(
+                title: "\(prefix) Glass Tinting",
+                perform: toggleGlassTintingAction
+            )
         }
 
         private static var toggleTimebombAction: DevModeAction {

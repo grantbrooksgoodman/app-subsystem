@@ -18,11 +18,16 @@ private struct InterfaceStyleViewModifier: ViewModifier {
     // MARK: - Properties
 
     private let interfaceStyle: UIUserInterfaceStyle
+    private let restoreOnDisappear: Bool
 
     // MARK: - Init
 
-    init(_ interfaceStyle: UIUserInterfaceStyle) {
+    init(
+        _ interfaceStyle: UIUserInterfaceStyle,
+        restoreOnDisappear: Bool
+    ) {
         self.interfaceStyle = interfaceStyle
+        self.restoreOnDisappear = restoreOnDisappear
     }
 
     // MARK: - Body
@@ -31,7 +36,11 @@ private struct InterfaceStyleViewModifier: ViewModifier {
         content
             .preferredColorScheme(.init(interfaceStyle))
             .onAppear { overrideStyle() }
-            .onDisappear { core.ui.overrideUserInterfaceStyle(ThemeService.currentTheme.style) }
+            .if(restoreOnDisappear) {
+                $0.onDisappear {
+                    core.ui.overrideUserInterfaceStyle(ThemeService.currentTheme.style)
+                }
+            }
     }
 
     // MARK: - Auxiliary Methods
@@ -47,7 +56,13 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 }
 
 public extension View {
-    func interfaceStyle(_ interfaceStyle: UIUserInterfaceStyle) -> some View {
-        modifier(InterfaceStyleViewModifier(interfaceStyle))
+    func interfaceStyle(
+        _ interfaceStyle: UIUserInterfaceStyle,
+        restoreOnDisappear: Bool = true
+    ) -> some View {
+        modifier(InterfaceStyleViewModifier(
+            interfaceStyle,
+            restoreOnDisappear: restoreOnDisappear
+        ))
     }
 }

@@ -16,6 +16,7 @@ public extension HeaderView {
         /* MARK: Properties */
 
         let appearance: Appearance
+        let restoreOnDisappear: Bool
         let showsDivider: Bool
         let sizeClass: SizeClass
 
@@ -23,10 +24,12 @@ public extension HeaderView {
 
         public init(
             appearance: Appearance = .custom(backgroundColor: .navigationBarBackground),
+            restoreOnDisappear: Bool = true,
             showsDivider: Bool = true,
             sizeClass: SizeClass = .fullScreenCover
         ) {
             self.appearance = appearance
+            self.restoreOnDisappear = restoreOnDisappear
             self.showsDivider = showsDivider
             self.sizeClass = sizeClass
         }

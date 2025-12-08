@@ -36,6 +36,13 @@ public extension UIApplication {
             UIApplication.isCompiledForV26OrLater
     }
 
+    static var isGlassTintingEnabled: Bool {
+        @Persistent(.isGlassTintingEnabled) var isGlassTintingEnabled: Bool?
+        guard UIApplication.isFullyV26Compatible,
+              isGlassTintingEnabled == true else { return false }
+        return true
+    }
+
     var isPresentingAlertController: Bool {
         presentedViewControllers.contains(where: { $0 is UIAlertController })
     }
@@ -95,6 +102,31 @@ public extension UIApplication {
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
     }
+
+    private static var bundleRequiresPreV26Design: Bool {
+        @Dependency(\.mainBundle) var mainBundle: Bundle
+
+        if let _bundleRequiresPreV26Design {
+            return _bundleRequiresPreV26Design
+        }
+
+        let designRequiresCompatibility = mainBundle.object(
+            forInfoDictionaryKey: "UIDesignRequiresCompatibility"
+        ) as? Bool
+
+        _bundleRequiresPreV26Design = designRequiresCompatibility
+        return designRequiresCompatibility ?? false
+    }
+
+    private static var isCompiledForV26OrLater: Bool {
+        #if compiler(>=6.2)
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    private static var _bundleRequiresPreV26Design: Bool?
 
     private var mainQueue: DispatchQueue { Dependency(\.mainQueue).wrappedValue }
 
@@ -169,21 +201,6 @@ public extension UIApplication {
             guard let firstResponder = self.firstResponder(in: view) else { return }
             firstResponder.resignFirstResponder()
         }
-    }
-
-    private static var bundleRequiresPreV26Design: Bool {
-        @Dependency(\.mainBundle) var mainBundle: Bundle
-        return (mainBundle.object(
-            forInfoDictionaryKey: "UIDesignRequiresCompatibility"
-        ) as? Bool) ?? false
-    }
-
-    private static var isCompiledForV26OrLater: Bool {
-        #if compiler(>=6.2)
-        return true
-        #else
-        return false
-        #endif
     }
 
     private func keyViewController(_ baseVC: UIViewController?) -> UIViewController? {

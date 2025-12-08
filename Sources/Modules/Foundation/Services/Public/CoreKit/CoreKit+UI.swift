@@ -39,6 +39,7 @@ public extension CoreKit {
 
         // MARK: - Dependencies
 
+        @Dependency(\.userDefaults) private var defaults: UserDefaults
         @Dependency(\.mainQueue) private var mainQueue: DispatchQueue
         @Dependency(\.uiApplication) private var uiApplication: UIApplication
 
@@ -74,6 +75,18 @@ public extension CoreKit {
             mainQueue.async {
                 uiApplication.mainWindow?.removeOverlay(animated: animated)
             }
+        }
+
+        // MARK: - Glass Tinting
+
+        public func toggleGlassTinting(on isEnabled: Bool) {
+            @Persistent(.isGlassTintingEnabled) var isGlassTintingEnabled: Bool?
+
+            isGlassTintingEnabled = isEnabled
+            defaults.synchronize() // NIT: Trying to force sync.
+
+            NavigationBar.removeAllItemGlassTint()
+            RootWindowScene.traitCollectionChanged()
         }
 
         // MARK: - View Controller Presentation

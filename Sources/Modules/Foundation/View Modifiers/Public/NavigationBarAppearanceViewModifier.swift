@@ -14,13 +14,18 @@ private struct NavigationBarAppearanceViewModifier: ViewModifier {
 
     private let appearance: NavigationBarAppearance
     private let previousAppearance: NavigationBarAppearance?
+    private let restoreOnDisappear: Bool
 
     @State private var viewID = UUID()
 
     // MARK: - Init
 
-    init(_ appearance: NavigationBarAppearance) {
+    init(
+        _ appearance: NavigationBarAppearance,
+        restoreOnDisappear: Bool
+    ) {
         self.appearance = appearance
+        self.restoreOnDisappear = restoreOnDisappear
         previousAppearance = NavigationBar.currentAppearance
     }
 
@@ -36,15 +41,25 @@ private struct NavigationBarAppearanceViewModifier: ViewModifier {
                 NavigationBar.setAppearance(appearance)
                 viewID = UUID()
             }
-            .onDisappear {
-                guard let previousAppearance else { return }
-                NavigationBar.setAppearance(previousAppearance)
+            .if(restoreOnDisappear) {
+                $0.onDisappear {
+                    guard let previousAppearance else { return }
+                    NavigationBar.setAppearance(previousAppearance)
+                }
             }
     }
 }
 
 public extension View {
-    func navigationBarAppearance(_ appearance: NavigationBarAppearance) -> some View {
-        modifier(NavigationBarAppearanceViewModifier(appearance))
+    func navigationBarAppearance(
+        _ appearance: NavigationBarAppearance,
+        restoreOnDisappear: Bool = true
+    ) -> some View {
+        modifier(
+            NavigationBarAppearanceViewModifier(
+                appearance,
+                restoreOnDisappear: restoreOnDisappear
+            )
+        )
     }
 }

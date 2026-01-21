@@ -158,6 +158,11 @@ public enum Logger {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
+        func showAlertIfNeeded() {
+            guard let alertType else { return }
+            showAlert(alertType, exception: exception)
+        }
+
         if filter == .reportableExceptionsOnly,
            !exception.isReportable {
             return
@@ -169,6 +174,9 @@ public enum Logger {
         let lineNumber = exception.metadata.line
 
         defer {
+            currentTimeLastCalled = Date.now
+            showAlertIfNeeded()
+
             if exception.isReportable,
                Logger.reportsErrorsAutomatically {
                 alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
@@ -176,12 +184,16 @@ public enum Logger {
         }
 
         guard !streamOpen else {
-            logToStream(exception.descriptor, domain: domain, line: lineNumber)
-            return
+            return logToStream(
+                exception.descriptor,
+                domain: domain,
+                line: lineNumber
+            )
         }
 
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
+
         log(
             "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(exception.descriptor) (\(exception.code))",
             domain: domain
@@ -196,14 +208,6 @@ public enum Logger {
             domain: domain,
             addingNewline: exception.userInfo == nil ? .preceding : nil
         )
-
-        currentTimeLastCalled = Date.now
-        showAlertIfNeeded()
-
-        func showAlertIfNeeded() {
-            guard let alertType else { return }
-            showAlert(alertType, exception: exception)
-        }
     }
 
     public static func log(
@@ -216,6 +220,12 @@ public enum Logger {
         line: Int = #line
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
+
+        func showAlertIfNeeded() {
+            guard let alertType else { return }
+            showAlert(alertType, text: text)
+        }
+
         let metadata = ExceptionMetadata(
             sender: sender,
             fileName: fileName,
@@ -232,25 +242,26 @@ public enum Logger {
         let functionName = metadata.function.components(separatedBy: "(")[0]
         let lineNumber = metadata.line
 
+        defer {
+            currentTimeLastCalled = Date.now
+            showAlertIfNeeded()
+        }
+
         guard !streamOpen else {
-            logToStream(text, domain: domain, line: lineNumber)
-            return
+            return logToStream(
+                text,
+                domain: domain,
+                line: lineNumber
+            )
         }
 
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
+
         log(
             "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(text)\n\(footer)\n",
             domain: domain
         )
-
-        currentTimeLastCalled = Date.now
-        showAlertIfNeeded()
-
-        func showAlertIfNeeded() {
-            guard let alertType else { return }
-            showAlert(alertType, text: text)
-        }
     }
 
     // MARK: - Streaming
@@ -312,7 +323,11 @@ public enum Logger {
             return
         }
 
-        log("[\(line)]: \(message)\(elapsedTime)", domain: domain)
+        log(
+            "[\(line)]: \(message)\(elapsedTime)",
+            domain: domain,
+            addingNewline: .preceding
+        )
     }
 
     public static func closeStream(
@@ -326,28 +341,30 @@ public enum Logger {
             return
         }
 
+        defer {
+            streamOpen = false
+            currentTimeLastCalled = Date.now
+        }
+
         guard streamOpen else {
             guard let message else { return }
-            log(message, sender: self)
-            return
+            return log(message, sender: self)
         }
 
         guard let message,
               let onLine else {
-            log(
+            return log(
                 "*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
-                domain: domain
+                domain: domain,
+                addingNewline: .preceding
             )
-            return
         }
 
         log(
             "[\(onLine)]: \(message)\(elapsedTime)\n*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
-            domain: domain
+            domain: domain,
+            addingNewline: .preceding
         )
-
-        streamOpen = false
-        currentTimeLastCalled = Date.now
     }
 
     // MARK: - Auxiliary
@@ -366,8 +383,14 @@ public enum Logger {
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
+        func showAlertIfNeeded() {
+            guard let alertType else { return }
+            showAlert(alertType, text: text)
+        }
+
         let header = "----- \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
+
         log(
             "\n\(header)\n[IMPROPERLY FORMATTED METADATA]\n\(text)\n\(footer)\n",
             domain: domain
@@ -375,11 +398,6 @@ public enum Logger {
 
         currentTimeLastCalled = Date.now
         showAlertIfNeeded()
-
-        func showAlertIfNeeded() {
-            guard let alertType else { return }
-            showAlert(alertType, text: text)
-        }
     }
 
     private static func log(

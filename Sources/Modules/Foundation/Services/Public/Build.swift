@@ -45,13 +45,11 @@ public final class Build {
     @Dependency(\.currentCalendar) private var calendar: Calendar
     @Dependency(\.expiryInfoStringDateFormatter) private var expiryInfoStringDateFormatter: DateFormatter
     @Dependency(\.mainBundle) private var mainBundle: Bundle
-    @Dependency(\.projectIDDateFormatter) private var projectIDDateFormatter: DateFormatter
 
     // MARK: - Properties
 
     public let appStoreBuildNumber: Int
     public let codeName: String
-    public let dmyFirstCompileDateString: String
     public let finalName: String
     public let loggingEnabled: Bool
     public let milestone: Milestone
@@ -75,6 +73,7 @@ public final class Build {
     public var revisionBuildNumber: Int { getRevisionBuildNumber() }
 
     private var buildDateUnixDouble: TimeInterval { getBuildDateUnixDouble() }
+    private var firstCompileDate: Date { getFirstCompileDate() }
     private var infoDictionary: [String: Any] { mainBundle.infoDictionary ?? [:] }
 
     // MARK: - Init
@@ -82,14 +81,12 @@ public final class Build {
     public init(
         appStoreBuildNumber: Int,
         codeName: String,
-        dmyFirstCompileDateString: String,
         finalName: String,
         loggingEnabled: Bool,
         milestone: Milestone
     ) {
         self.appStoreBuildNumber = appStoreBuildNumber
         self.codeName = codeName
-        self.dmyFirstCompileDateString = dmyFirstCompileDateString
         self.finalName = finalName
         self.loggingEnabled = loggingEnabled
         self.milestone = milestone
@@ -232,6 +229,15 @@ public final class Build {
         return "The evaluation period for this build ended on ⌘\(expiryInfoStringDateFormatter.string(from: expiryDate))⌘."
     }
 
+    private func getFirstCompileDate() -> Date {
+        var timeInterval: TimeInterval = floor(Date.now.timeIntervalSince1970)
+        if let firstCompileDateString = infoDictionary["CFFirstCompileDate"] as? String {
+            timeInterval = .init(firstCompileDateString) ?? timeInterval
+        }
+
+        return .init(timeIntervalSince1970: timeInterval).comparator
+    }
+
     private func getIsDeveloperModeEnabled() -> Bool {
         @Persistent(.isDeveloperModeEnabled) var persistedValue: Bool?
         return milestone == .generalRelease ? false : persistedValue ?? false
@@ -248,10 +254,6 @@ public final class Build {
     }
 
     private func getProjectID() -> String {
-        // Parse first compile date
-
-        let firstCompileDate = projectIDDateFormatter.date(from: dmyFirstCompileDateString) ?? projectIDDateFormatter.date(from: "29062007")!
-
         // Normalize code name
 
         let codeName = codeName.lowercasedTrimmingWhitespaceAndNewlines
@@ -348,15 +350,6 @@ private enum ExpiryInfoStringDateFormatterDependency: DependencyKey {
     }
 }
 
-private enum ProjectIDDateFormatterDependency: DependencyKey {
-    static func resolve(_: DependencyValues) -> DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "ddMMyyyy"
-        formatter.locale = .init(identifier: "en_US_POSIX")
-        return formatter
-    }
-}
-
 private extension DependencyValues {
     var buildSKUDateFormatter: DateFormatter {
         get { self[BuildSKUDateFormatterDependency.self] }
@@ -366,10 +359,5 @@ private extension DependencyValues {
     var expiryInfoStringDateFormatter: DateFormatter {
         get { self[ExpiryInfoStringDateFormatterDependency.self] }
         set { self[ExpiryInfoStringDateFormatterDependency.self] = newValue }
-    }
-
-    var projectIDDateFormatter: DateFormatter {
-        get { self[ProjectIDDateFormatterDependency.self] }
-        set { self[ProjectIDDateFormatterDependency.self] = newValue }
     }
 }

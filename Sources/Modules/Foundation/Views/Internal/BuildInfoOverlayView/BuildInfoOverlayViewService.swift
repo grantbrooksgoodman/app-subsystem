@@ -65,19 +65,22 @@ struct BuildInfoOverlayViewService {
         Task { @MainActor in
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
+            let reportBugAction: AKAction = .init("Report Bug") { reportDelegate.reportBug() }
+
             await AKActionSheet(
                 title: "File a Report",
                 actions: [
                     .init(AppSubsystem.delegates.localizedStrings.sendFeedback) {
                         reportDelegate.sendFeedback()
                     },
-                    .init("Report Bug") {
-                        reportDelegate.reportBug()
-                    },
+                    reportBugAction,
                 ],
                 cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel,
                 sourceItem: .custom(.string(AppSubsystem.delegates.localizedStrings.sendFeedback))
-            ).present(translating: [.actions(), .title])
+            ).present(translating: [
+                .actions([reportBugAction]),
+                .title,
+            ])
         }
     }
 

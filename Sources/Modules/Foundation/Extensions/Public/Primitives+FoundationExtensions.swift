@@ -165,7 +165,7 @@ public extension String {
     }
 
     var sanitized: String {
-        removingOccurrences(of: ["⁂", "⌘"])
+        removingOccurrences(of: ["⁂", "⌘", "※"])
     }
 
     var snakeCased: String {

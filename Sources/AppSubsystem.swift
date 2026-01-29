@@ -29,7 +29,6 @@ public enum AppSubsystem {
         appStoreBuildNumber: Int,
         buildMilestone: Build.Milestone,
         codeName: String,
-        dmyFirstCompileDateString: String,
         finalName: String,
         languageCode: String,
         loggingEnabled: Bool
@@ -49,7 +48,6 @@ public enum AppSubsystem {
         _build = .init(
             appStoreBuildNumber: appStoreBuildNumber,
             codeName: codeName,
-            dmyFirstCompileDateString: dmyFirstCompileDateString,
             finalName: finalName,
             loggingEnabled: loggingEnabled,
             milestone: buildMilestone

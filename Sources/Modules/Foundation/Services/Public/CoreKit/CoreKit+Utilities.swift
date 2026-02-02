@@ -14,6 +14,14 @@ import AlertKit
 
 public extension CoreKit {
     struct Utilities: Sendable {
+        // MARK: - Types
+
+        public enum EnhancedTranslationStatusVerbosity {
+            case errorsOnly
+            case successAndErrors
+            case successOnly
+        }
+
         // MARK: - Dependencies
 
         @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
@@ -25,12 +33,30 @@ public extension CoreKit {
 
         static let shared = Utilities()
 
+        private static var enhancedTranslationStatusVerbosity: EnhancedTranslationStatusVerbosity?
+        private static var isEnhancedDialogTranslationEnabled = false
+
         // MARK: - Computed Properties
 
         /// The current memory usage of the application in megabytes.
-        public var appMemoryFootprint: Int? { getAppMemoryFootprint() }
+        public var appMemoryFootprint: Int? {
+            getAppMemoryFootprint()
+        }
+
+        /// Determines verbosity level for AI-enhanced translation status messages.
+        public var enhancedTranslationStatusVerbosity: EnhancedTranslationStatusVerbosity? {
+            Utilities.enhancedTranslationStatusVerbosity
+        }
+
+        /// When `true`, enables system dialog translations to be enhanced with artificial intelligence.
+        public var isEnhancedDialogTranslationEnabled: Bool {
+            Utilities.isEnhancedDialogTranslationEnabled
+        }
+
         /// The mapping of supported language codes to language names, localized based on the value of `RuntimeStorage.languageCode`.
-        public var localizedLanguageCodeDictionary: [String: String]? { localizedLanguageCodeDictionary(for: RuntimeStorage.languageCode) }
+        public var localizedLanguageCodeDictionary: [String: String]? {
+            localizedLanguageCodeDictionary(for: RuntimeStorage.languageCode)
+        }
 
         // MARK: - Init
 
@@ -90,6 +116,16 @@ public extension CoreKit {
 
         public func restoreDeviceLanguageCode() {
             setLanguageCode(Locale.systemLanguageCode)
+        }
+
+        public func setEnhancedTranslationStatusVerbosity(_ enhancedTranslationStatusVerbosity: EnhancedTranslationStatusVerbosity?) {
+            Utilities.enhancedTranslationStatusVerbosity = enhancedTranslationStatusVerbosity
+        }
+
+        public func setIsEnhancedDialogTranslationEnabled(_ isEnhancedDialogTranslationEnabled: Bool) {
+            Utilities.isEnhancedDialogTranslationEnabled = isEnhancedDialogTranslationEnabled
+            guard !isEnhancedDialogTranslationEnabled else { return }
+            setEnhancedTranslationStatusVerbosity(nil)
         }
 
         public func setLanguageCode(_ languageCode: String, override: Bool = false) {

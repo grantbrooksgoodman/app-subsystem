@@ -72,13 +72,20 @@ public enum NavigationBar {
     // MARK: - Computed Properties
 
     public static var height: CGFloat {
+        typealias Floats = FoundationConstants.CGFloats.NavigationBar
         @Dependency(\.uiApplication.presentedViewControllers) var viewControllers: [UIViewController]
-        return viewControllers
+
+        let minimumCurrentHeight = viewControllers
             .compactMap { $0 as? UINavigationController }
-            .first?
-            .navigationBar
-            .frame
-            .height ?? FoundationConstants.CGFloats.NavigationBar.defaultHeight
+            .map(\.navigationBar.frame.height)
+            .sorted()
+            .first ?? Floats.defaultHeight
+
+        guard minimumCurrentHeight > 0 else { return Floats.defaultHeight }
+        return min(
+            minimumCurrentHeight,
+            Floats.defaultHeight
+        )
     }
 
     // MARK: - Methods

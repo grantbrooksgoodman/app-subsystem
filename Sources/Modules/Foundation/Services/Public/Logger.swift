@@ -22,7 +22,10 @@ public enum Logger {
 
         case errorAlert
         case normalAlert
-        case toast(style: Toast.Style?, isPersistent: Bool = true)
+        case toast(
+            style: Toast.Style?,
+            isPersistent: Bool = true
+        )
 
         /* MARK: Properties */
 
@@ -44,7 +47,10 @@ public enum Logger {
         ) -> AlertType? {
             @Dependency(\.build.milestone) var buildMilestone: Build.Milestone
             guard buildMilestone != .generalRelease else { return nil }
-            return .toast(style: style, isPersistent: isPersistent)
+            return .toast(
+                style: style,
+                isPersistent: isPersistent
+            )
         }
     }
 
@@ -504,7 +510,10 @@ public enum Logger {
 
                 return await alert.present(translating: [])
 
-            case let .toast(style: style, isPersistent: isPersistent):
+            case let .toast(
+                style: style,
+                isPersistent: isPersistent
+            ):
                 let style = style ?? (exception == nil ? .info : .error)
 
                 var title: String?

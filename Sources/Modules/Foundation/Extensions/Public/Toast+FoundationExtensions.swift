@@ -28,6 +28,15 @@ public extension Toast {
     private static var isHidden = true
     private static var keyboardHeight: CGFloat = 0
 
+    // MARK: - Computed Properties
+
+    private static var isShowingToast: Bool {
+        UIApplication.iOS27IsAvailable ?
+            !isHidden :
+            (Observables.rootViewToast.value != nil ||
+                Observables.rootViewToastAction.value != nil)
+    }
+
     // MARK: - Show / Hide
 
     static func show(
@@ -38,7 +47,12 @@ public extension Toast {
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         guard let translationDelegate = alertKitConfig.translationDelegate,
-              !keys.isEmpty else { return Toast.show(toast, onTap: onTap) }
+              !keys.isEmpty else {
+            return Toast.show(
+                toast,
+                onTap: onTap
+            )
+        }
 
         let inputs = keys.reduce(into: [TranslationInput]()) { partialResult, key in
             switch key {
@@ -68,8 +82,15 @@ public extension Toast {
                 )
 
             case let .failure(error):
-                Logger.log(.init(error, metadata: .init(sender: self)))
-                Toast.show(toast, onTap: onTap)
+                Logger.log(.init(
+                    error,
+                    metadata: .init(sender: self)
+                ))
+
+                Toast.show(
+                    toast,
+                    onTap: onTap,
+                )
             }
         }
     }
@@ -158,27 +179,31 @@ public extension Toast {
         return .init(origin: appearanceEdge == .bottom ? bottomEdgeOrigin : topEdgeOrigin, size: size)
     }
 
-    private static func show(_ toast: Toast, onTap: (() -> Void)? = nil) {
+    private static func show(
+        _ toast: Toast,
+        onTap: (() -> Void)? = nil
+    ) {
         Task { @MainActor in
-            guard !UIApplication.isBlockingUserInteraction else {
-                Task.delayed(by: .milliseconds(100)) { show(toast, onTap: onTap) }
+            // Return early if same toast is already being shown.
+            guard !(Observables.rootViewToast.value == toast &&
+                (Observables.rootViewToastAction.value == nil) == (onTap == nil)) else { return }
+
+            guard !UIApplication.isBlockingUserInteraction,
+                  !isShowingToast else {
+                Task.delayed(
+                    by: UIApplication.isBlockingUserInteraction ? .milliseconds(100) : .seconds(1)
+                ) {
+                    show(
+                        toast,
+                        onTap: onTap
+                    )
+                }
                 return
             }
 
             guard UIApplication.iOS27IsAvailable else {
-                guard Observables.rootViewToast.value == nil,
-                      Observables.rootViewToastAction.value == nil else {
-                    Task.delayed(by: .milliseconds(100)) { show(toast, onTap: onTap) }
-                    return
-                }
-
                 Observables.rootViewToast.value = toast
                 Observables.rootViewToastAction.value = onTap
-                return
-            }
-
-            guard isHidden else {
-                Task.delayed(by: .seconds(1)) { show(toast, onTap: onTap) }
                 return
             }
 

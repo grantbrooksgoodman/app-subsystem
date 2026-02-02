@@ -91,9 +91,10 @@ private struct ToastViewModifier: ViewModifier {
 
     private func dismiss() {
         withAnimation { toast = nil }
-        if UIApplication.iOS27IsAvailable {
-            Task.delayed(by: .seconds(1)) { Toast.hide() }
-        }
+        // TODO: Audit this.
+//        if UIApplication.iOS27IsAvailable {
+        Task.delayed(by: .seconds(1)) { Toast.hide() }
+//        }
 
         dismissWorkItem?.cancel()
         dismissWorkItem = nil

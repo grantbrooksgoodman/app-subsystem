@@ -166,6 +166,12 @@ public extension Toast {
             }
 
             guard UIApplication.iOS27IsAvailable else {
+                guard Observables.rootViewToast.value == nil,
+                      Observables.rootViewToastAction.value == nil else {
+                    Task.delayed(by: .milliseconds(100)) { show(toast, onTap: onTap) }
+                    return
+                }
+
                 Observables.rootViewToast.value = toast
                 Observables.rootViewToastAction.value = onTap
                 return

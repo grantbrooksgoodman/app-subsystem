@@ -14,11 +14,11 @@ import Translator
 public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate {
     // MARK: - Properties
 
-    @LockIsolated private var archive = [Translation]() {
+    @LockIsolated private var archive = Set<Translation>() {
         didSet { persistedArchive = archive.isEmpty ? nil : archive }
     }
 
-    @Persistent(.translationArchive) private var persistedArchive: [Translation]?
+    @Persistent(.translationArchive) private var persistedArchive: Set<Translation>?
     @LockIsolated private var translationsForInputValueEncodedHashes = [String: Translation]()
 
     // MARK: - Init
@@ -35,15 +35,23 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
     // MARK: - Add Value
 
     public func addValue(_ translation: Translation) {
-        archive.removeAll(where: { $0 == translation })
-        archive.append(translation)
+        archive.insert(translation)
+        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes
+            .filter { $0.value != translation }
+    }
 
-        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes.filter { $0.value != translation }
+    public func addValues(_ translations: Set<Translation>) {
+        archive.formUnion(translations)
+        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes
+            .filter { !translations.contains($0.value) }
     }
 
     // MARK: - Get Value
 
-    public func getValue(inputValueEncodedHash hash: String, languagePair: LanguagePair) -> Translation? {
+    public func getValue(
+        inputValueEncodedHash hash: String,
+        languagePair: LanguagePair
+    ) -> Translation? {
         if let value = translationsForInputValueEncodedHashes[hash],
            value.languagePair == languagePair {
             return value
@@ -59,13 +67,23 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
 
     // MARK: - Remove Value
 
-    public func removeValue(inputValueEncodedHash hash: String, languagePair: LanguagePair) {
+    public func removeValue(
+        inputValueEncodedHash hash: String,
+        languagePair: LanguagePair
+    ) {
         func satisfiesConstraints(_ translation: Translation) -> Bool {
             translation.input.value.encodedHash == hash && translation.languagePair == languagePair
         }
 
-        archive.removeAll(where: { satisfiesConstraints($0) })
-        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes.filter { !satisfiesConstraints($0.value) }
+        if let value = getValue(
+            inputValueEncodedHash: hash,
+            languagePair: languagePair
+        ) {
+            archive.remove(value)
+        }
+
+        translationsForInputValueEncodedHashes = translationsForInputValueEncodedHashes
+            .filter { !satisfiesConstraints($0.value) }
     }
 
     // MARK: - Clear Archive

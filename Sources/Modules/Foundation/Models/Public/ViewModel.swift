@@ -88,26 +88,44 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
 
     public func binding<Value>(
         for keyPath: KeyPath<State, Value>,
-        sendAction valueToAction: @escaping (Value) -> Action
+        sendAction valueToAction: @escaping (Value) -> Action,
+        animation: Animation? = nil
     ) -> Binding<Value> {
         Binding<Value>(
             get: { self.state[keyPath: keyPath] },
             set: { value in
                 let action = valueToAction(value)
-                self.send(action)
+                guard let animation else {
+                    self.send(action)
+                    return
+                }
+
+                self.send(
+                    action,
+                    animation: animation
+                )
             }
         )
     }
 
     public func binding<Value>(
         for keyPath: KeyPath<State, Value>,
-        sendAction valueToAction: @escaping (Value) -> Action?
+        sendAction valueToAction: @escaping (Value) -> Action?,
+        animation: Animation? = nil
     ) -> Binding<Value> {
         Binding<Value>(
             get: { self.state[keyPath: keyPath] },
             set: { value in
                 if let action = valueToAction(value) {
-                    self.send(action)
+                    guard let animation else {
+                        self.send(action)
+                        return
+                    }
+
+                    self.send(
+                        action,
+                        animation: animation
+                    )
                 }
             }
         )

@@ -37,7 +37,7 @@ public enum SystemInformation {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
         return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #else
-        return try? informationString(withLevels: CTL_HW, HW_MACHINE) ?? "Unknown"
+        return (try? informationString(withLevels: CTL_HW, HW_MACHINE)) ?? "Unknown"
         #endif
     }
 

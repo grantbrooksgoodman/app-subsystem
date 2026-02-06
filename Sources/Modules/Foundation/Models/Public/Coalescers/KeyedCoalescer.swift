@@ -8,9 +8,15 @@
 /* Native */
 import Foundation
 
-/// Coalesces concurrent callers onto a single in-flight execution pathway per-key.
+/// A per-key async work coordinator that deduplicates concurrent callers.
+///
+/// `KeyedCoalescer` ensures there is at most one in-flight `operation` per `key`.
+/// If multiple callers invoke the coalescer with the same `key` while an operation
+/// is running, they will await the existing task and share its result. Calls for
+/// different keys proceed independently.
+///
 /// The slot for `key` is cleared automatically when the in-flight task completes,
-/// even if callers are cancelled.
+/// independent of which caller awaits it or whether callers are cancelled.
 public actor KeyedCoalescer<Key: Hashable & Sendable, Output: Sendable> {
     // MARK: - Type Aliases
 
@@ -33,6 +39,19 @@ public actor KeyedCoalescer<Key: Hashable & Sendable, Output: Sendable> {
         _ operation: @escaping Operation
     ) async -> Output {
         if let existingTask = currentTasks[key] {
+            Logger.log(
+                .init(
+                    "Coalescing task with existing in-flight operation.",
+                    isReportable: false,
+                    userInfo: [
+                        "Key": key,
+                        "TaskID": existingTask.id,
+                    ],
+                    metadata: .init(sender: self)
+                ),
+                domain: .task
+            )
+
             return await existingTask.task.value
         }
 

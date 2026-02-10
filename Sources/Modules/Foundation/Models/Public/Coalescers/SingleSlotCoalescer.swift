@@ -8,9 +8,19 @@
 /* Native */
 import Foundation
 
-/// Coalesces concurrent callers onto a single in-flight execution pathway.
-/// The slot is cleared automatically when the in-flight task completes,
-/// even if callers are cancelled.
+/// A single-lane async work coordinator.
+///
+/// `SingleSlotCoalescer` ensures there is at most one in-flight `operation` at a time.
+/// While an operation is running, callers either:
+/// - `.coalesce`: await the existing in-flight task and share its result, or
+/// - `.lastCallerWins`: cancel the in-flight task and start a new one.
+///
+/// - Important: `.lastCallerWins` relies on cooperative cancellation. The cancelled
+///   `operation` must periodically check for cancellation (or call cancellation-aware APIs)
+///   to stop promptly and avoid producing latent side effects.
+///
+/// The slot is cleared automatically when the in-flight task completes, independent of
+/// which caller awaits it or whether callers are cancelled.
 public actor SingleSlotCoalescer<Output: Sendable> {
     // MARK: - Type Aliases
 
@@ -47,6 +57,16 @@ public actor SingleSlotCoalescer<Output: Sendable> {
 
     private func coalesce(_ operation: @escaping Operation) async -> Output {
         if let currentTask {
+            Logger.log(
+                .init(
+                    "Coalescing task with existing in-flight operation.",
+                    isReportable: false,
+                    userInfo: ["TaskID": currentTask.id],
+                    metadata: .init(sender: self)
+                ),
+                domain: .task
+            )
+
             return await currentTask.task.value
         }
 
@@ -55,6 +75,16 @@ public actor SingleSlotCoalescer<Output: Sendable> {
 
     private func lastCallerWins(_ operation: @escaping Operation) async -> Output {
         if let currentTask {
+            Logger.log(
+                .init(
+                    "Cancelling previous in-flight operation to prioritize last caller.",
+                    isReportable: false,
+                    userInfo: ["TaskID": currentTask.id],
+                    metadata: .init(sender: self)
+                ),
+                domain: .task
+            )
+
             currentTask.task.cancel()
         }
 

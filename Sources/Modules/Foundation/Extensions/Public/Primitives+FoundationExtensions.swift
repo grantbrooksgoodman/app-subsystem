@@ -210,13 +210,25 @@ public extension String {
     init<T>(_ type: T) {
         @Dependency(\.mainBundle) var mainBundle: Bundle
 
-        let string = String(describing: type)
-        guard let targetName = mainBundle.infoDictionary?["CFTargetName"] as? String else {
-            self.init(string.components(separatedBy: "(")[0])
-            return
+        var descriptor = String(describing: type)
+        let targetName = mainBundle.infoDictionary?["CFTargetName"] as? String
+
+        if let targetName {
+            descriptor = descriptor.removingOccurrences(of: [
+                "\(targetName).",
+            ])
         }
 
-        self.init(string.removingOccurrences(of: ["\(targetName)."]).components(separatedBy: "(")[0])
+        descriptor = descriptor.components(separatedBy: "(").first ?? descriptor
+
+        if descriptor.hasPrefix("["),
+           !descriptor.contains("]") {
+            descriptor = descriptor.dropPrefix()
+        }
+
+        self.init(
+            descriptor.hasSuffix("<") ? descriptor.dropSuffix() : descriptor
+        )
     }
 
     func attributed(_ config: AttributedStringConfig) -> NSAttributedString {

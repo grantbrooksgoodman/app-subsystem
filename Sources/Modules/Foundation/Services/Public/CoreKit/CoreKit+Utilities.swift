@@ -124,8 +124,6 @@ public extension CoreKit {
 
         public func setIsEnhancedDialogTranslationEnabled(_ isEnhancedDialogTranslationEnabled: Bool) {
             Utilities.isEnhancedDialogTranslationEnabled = isEnhancedDialogTranslationEnabled
-            guard !isEnhancedDialogTranslationEnabled else { return }
-            setEnhancedTranslationStatusVerbosity(nil)
         }
 
         public func setLanguageCode(_ languageCode: String, override: Bool = false) {

@@ -78,6 +78,7 @@ public extension LoggerDomain {
     static let caches: LoggerDomain = .init("caches")
     static let general: LoggerDomain = .init("general")
     static let observer: LoggerDomain = .init("observer")
+    static let task: LoggerDomain = .init("task")
     static let translation: LoggerDomain = .init("translation")
 }
 

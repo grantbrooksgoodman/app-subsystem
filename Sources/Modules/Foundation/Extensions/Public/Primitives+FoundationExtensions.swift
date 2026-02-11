@@ -219,16 +219,25 @@ public extension String {
             ])
         }
 
-        descriptor = descriptor.components(separatedBy: "(").first ?? descriptor
+        descriptor = descriptor
+            .components(separatedBy: "(")
+            .first?
+            .components(separatedBy: " ")
+            .first?
+            .components(separatedBy: "<")
+            .last ?? descriptor
 
-        if descriptor.hasPrefix("["),
-           !descriptor.contains("]") {
+        while let firstCharacter = descriptor.first,
+              !firstCharacter.isLetter {
             descriptor = descriptor.dropPrefix()
         }
 
-        self.init(
-            descriptor.hasSuffix("<") ? descriptor.dropSuffix() : descriptor
-        )
+        while let lastCharacter = descriptor.last,
+              !lastCharacter.isLetter {
+            descriptor = descriptor.dropSuffix()
+        }
+
+        self.init(descriptor)
     }
 
     func attributed(_ config: AttributedStringConfig) -> NSAttributedString {

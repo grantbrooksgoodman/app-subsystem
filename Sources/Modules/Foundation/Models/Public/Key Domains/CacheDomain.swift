@@ -43,6 +43,7 @@ public struct CacheDomain: CaseIterable, Hashable {
 extension CacheDomain {
     static var subsystemCases: [CacheDomain] {
         [
+            .appIconImage,
             .encodedHash,
             .localization,
             .localTranslationArchive,

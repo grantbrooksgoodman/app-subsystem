@@ -17,7 +17,7 @@ public extension TranslationService {
         hud hudConfig: (appearsAfter: Duration, isModal: Bool)? = nil,
         timeout timeoutConfig: (duration: Duration, returnsInputs: Bool) = (.seconds(10), true)
     ) async -> Callback<[Translation], Exception> {
-        return await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             getTranslations(
                 inputs,
                 languagePair: languagePair,
@@ -29,22 +29,38 @@ public extension TranslationService {
         }
     }
 
-    func resolve(_ strings: TranslatedLabelStrings.Type) async -> Callback<[TranslationOutputMap], Exception> {
-        let getTranslationsResult = await getTranslations(strings.keyPairs.map(\.input), languagePair: .system)
+    func resolve(
+        _ strings: TranslatedLabelStrings.Type
+    ) async -> Callback<[TranslationOutputMap], Exception> {
+        let getTranslationsResult = await getTranslations(
+            strings.keyPairs.map(\.input),
+            languagePair: .system
+        )
 
         switch getTranslationsResult {
         case let .success(translations):
-            let outputs = strings.keyPairs.reduce(into: [TranslationOutputMap]()) { partialResult, keyPair in
-                if let translation = translations.first(where: { $0.input.value == keyPair.input.value }) {
-                    partialResult.append(.init(key: keyPair.key, value: translation.output))
-                } else {
-                    partialResult.append(keyPair.defaultOutputMap)
-                }
-            }
-            return .success(outputs)
+            return .success(
+                strings
+                    .keyPairs
+                    .reduce(into: [TranslationOutputMap]()) { partialResult, keyPair in
+                        if let translation = translations.first(where: {
+                            $0.input.value == keyPair.input.value
+                        }) {
+                            partialResult.append(.init(
+                                key: keyPair.key,
+                                value: translation.output
+                            ))
+                        } else {
+                            partialResult.append(keyPair.defaultOutputMap)
+                        }
+                    }
+            )
 
         case let .failure(error):
-            return .failure(.init(error, metadata: .init(sender: self)))
+            return .failure(.init(
+                error,
+                metadata: .init(sender: self)
+            ))
         }
     }
 
@@ -63,7 +79,12 @@ public extension TranslationService {
 
         switch getTranslationsResult {
         case let .success(translations):
-            guard let translation = translations.first else { return .failure(.init(metadata: .init(sender: self))) }
+            guard let translation = translations.first else {
+                return .failure(.init(
+                    metadata: .init(sender: self)
+                ))
+            }
+
             return .success(translation)
 
         case let .failure(exception):
@@ -97,71 +118,81 @@ public extension TranslationService {
             return true
         }
 
-        var exceptions = [Exception]()
+        var exception: Exception?
         var translations = [Translation]()
 
-        func handleExceptionAndComplete() {
-            let exception = exceptions.compiledException ?? .init(metadata: .init(sender: self))
-            guard timeoutConfig.returnsInputs else { return completion(.failure(exception)) }
+        func complete(timedOut: Bool) {
+            guard canComplete else { return }
 
-            Logger.log(exception, domain: .translation)
+            if let exception {
+                guard timeoutConfig.returnsInputs else {
+                    return completion(.failure(exception))
+                }
+
+                Logger.log(
+                    exception,
+                    domain: .translation
+                )
+
+                return completion(.success(translations))
+            }
+
+            guard translations.count == inputs.count else {
+                return completion(.failure(.init(
+                    "Mismatched ratio returned.",
+                    metadata: .init(sender: self)
+                )))
+            }
+
+            if timedOut {
+                guard timeoutConfig.returnsInputs else {
+                    return completion(.failure(.timedOut(
+                        metadata: .init(sender: self)
+                    )))
+                }
+
+                Logger.log(
+                    .timedOut(metadata: .init(sender: self)),
+                    domain: .translation
+                )
+            }
+
             return completion(.success(translations))
         }
 
-        func handleTimeout() {
-            guard canComplete else { return }
-            translations.append(contentsOf: inputs.filter { !translations.map(\.input).contains($0) }.map {
-                Translation(
-                    input: $0,
-                    output: $0.original.sanitized,
-                    languagePair: languagePair
-                )
-            })
+        let timeout = Timeout(after: timeoutConfig.duration) {
+            translations.append(contentsOf: inputs
+                .filter { !translations.map(\.input).contains($0) }
+                .map {
+                    Translation(
+                        input: $0,
+                        output: $0.original.sanitized,
+                        languagePair: languagePair
+                    )
+                }
+            )
 
-            guard exceptions.isEmpty else { return }
-            guard translations.count == inputs.count else {
-                return completion(.failure(.init(
-                    "Mismatched ratio returned.",
-                    metadata: .init(sender: self)
-                )))
-            }
-
-            guard timeoutConfig.returnsInputs else { return completion(.failure(.timedOut(metadata: .init(sender: self)))) }
-            Logger.log(.timedOut(metadata: .init(sender: self)), domain: .translation)
-            completion(.success(translations))
+            return complete(timedOut: true)
         }
 
-        var timeout = Timeout(after: timeoutConfig.duration) { handleTimeout() }
-
         Task {
-            for input in inputs {
-                let translateResult = await translator.translate(
-                    input,
-                    languagePair: languagePair
-                )
+            let getTranslationsResult = await translator.getTranslations(
+                inputs,
+                languagePair: languagePair
+            )
 
-                timeout.cancel()
-                timeout = .init(after: timeoutConfig.duration) { handleTimeout() }
+            timeout.cancel()
 
-                switch translateResult {
-                case let .success(translation):
-                    translations.append(translation)
-
-                case let .failure(error):
-                    exceptions.append(.init(error, metadata: .init(sender: self)))
-                }
-            }
-
-            guard canComplete else { return }
-            guard exceptions.isEmpty else { return handleExceptionAndComplete() }
-            guard translations.count == inputs.count else {
-                return completion(.failure(.init(
-                    "Mismatched ratio returned.",
+            switch getTranslationsResult {
+            case let .success(_translations): translations = _translations
+            case let .failure(error):
+                exception = .init(
+                    error,
                     metadata: .init(sender: self)
-                )))
+                )
             }
 
-            completion(.success(translations))
+            return complete(timedOut: false)
         }
     }
 }

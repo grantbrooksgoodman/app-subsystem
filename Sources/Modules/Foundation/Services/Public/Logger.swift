@@ -59,12 +59,6 @@ public enum Logger {
         case reportableExceptionsOnly
     }
 
-    private enum NewlinePlacement {
-        case preceding
-        case succeeding
-        case surrounding
-    }
-
     // MARK: - Properties
 
     public private(set) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
@@ -72,6 +66,7 @@ public enum Logger {
     public private(set) static var reportsErrorsAutomatically = false
     public private(set) static var subscribedDomains = [LoggerDomain]()
 
+    private static let ioLock = NSLock()
     private static let sessionID = UUID()
 
     private static var currentTimeLastCalled = Date.now
@@ -200,19 +195,22 @@ public enum Logger {
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
         let footer = String(repeating: "-", count: header.count)
 
-        log(
-            "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(exception.descriptor) (\(exception.code))",
-            domain: domain
-        )
-
+        var exceptionString = "\(exception.descriptor) (\(exception.code))"
         if let userInfo = exception.userInfo {
-            printUserInfo(userInfo, domain: domain)
+            exceptionString = "\(exception.descriptor) (\(exception.code))\n\(format(userInfo: userInfo))"
         }
 
+        let text =
+            """
+            \n\(header)
+            \(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)
+            \(exceptionString)
+            \(footer)\n
+            """
+
         log(
-            "\(footer)\n",
-            domain: domain,
-            addingNewline: exception.userInfo == nil ? .preceding : nil
+            text,
+            domain: domain
         )
     }
 
@@ -293,6 +291,15 @@ public enum Logger {
             return
         }
 
+        guard !streamOpen else {
+            guard let message else { return }
+            return logToStream(
+                message,
+                domain: domain,
+                line: line
+            )
+        }
+
         let sender = String(metadata.sender)
         let fileName = metadata.fileName
         let functionName = metadata.function.components(separatedBy: "(")[0]
@@ -332,7 +339,7 @@ public enum Logger {
         log(
             "[\(line)]: \(message)\(elapsedTime)",
             domain: domain,
-            addingNewline: .preceding
+            addPrecedingNewline: true
         )
     }
 
@@ -362,14 +369,14 @@ public enum Logger {
             return log(
                 "*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
                 domain: domain,
-                addingNewline: .preceding
+                addPrecedingNewline: true
             )
         }
 
         log(
             "[\(onLine)]: \(message)\(elapsedTime)\n*---------- STREAM CLOSED @ \(dateFormatter.string(from: Date.now)) ----------*\n",
             domain: domain,
-            addingNewline: .preceding
+            addPrecedingNewline: true
         )
     }
 
@@ -406,29 +413,45 @@ public enum Logger {
         showAlertIfNeeded()
     }
 
+    private static func format(userInfo parameters: [String: Any]) -> String {
+        guard !parameters.isEmpty else { return "" }
+        if parameters.count == 1,
+           let (key, value) = parameters.first {
+            return "[\(key): \(value)]"
+        }
+
+        let keys = parameters.keys.sorted()
+        var lines: [String] = []
+
+        for (index, key) in keys.enumerated() {
+            let value = parameters[key]!
+            if index == 0 {
+                lines.append("[\(key): \(value),")
+            } else if index == keys.count - 1 {
+                lines.append("\(key): \(value)]")
+            } else {
+                lines.append("\(key): \(value),")
+            }
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
     private static func log(
         _ text: String,
         domain: LoggerDomain,
-        addingNewline placement: NewlinePlacement? = nil
+        addPrecedingNewline: Bool = false
     ) {
+        ioLock.lock()
+        defer { ioLock.unlock() }
+
         if canLog(to: domain) {
             print(text)
         }
 
         guard !domainsExcludedFromSessionRecord.contains(domain) else { return }
 
-        var text = text
-        if let placement {
-            switch placement {
-            case .preceding:
-                text = "\n\(text)"
-            case .succeeding:
-                text = "\(text)\n"
-            case .surrounding:
-                text = "\n\(text)\n"
-            }
-        }
-
+        let text = addPrecedingNewline ? "\n\(text)" : text
         let data = Data(text.utf8)
 
         do {
@@ -439,25 +462,6 @@ public enum Logger {
         } catch let error as NSError where error.code == NSFileNoSuchFileError && error.domain == NSCocoaErrorDomain {
             try? data.write(to: sessionRecordFilePath, options: .atomic)
         } catch { return }
-    }
-
-    private static func printUserInfo(_ parameters: [String: Any], domain: LoggerDomain) {
-        guard !parameters.isEmpty else { return }
-        guard parameters.count > 1 else {
-            log("[\(parameters.first!.key): \(parameters.first!.value)]", domain: domain, addingNewline: .surrounding)
-            return
-        }
-
-        for (index, key) in parameters.keys.sorted().enumerated() {
-            switch index {
-            case 0:
-                log("[\(key): \(parameters[key]!),", domain: domain, addingNewline: .preceding)
-            case parameters.count - 1:
-                log("\(key): \(parameters[key]!)]", domain: domain, addingNewline: .surrounding)
-            default:
-                log("\(key): \(parameters[key]!),", domain: domain, addingNewline: .preceding)
-            }
-        }
     }
 
     private static func showAlert(

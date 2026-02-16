@@ -215,26 +215,39 @@ public extension String {
 
         if let targetName {
             descriptor = descriptor.removingOccurrences(of: [
+                "Swift.",
                 "\(targetName).",
             ])
         }
 
-        descriptor = descriptor
-            .components(separatedBy: "(")
-            .first?
-            .components(separatedBy: " ")
-            .first?
-            .components(separatedBy: "<")
-            .last ?? descriptor
+        descriptor = descriptor.components(separatedBy: "(").first ?? descriptor
 
-        while let firstCharacter = descriptor.first,
-              !firstCharacter.isLetter {
-            descriptor = descriptor.dropPrefix()
-        }
+        // Repeatedly apply the trim rules until stable.
+        while true {
+            guard let firstCharacter = descriptor.first,
+                  let lastCharacter = descriptor.last else { break }
 
-        while let lastCharacter = descriptor.last,
-              !lastCharacter.isLetter {
-            descriptor = descriptor.dropSuffix()
+            if !firstCharacter.isLetter,
+               lastCharacter.isLetter {
+                descriptor = descriptor.dropPrefix()
+                continue
+            }
+
+            if firstCharacter.isLetter,
+               !lastCharacter.isLetter {
+                descriptor = descriptor.dropSuffix()
+                continue
+            }
+
+            if !firstCharacter.isLetter,
+               !lastCharacter.isLetter,
+               !firstCharacter.isFlipSideMatch(with: lastCharacter),
+               firstCharacter != lastCharacter {
+                descriptor = descriptor.dropPrefix().dropSuffix()
+                continue
+            }
+
+            break
         }
 
         self.init(descriptor)
@@ -287,5 +300,39 @@ public extension String {
         var string = self
         excludedStrings.forEach { string = string.replacingOccurrences(of: $0, with: "") }
         return string
+    }
+}
+
+private extension Character {
+    func isFlipSideMatch(with otherCharacter: Character) -> Bool {
+        let wrapperPairs: [Character: Character] = [
+            "(": ")",
+            "[": "]",
+            "{": "}",
+            "<": ">",
+            "“": "”",
+            "‘": "’",
+        ]
+
+        // Forward match: opening -> closing.
+        if let closingCharacter = wrapperPairs[self],
+           closingCharacter == otherCharacter {
+            return true
+        }
+
+        // Reverse match: closing -> opening.
+        if let closingCharacter = wrapperPairs[otherCharacter],
+           closingCharacter == self {
+            return true
+        }
+
+        // Treat same-character wrappers as matching (quotes, pipes, etc.).
+        let symmetricallyWrapped: Set<Character> = ["\"", "'", "|", "`"]
+        if self == otherCharacter,
+           symmetricallyWrapped.contains(self) {
+            return true
+        }
+
+        return false
     }
 }

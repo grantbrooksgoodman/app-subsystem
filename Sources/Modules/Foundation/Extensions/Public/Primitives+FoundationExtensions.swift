@@ -215,6 +215,7 @@ public extension String {
 
         if let targetName {
             descriptor = descriptor.removingOccurrences(of: [
+                "AppSubsystem.",
                 "Swift.",
                 "\(targetName).",
             ])
@@ -222,20 +223,25 @@ public extension String {
 
         descriptor = descriptor.components(separatedBy: "(").first ?? descriptor
 
-        // Repeatedly apply the trim rules until stable.
+        // If the string ends in a balanced generic suffix like "<...>",
+        // temporarily peel it off so trimming doesn't eat trailing ">" / ">>".
+        let (_head, suffix) = descriptor.peelTrailingBalancedGenericSuffix()
+        var head = _head
+
+        // Repeatedly apply the trim rules until stable (on head only).
         while true {
-            guard let firstCharacter = descriptor.first,
-                  let lastCharacter = descriptor.last else { break }
+            guard let firstCharacter = head.first,
+                  let lastCharacter = head.last else { break }
 
             if !firstCharacter.isLetter,
                lastCharacter.isLetter {
-                descriptor = descriptor.dropPrefix()
+                head = head.dropPrefix()
                 continue
             }
 
             if firstCharacter.isLetter,
                !lastCharacter.isLetter {
-                descriptor = descriptor.dropSuffix()
+                head = head.dropSuffix()
                 continue
             }
 
@@ -243,14 +249,14 @@ public extension String {
                !lastCharacter.isLetter,
                !firstCharacter.isFlipSideMatch(with: lastCharacter),
                firstCharacter != lastCharacter {
-                descriptor = descriptor.dropPrefix().dropSuffix()
+                head = head.dropPrefix().dropSuffix()
                 continue
             }
 
             break
         }
 
-        self.init(descriptor)
+        self.init(head + suffix)
     }
 
     func attributed(_ config: AttributedStringConfig) -> NSAttributedString {
@@ -334,5 +340,37 @@ private extension Character {
         }
 
         return false
+    }
+}
+
+private extension String {
+    func peelTrailingBalancedGenericSuffix() -> (head: String, suffix: String) {
+        guard last == ">" else { return (self, "") }
+
+        // Walk backwards to find the matching '<' for the last '>'.
+        var depth = 0
+        var index = index(before: endIndex)
+
+        while true {
+            let character = self[index]
+            if character == ">" {
+                depth += 1
+            } else if character == "<" {
+                depth -= 1
+                if depth == 0 {
+                    // index is the '<' that matches the trailing generic block.
+                    return (
+                        String(self[..<index]),
+                        String(self[index...])
+                    )
+                }
+            }
+
+            if index == startIndex { break }
+            index = self.index(before: index)
+        }
+
+        // Not balanced (or no matching '<'), don't peel.
+        return (self, "")
     }
 }

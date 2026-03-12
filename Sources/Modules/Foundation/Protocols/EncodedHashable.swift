@@ -18,7 +18,7 @@ public protocol EncodedHashable {
 public extension EncodedHashable {
     var encodedHash: String {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
-        let compiledString = hashFactors.reduce(String(), +)
+        let compiledString = hashFactors.joined()
 
         if let storedValue = EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] {
             return storedValue
@@ -38,7 +38,8 @@ public extension EncodedHashable {
 enum EncodedHashStore {
     // MARK: - Properties
 
-    @LockIsolated static var storedEncodedHashesForCompiledHashFactorStrings = [String: String]()
+    @LockIsolated
+    static var storedEncodedHashesForCompiledHashFactorStrings = [String: String]()
 
     // MARK: - Clear Cache
 

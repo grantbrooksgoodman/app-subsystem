@@ -305,8 +305,10 @@ public enum Logger {
         let functionName = metadata.function.components(separatedBy: "(")[0]
         let lineNumber = metadata.line
 
-        streamOpen = true
-        currentTimeLastCalled = Date.now
+        if canLog(to: domain) {
+            streamOpen = true
+            currentTimeLastCalled = Date.now
+        }
 
         guard let message else {
             log( // swiftlint:disable:next line_length

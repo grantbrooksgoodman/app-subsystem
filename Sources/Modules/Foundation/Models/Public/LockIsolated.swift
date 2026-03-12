@@ -24,7 +24,7 @@ public final class LockIsolated<Value>: @unchecked Sendable {
 
     public var wrappedValue: Value {
         get { isolatedValue.value }
-        set { isolatedValue.withValue { $0 = newValue } }
+        set { isolatedValue.setValue(newValue) }
     }
 }
 
@@ -54,12 +54,10 @@ private final class _LockIsolated<Value>: @unchecked Sendable {
     }
 
     func withValue<T: Sendable>(
-        _ operation: @Sendable (inout Value) throws -> T
+        _ operation: (inout Value) throws -> T
     ) rethrows -> T {
-        try self.lock.sync {
-            var value = _value
-            defer { _value = value }
-            return try operation(&value)
+        try lock.sync {
+            try operation(&_value)
         }
     }
 }

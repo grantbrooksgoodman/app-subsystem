@@ -20,13 +20,13 @@ public extension EncodedHashable {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
         let compiledString = hashFactors.joined()
 
-        if let storedValue = EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] {
+        if let storedValue = EncodedHashStore.$storedEncodedHashesForCompiledHashFactorStrings[compiledString] {
             return storedValue
         }
 
         do {
             let encodedHash = try jsonEncoder.encode(hashFactors).encodedHash
-            EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
+            EncodedHashStore.$storedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
             return encodedHash
         } catch {
             Logger.log(.init(error, metadata: .init(sender: self)))

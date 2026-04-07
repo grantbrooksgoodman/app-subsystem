@@ -22,7 +22,6 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     private let reducer: any Reducer<State, Action>
     private var internalState: State
     private var parentCancellable: AnyCancellable?
-    private var _isInvalidated = { false }
 
     // MARK: - Init
 
@@ -57,8 +56,6 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     @discardableResult
     private func _send(_ action: Action) -> Task<Void, Never> {
         checkThreadPreconditions()
-        guard !_isInvalidated() else { return Task {} }
-
         let effect = updateState(for: action)
         return Task(priority: effect.priority) { [weak self] in
             await effect.operation(

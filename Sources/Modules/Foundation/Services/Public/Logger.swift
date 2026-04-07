@@ -54,9 +54,21 @@ public enum Logger {
         }
     }
 
-    public enum Filter {
+    public enum Filter: Equatable {
+        /* MARK: Cases */
+
+        case byFileNames(_ fileNames: Set<String>)
         case exceptionsOnly
         case reportableExceptionsOnly
+
+        /* MARK: Properties */
+
+        fileprivate var fileNames: Set<String>? {
+            switch self {
+            case let .byFileNames(fileNames): return fileNames
+            default: return nil
+            }
+        }
     }
 
     // MARK: - Properties
@@ -68,6 +80,7 @@ public enum Logger {
 
     private static let ioLock = NSLock()
     private static let sessionID = UUID()
+    private static let utf8BOM = Data([0xEF, 0xBB, 0xBF])
 
     private static var currentTimeLastCalled = Date.now
     private static var streamOpen = false
@@ -174,7 +187,11 @@ public enum Logger {
         let functionName = exception.metadata.function.components(separatedBy: "(")[0]
         let lineNumber = exception.metadata.line
 
-        defer {
+        if let filterFileNames = filter?.fileNames {
+            guard filterFileNames.contains(fileName) else { return }
+        }
+
+        defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
             currentTimeLastCalled = Date.now
             showAlertIfNeeded()
 
@@ -192,7 +209,10 @@ public enum Logger {
             )
         }
 
-        let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
+        let headerAffix = exception.isReportable ? "🛑" : ""
+        let headerDelimiter = headerAffix.isEmpty ? "" : " "
+        let headerInfix = "\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now))"
+        let header = "----- \(headerAffix)\(headerDelimiter)\(headerInfix)\(headerDelimiter)\(headerAffix) -----"
         let footer = String(repeating: "-", count: header.count)
 
         var exceptionString = "\(exception.descriptor) (\(exception.code))"
@@ -246,7 +266,11 @@ public enum Logger {
         let functionName = metadata.function.components(separatedBy: "(")[0]
         let lineNumber = metadata.line
 
-        defer {
+        if let filterFileNames = filter?.fileNames {
+            guard filterFileNames.contains(fileName) else { return }
+        }
+
+        defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
             currentTimeLastCalled = Date.now
             showAlertIfNeeded()
         }
@@ -291,6 +315,15 @@ public enum Logger {
             return
         }
 
+        let sender = String(metadata.sender)
+        let fileName = metadata.fileName
+        let functionName = metadata.function.components(separatedBy: "(")[0]
+        let lineNumber = metadata.line
+
+        if let filterFileNames = filter?.fileNames {
+            guard filterFileNames.contains(fileName) else { return }
+        }
+
         guard !streamOpen else {
             guard let message else { return }
             return logToStream(
@@ -299,11 +332,6 @@ public enum Logger {
                 line: line
             )
         }
-
-        let sender = String(metadata.sender)
-        let fileName = metadata.fileName
-        let functionName = metadata.function.components(separatedBy: "(")[0]
-        let lineNumber = metadata.line
 
         if canLog(to: domain) {
             streamOpen = true
@@ -454,16 +482,23 @@ public enum Logger {
         guard !domainsExcludedFromSessionRecord.contains(domain) else { return }
 
         let text = addPrecedingNewline ? "\n\(text)" : text
-        let data = Data(text.utf8)
+        guard let data = text.data(using: .utf8) else { return }
 
         do {
             let fileHandle = try FileHandle(forWritingTo: sessionRecordFilePath)
+            defer { try? fileHandle.close() }
+
             try fileHandle.seekToEnd()
             try fileHandle.write(contentsOf: data)
-            try fileHandle.close()
-        } catch let error as NSError where error.code == NSFileNoSuchFileError && error.domain == NSCocoaErrorDomain {
-            try? data.write(to: sessionRecordFilePath, options: .atomic)
-        } catch { return }
+        } catch let error as NSError
+            where error.code == NSFileNoSuchFileError &&
+            error.domain == NSCocoaErrorDomain {
+            var initialData = utf8BOM
+            initialData.append(data)
+            try? initialData.write(to: sessionRecordFilePath, options: .atomic)
+        } catch {
+            return
+        }
     }
 
     private static func showAlert(

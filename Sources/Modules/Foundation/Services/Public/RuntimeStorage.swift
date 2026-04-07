@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public actor RuntimeStorage {
+public enum RuntimeStorage {
     // MARK: - Properties
 
     @LockIsolated private static var storedItems = [String: Any]()
@@ -16,20 +16,19 @@ public actor RuntimeStorage {
     // MARK: - Removal
 
     public static func remove(_ item: StoredItemKey) {
-        storedItems[item.rawValue] = nil
+        $storedItems[item.rawValue] = nil
     }
 
     // MARK: - Retrieval
 
     public static func retrieve(_ item: StoredItemKey) -> Any? {
-        guard let object = storedItems[item.rawValue] else { return nil }
-        return object
+        $storedItems[item.rawValue]
     }
 
     // MARK: - Storage
 
     public static func store(_ object: Any, as item: StoredItemKey) {
-        storedItems[item.rawValue] = object
+        $storedItems[item.rawValue] = object
     }
 }
 

@@ -211,7 +211,7 @@ public extension AppSubsystem {
         }
 
         public func registerBreadcrumbsCaptureDelegate(_ breadcrumbsCaptureDelegate: BreadcrumbsCaptureDelegate) {
-            register(breadcrumbsCaptureDelegate: breadcrumbsCapture)
+            register(breadcrumbsCaptureDelegate: breadcrumbsCaptureDelegate)
         }
 
         public func registerBuildInfoOverlayDotIndicatorColorDelegate(_ buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate) {

@@ -14,7 +14,6 @@ import AlertKit
 struct FailurePageReducer: Reducer {
     // MARK: - Dependencies
 
-    @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
     @Dependency(\.build) private var build: Build
 
     // MARK: - Actions
@@ -82,8 +81,12 @@ struct FailurePageReducer: Reducer {
                 return .none
             }
 
-            alertKitConfig.reportDelegate?.fileReport(state.exception)
+            let exception = state.exception
             state.didReportBug = true
+            return .fireAndForget { @MainActor in
+                @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+                alertKitConfig.reportDelegate?.fileReport(exception)
+            }
         }
 
         return .none

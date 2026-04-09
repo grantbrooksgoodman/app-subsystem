@@ -10,7 +10,8 @@ import Foundation
 
 public enum QuickViewerDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> QuickViewer {
-        .init()
+        @MainActorIsolated var quickViewer = QuickViewer()
+        return quickViewer
     }
 }
 

@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-public struct UITheme: CaseIterable, Equatable, EncodedHashable {
+public struct UITheme: CaseIterable, Equatable, EncodedHashable, @unchecked Sendable {
     // MARK: - Properties
 
     public let name: String
@@ -50,6 +50,7 @@ public struct UITheme: CaseIterable, Equatable, EncodedHashable {
     // MARK: - Color for Item
 
     /// - Warning: Returns `UIColor.clear` if item is not themed.
+    @MainActor
     public func color(for itemType: ColoredItemType) -> UIColor {
         guard let item = items.first(where: { $0.type == itemType }) else { return .clear }
         return ThemeService.isDarkModeActive ? (item.set.variant ?? item.set.primary) : item.set.primary

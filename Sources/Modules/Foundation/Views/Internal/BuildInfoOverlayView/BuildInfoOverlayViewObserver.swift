@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-final class BuildInfoOverlayViewObserver: Observer {
+final class BuildInfoOverlayViewObserver: Observer, @unchecked Sendable {
     // MARK: - Type Aliases
 
     typealias R = BuildInfoOverlayReducer

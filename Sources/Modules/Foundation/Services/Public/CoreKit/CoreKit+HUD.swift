@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 public extension CoreKit {
+    @MainActor
     struct HUD: Sendable {
         // MARK: - Types
 
@@ -20,14 +21,13 @@ public extension CoreKit {
 
         // MARK: - Dependencies
 
-        @Dependency(\.mainQueue) private var mainQueue: DispatchQueue
         @Dependency(\.uiApplication) private var uiApplication: UIApplication
 
         // MARK: - Properties
 
         static let shared = HUD()
 
-        @LockIsolated private(set) static var isBlockingUserInteraction = false
+        static let isBlockingUserInteraction = LockIsolated<Bool>(wrappedValue: false)
 
         // MARK: - Init
 
@@ -54,19 +54,28 @@ public extension CoreKit {
 
             guard let alertIcon else {
                 guard let animatedIcon else { return }
-                mainQueue.async { ProgressHUD.show(resolvedText, icon: animatedIcon, interaction: true) }
-                return
+                return ProgressHUD.show(
+                    resolvedText,
+                    icon: animatedIcon,
+                    interaction: true
+                )
             }
 
-            mainQueue.async { ProgressHUD.show(resolvedText, icon: alertIcon, interaction: true) }
+            ProgressHUD.show(
+                resolvedText,
+                icon: alertIcon,
+                interaction: true
+            )
         }
 
         public func hide(after delay: Duration = .milliseconds(250)) {
-            mainQueue.async {
-                HUD.isBlockingUserInteraction = false
-                UI.shared.unblockUserInteraction()
-                ProgressHUD.dismiss()
-                GCD.shared.after(delay) { ProgressHUD.remove() }
+            HUD.isBlockingUserInteraction.wrappedValue = false
+            UI.shared.unblockUserInteraction()
+            ProgressHUD.dismiss()
+            GCD.shared.after(delay) {
+                Task { @MainActor in
+                    ProgressHUD.remove()
+                }
             }
         }
 
@@ -75,23 +84,22 @@ public extension CoreKit {
             after delay: Duration? = nil,
             isModal: Bool = false
         ) {
-            mainQueue.async {
-                func showHUD() {
+            @Sendable
+            func showHUD() {
+                Task { @MainActor in
                     ProgressHUD.show(text)
                     guard isModal else { return }
-                    HUD.isBlockingUserInteraction = true
+                    HUD.isBlockingUserInteraction.wrappedValue = true
                     UI.shared.blockUserInteraction(dismissSheets: false)
                 }
-
-                guard let delay else { return showHUD() }
-                GCD.shared.after(delay) { showHUD() }
             }
+
+            guard let delay else { return showHUD() }
+            GCD.shared.after(delay) { showHUD() }
         }
 
         public func showSuccess(text: String? = nil) {
-            mainQueue.async {
-                ProgressHUD.showSucceed(text)
-            }
+            ProgressHUD.showSucceed(text)
         }
     }
 }

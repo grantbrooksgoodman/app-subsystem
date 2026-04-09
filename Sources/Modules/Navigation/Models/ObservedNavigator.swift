@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 @propertyWrapper
 public struct ObservedNavigator<N: Navigating>: DynamicProperty {
     // MARK: - Properties

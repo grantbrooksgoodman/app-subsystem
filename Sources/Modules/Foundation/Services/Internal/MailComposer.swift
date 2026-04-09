@@ -10,7 +10,7 @@ import Foundation
 import MessageUI
 import UIKit
 
-final class MailComposer: UIViewController, MFMailComposeViewControllerDelegate {
+final class MailComposer: UIViewController, @preconcurrency MFMailComposeViewControllerDelegate {
     // MARK: - Types
 
     struct AttachmentData {

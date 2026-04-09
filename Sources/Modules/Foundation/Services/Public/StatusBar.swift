@@ -9,37 +9,36 @@
 import Foundation
 import UIKit
 
+@MainActor
 public enum StatusBar {
     // MARK: - Properties
 
     private static var statusBarViewController: StatusBarViewController? {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
-        @Dependency(\.uiApplication.windows) var windows: [UIWindow]
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-        return (windows
-            .first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") }))?
-                    .rootViewController as? StatusBarViewController
+        return (uiApplication.windows
+            .first(where: {
+                $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW")
+            }))?.rootViewController as? StatusBarViewController
     }
 
     // MARK: - Override Style
 
     public static func overrideStyle(_ style: UIStatusBarStyle) {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.statusBarStyle = style }
+        statusBarViewController?.statusBarStyle = style
     }
 
     // MARK: - Restore Style
 
     public static func restoreStyle() {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent }
+        statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent
     }
 
     // MARK: - Set Is Hidden
 
     public static func setIsHidden(_ isHidden: Bool) {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.isStatusBarHidden = isHidden }
+        statusBarViewController?.isStatusBarHidden = isHidden
     }
 }
 
@@ -73,6 +72,7 @@ final class StatusBarViewController: UIViewController {
     }
 }
 
+@MainActor
 extension UIUserInterfaceStyle {
     var statusBarStyle: UIStatusBarStyle {
         let adaptiveStyle: UIStatusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent

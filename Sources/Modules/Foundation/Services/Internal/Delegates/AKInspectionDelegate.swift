@@ -12,15 +12,11 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
-struct InspectionDelegate: AlertKit.InspectionDelegate {
-    // MARK: - Dependencies
-
-    @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
-    @Dependency(\.uiApplication.presentedViews) private var presentedViews: [UIView]
-
+@MainActor
+struct InspectionDelegate: @MainActor AlertKit.InspectionDelegate {
     // MARK: - Init
 
-    fileprivate init() {}
+    private init() {}
 
     // MARK: - Register with Dependencies
 
@@ -32,7 +28,8 @@ struct InspectionDelegate: AlertKit.InspectionDelegate {
     // MARK: - AlertKit.InspectionDelegate Conformance
 
     func sourceItem(_ tag: Int) -> UIView? {
-        presentedViews
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        return uiApplication.presentedViews
             .compactMap { $0 as? UILabel }
             .first(where: { $0.tag == tag })
     }

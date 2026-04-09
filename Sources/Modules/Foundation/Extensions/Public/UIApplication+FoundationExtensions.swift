@@ -128,26 +128,22 @@ public extension UIApplication {
 
     private static var _bundleRequiresPreV26Design: Bool?
 
-    private var mainQueue: DispatchQueue { Dependency(\.mainQueue).wrappedValue }
-
     // MARK: - Methods
 
+    @MainActor
     func dismissAlertControllers(animated: Bool = true) {
-        mainQueue.async {
-            guard self.isPresentingAlertController else { return }
-            self.presentedViewControllers
-                .compactMap { $0 as? UIAlertController }
-                .forEach { $0.dismiss(animated: animated) }
-        }
+        guard isPresentingAlertController else { return }
+        presentedViewControllers
+            .compactMap { $0 as? UIAlertController }
+            .forEach { $0.dismiss(animated: animated) }
     }
 
+    @MainActor
     func dismissSheets(animated: Bool = true) {
-        mainQueue.async {
-            guard self.isPresentingSheet else { return }
-            self.presentedViewControllers
-                .filter { $0.activePresentationController is UISheetPresentationController }
-                .forEach { $0.dismiss(animated: animated) }
-        }
+        guard isPresentingSheet else { return }
+        presentedViewControllers
+            .filter { $0.activePresentationController is UISheetPresentationController }
+            .forEach { $0.dismiss(animated: animated) }
     }
 
     func firstResponder(in view: UIView? = nil) -> UIView? {
@@ -156,11 +152,10 @@ public extension UIApplication {
         return view.traversedSubviews.first(where: { $0.isFirstResponder })
     }
 
+    @MainActor
     func overrideUserInterfaceStyle(_ style: UIUserInterfaceStyle) {
-        mainQueue.async {
-            self.presentedViewControllers.forEach { $0.overrideUserInterfaceStyle = style }
-            self.windows.forEach { $0.overrideUserInterfaceStyle = style }
-        }
+        presentedViewControllers.forEach { $0.overrideUserInterfaceStyle = style }
+        windows.forEach { $0.overrideUserInterfaceStyle = style }
     }
 
     /// Recursively resolves all view controllers (including parents & children) associated with either the key window, or all windows in all window scenes.
@@ -196,11 +191,14 @@ public extension UIApplication {
     }
 
     func resignFirstResponders(in view: UIView? = nil) {
-        mainQueue.async {
-            guard let view else { return self.presentedViews.filter { $0.isFirstResponder }.forEach { $0.resignFirstResponder() } }
-            guard let firstResponder = self.firstResponder(in: view) else { return }
-            firstResponder.resignFirstResponder()
+        guard let view else {
+            return presentedViews
+                .filter { $0.isFirstResponder }
+                .forEach { $0.resignFirstResponder() }
         }
+
+        guard let firstResponder = firstResponder(in: view) else { return }
+        firstResponder.resignFirstResponder()
     }
 
     private func keyViewController(_ baseVC: UIViewController?) -> UIViewController? {

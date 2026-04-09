@@ -11,24 +11,24 @@ import Foundation
 public enum RuntimeStorage {
     // MARK: - Properties
 
-    @LockIsolated private static var storedItems = [String: Any]()
+    private static let storedItems = LockIsolated<[String: Any]>(wrappedValue: [:])
 
     // MARK: - Removal
 
     public static func remove(_ item: StoredItemKey) {
-        $storedItems[item.rawValue] = nil
+        storedItems.projectedValue[item.rawValue] = nil
     }
 
     // MARK: - Retrieval
 
     public static func retrieve(_ item: StoredItemKey) -> Any? {
-        $storedItems[item.rawValue]
+        storedItems.projectedValue[item.rawValue]
     }
 
     // MARK: - Storage
 
     public static func store(_ object: Any, as item: StoredItemKey) {
-        $storedItems[item.rawValue] = object
+        storedItems.projectedValue[item.rawValue] = object
     }
 }
 

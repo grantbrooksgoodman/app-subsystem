@@ -6,7 +6,7 @@
 //
 
 /* Native */
-import Foundation
+@preconcurrency import Foundation
 import SwiftUI
 
 private struct ToastViewModifier: ViewModifier {
@@ -93,7 +93,9 @@ private struct ToastViewModifier: ViewModifier {
         withAnimation { toast = nil }
         // TODO: Audit this.
 //        if UIApplication.iOS27IsAvailable {
-        Task.delayed(by: .seconds(1)) { Toast.hide() }
+        Task.delayed(by: .seconds(1)) { @MainActor in
+            Toast.hide()
+        }
 //        }
 
         dismissWorkItem?.cancel()

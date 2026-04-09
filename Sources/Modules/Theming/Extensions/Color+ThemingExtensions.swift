@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 public extension Color {
     static var accent: Color { .init(uiColor: .accent) }
     static var background: Color { .init(uiColor: .background) }

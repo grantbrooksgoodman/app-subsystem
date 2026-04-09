@@ -21,6 +21,7 @@ public struct HeaderView: View {
 
         /* MARK: Properties */
 
+        @MainActor
         var backgroundColor: UIColor {
             switch self {
             case let .custom(backgroundColor: backgroundColor):

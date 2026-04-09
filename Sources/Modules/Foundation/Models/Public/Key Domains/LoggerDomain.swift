@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct LoggerDomain: Hashable {
+public struct LoggerDomain: Hashable, Sendable {
     // MARK: - Properties
 
     public let rawValue: String

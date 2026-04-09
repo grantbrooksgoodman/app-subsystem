@@ -17,7 +17,7 @@ struct RootOverlayReducer: Reducer {
 
     // MARK: - Actions
 
-    enum Action {
+    enum Action: @unchecked Sendable {
         case viewAppeared
 
         case didShakeDevice
@@ -41,9 +41,10 @@ struct RootOverlayReducer: Reducer {
 
         /* MARK: Computed Properties */
 
+        @MainActor
         var buildInfoOverlayYOffset: CGFloat {
-            @Dependency(\.uiApplication.mainWindow?.safeAreaInsets.bottom) var safeAreaBottomInsets: CGFloat?
-            return (safeAreaBottomInsets ?? 0) == 0 ? 10 : 30
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
+            return (uiApplication.mainWindow?.safeAreaInsets.bottom ?? 0) == 0 ? 10 : 30
         }
 
         /* MARK: Init */
@@ -75,9 +76,11 @@ struct RootOverlayReducer: Reducer {
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .viewAppeared:
-            rootWindowService.startRaisingWindow()
-            guard UIApplication.iOS27IsAvailable else { return .none }
-            rootWindowService.addKeyboardAppearanceObservers()
+            return .fireAndForget { @MainActor in
+                rootWindowService.startRaisingWindow()
+                guard UIApplication.iOS27IsAvailable else { return }
+                rootWindowService.addKeyboardAppearanceObservers()
+            }
 
         case .didShakeDevice:
             guard build.isDeveloperModeEnabled else { return .none }

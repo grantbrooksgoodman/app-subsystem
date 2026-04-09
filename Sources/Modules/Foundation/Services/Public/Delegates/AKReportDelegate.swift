@@ -12,15 +12,14 @@ import MessageUI
 /* Proprietary */
 import AlertKit
 
-public struct ReportDelegate: AlertKit.ReportDelegate {
+@MainActor
+public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, @unchecked Sendable {
     // MARK: - Dependencies
 
-    @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
     @Dependency(\.build) private var build: Build
     @Dependency(\.coreKit) private var core: CoreKit
     @Dependency(\.timestampDateFormatter) private var dateFormatter: DateFormatter
     @Dependency(\.fileManager) private var fileManager: FileManager
-    @Dependency(\.uiApplication.keyViewController?.leafViewController) private var leafViewController: UIViewController?
     @Dependency(\.jsonEncoder) private var jsonEncoder: JSONEncoder
     @Dependency(\.mailComposer) private var mailComposer: MailComposer
 
@@ -99,13 +98,14 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
 
     // MARK: - Auxiliary
 
-    @MainActor
     private func composeMessage(
         subject: String,
         body: String?,
         prompt: String?,
         error: (any AlertKit.Errorable)?
     ) async {
+        @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+
         func compose(body: String?, prompt: String?) {
             var bodyTuple: (String, Bool)?
 
@@ -208,7 +208,12 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
         }
     }
 
-    private func reportMetadataAttachment(_ error: (any AlertKit.Errorable)? = nil) -> MailComposer.AttachmentData? {
+    private func reportMetadataAttachment(
+        _ error: (any AlertKit.Errorable)? = nil
+    ) -> MailComposer.AttachmentData? {
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        let leafViewController = uiApplication.keyViewController?.leafViewController
+
         func attachmentData(_ dictionary: [String: String]) -> MailComposer.AttachmentData? {
             do {
                 return try .init(
@@ -267,7 +272,8 @@ public struct ReportDelegate: AlertKit.ReportDelegate {
 
 public enum ReportDelegateDependency: DependencyKey {
     public static func resolve(_ dependencies: DependencyValues) -> ReportDelegate {
-        (dependencies.alertKitConfig.reportDelegate as? ReportDelegate) ?? .init()
+        @MainActorIsolated var reportDelegate = (dependencies.alertKitConfig.reportDelegate as? ReportDelegate) ?? .init()
+        return reportDelegate
     }
 }
 

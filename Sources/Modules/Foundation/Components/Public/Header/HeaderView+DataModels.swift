@@ -22,6 +22,7 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        @MainActor
         public init(
             appearance: Appearance = .custom(backgroundColor: .navigationBarBackground),
             restoreOnDisappear: Bool = true,
@@ -47,6 +48,7 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        @MainActor
         public init(
             foregroundColor: Color = .accent,
             image: Image,
@@ -93,6 +95,7 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        @MainActor
         public init(
             _ string: String,
             font: Font = .system(size: 17, weight: .semibold),

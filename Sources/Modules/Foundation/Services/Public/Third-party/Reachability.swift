@@ -63,7 +63,7 @@ public class Reachability {
         }
     }
 
-    public enum Connection: CustomStringConvertible {
+    public enum Connection: CustomStringConvertible, Sendable {
         case unavailable
         case wifi
         case cellular

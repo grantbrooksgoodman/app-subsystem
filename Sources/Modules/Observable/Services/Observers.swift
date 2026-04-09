@@ -11,7 +11,7 @@ import Foundation
 public enum Observers {
     // MARK: - Properties
 
-    private static var instances = [any Observer]()
+    private nonisolated(unsafe) static var instances = [any Observer]()
 
     // MARK: - Association
 

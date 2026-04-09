@@ -256,7 +256,8 @@ struct ToastView: View {
 
 private enum UISelectionFeedbackGeneratorDependency: DependencyKey {
     static func resolve(_: DependencyValues) -> UISelectionFeedbackGenerator {
-        .init()
+        @MainActorIsolated var uiSelectionFeedbackGenerator = UISelectionFeedbackGenerator()
+        return uiSelectionFeedbackGenerator
     }
 }
 

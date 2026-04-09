@@ -100,7 +100,7 @@ struct InternalCancelID: Hashable {
     }
 }
 
-var internalCancellableTasks = CancellableTasks()
+let internalCancellableTasks = CancellableTasks()
 
 actor CancellableTasks {
     // MARK: - Properties

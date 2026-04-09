@@ -38,14 +38,19 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
         private static var changeThemeAction: DevModeAction {
             func changeTheme() {
-                Task {
+                Task { @MainActor in
                     var actions = [AKAction]()
                     actions = UITheme.allCases.map { uiTheme in
                         .init(
                             uiTheme.name,
                             isEnabled: uiTheme.encodedHash != ThemeService.currentTheme.encodedHash
                         ) {
-                            ThemeService.setTheme(uiTheme, checkStyle: false)
+                            Task { @MainActor in
+                                ThemeService.setTheme(
+                                    uiTheme,
+                                    checkStyle: false
+                                )
+                            }
                         }
                     }
 
@@ -62,8 +67,8 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         private static var eraseContentAndSettingsAction: DevModeAction {
             func eraseContentAndSettings() {
                 @Dependency(\.coreKit) var core: CoreKit
-                @Dependency(\.userDefaults) var defaults: UserDefaults
 
+                @Sendable
                 func perform(
                     clearCaches: Bool = false,
                     resetUserDefaults: Bool = false,
@@ -75,6 +80,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     }
 
                     if resetUserDefaults {
+                        @Dependency(\.userDefaults) var defaults: UserDefaults
                         defaults.reset()
                     }
 
@@ -91,7 +97,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
                 let clearCachesAction: AKAction = .init("Clear Caches") {
                     perform(clearCaches: true)
-                    core.hud.showSuccess(text: "Cleared Caches")
+                    Task { @MainActor in
+                        core.hud.showSuccess(text: "Cleared Caches")
+                    }
                 }
 
                 let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
@@ -100,7 +108,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         return
                     }
 
-                    core.hud.showSuccess(text: "Erased Documents Directory")
+                    Task { @MainActor in
+                        core.hud.showSuccess(text: "Erased Documents Directory")
+                    }
                 }
 
                 let eraseTemporaryDirectoryAction: AKAction = .init("Erase Temporary Directory") {
@@ -109,12 +119,16 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         return
                     }
 
-                    core.hud.showSuccess(text: "Erased Temporary Directory")
+                    Task { @MainActor in
+                        core.hud.showSuccess(text: "Erased Temporary Directory")
+                    }
                 }
 
                 let resetUserDefaultsAction: AKAction = .init("Reset UserDefaults") {
                     perform(resetUserDefaults: true)
-                    core.hud.showSuccess(text: "Reset UserDefaults")
+                    Task { @MainActor in
+                        core.hud.showSuccess(text: "Reset UserDefaults")
+                    }
                 }
 
                 let eraseAllContentAndSettingsAction: AKAction = .init("Erase All Content & Settings", style: .destructivePreferred) {
@@ -125,7 +139,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         eraseTemporaryDirectory: true
                     )
 
-                    core.hud.showSuccess()
+                    Task { @MainActor in
+                        core.hud.showSuccess()
+                    }
                 }
 
                 Task {
@@ -150,6 +166,8 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             func overrideLanguageCode() {
                 Task {
                     @Dependency(\.coreKit) var core: CoreKit
+
+                    @Sendable
                     func presentLanguageCodeTextInputAlert() async {
                         let input = await AKTextInputAlert(
                             title: "Override Language Code",
@@ -176,14 +194,19 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         }
 
                         core.utils.setLanguageCode(input, override: true)
-                        core.hud.showSuccess()
+                        Task { @MainActor in
+                            core.hud.showSuccess()
+                        }
                     }
 
+                    @Sendable
                     func restoreLanguageCode(showSuccess: Bool) {
                         RuntimeStorage.remove(.overriddenLanguageCode)
                         core.utils.restoreDeviceLanguageCode()
                         guard showSuccess else { return }
-                        core.hud.showSuccess()
+                        Task { @MainActor in
+                            core.hud.showSuccess()
+                        }
                     }
 
                     guard RuntimeStorage.retrieve(.overriddenLanguageCode) == nil else {
@@ -207,9 +230,11 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     let setToRandomLanguageCodeAction: AKAction = .init("Set to Random Language Code") {
                         guard let languageCode = RuntimeStorage.languageCodeDictionary?.keys.randomElement() else { return }
                         core.utils.setLanguageCode(languageCode, override: true)
-                        core.hud.showSuccess(
-                            text: "Set to \(languageCode.englishLanguageName ?? languageCode.languageName ?? languageCode.uppercased())"
-                        )
+                        Task { @MainActor in
+                            core.hud.showSuccess(
+                                text: "Set to \(languageCode.englishLanguageName ?? languageCode.languageName ?? languageCode.uppercased())"
+                            )
+                        }
                     }
 
                     let specifyLanguageCodeAction: AKAction = .init("Specify Language Code") {
@@ -236,11 +261,8 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
         private static var toggleBreadcrumbsAction: DevModeAction {
             func toggleBreadcrumbs() {
-                Task {
+                Task { @MainActor in
                     @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
-
-                    @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
-                    @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
 
                     guard !AppSubsystem.delegates.breadcrumbsCapture.isCapturing else {
                         let confirmed = await AKConfirmationAlert(
@@ -249,6 +271,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         ).present(translating: [])
 
                         guard confirmed else { return }
+                        @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
                         breadcrumbsCaptureEnabled = false
 
                         if let exception = AppSubsystem.delegates.breadcrumbsCapture.stopCapture() {
@@ -262,24 +285,32 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         return
                     }
 
+                    @Sendable
                     func startCapture(_ savesToPhotos: Bool) {
                         AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
                         if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
                             Logger.log(exception, with: .errorAlert)
                         } else {
-                            coreHUD.showSuccess()
+                            Task { @MainActor in
+                                coreHUD.showSuccess()
+                            }
+
                             DevModeService.removeAction(withTitle: "Start Breadcrumbs Capture")
                             DevModeService.insertAction(toggleBreadcrumbsAction, after: overrideLanguageCodeAction)
                         }
                     }
 
                     let documentsDirectoryOnlyAction: AKAction = .init("Documents Directory Only", style: .preferred) {
+                        @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
+                        @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
                         breadcrumbsCaptureEnabled = true
                         breadcrumbsCaptureSavesToPhotos = false
                         startCapture(false)
                     }
 
                     let saveToPhotoLibraryAction: AKAction = .init("Save to Photo Library") {
+                        @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
+                        @Persistent(.breadcrumbsCaptureSavesToPhotos) var breadcrumbsCaptureSavesToPhotos: Bool?
                         breadcrumbsCaptureEnabled = true
                         breadcrumbsCaptureSavesToPhotos = true
                         startCapture(true)
@@ -323,18 +354,23 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
         private static var toggleGlassTintingAction: DevModeAction? {
             func toggleGlassTintingAction() {
-                @Dependency(\.coreKit) var core: CoreKit
+                Task { @MainActor in
+                    @Dependency(\.coreKit) var core: CoreKit
 
-                @Persistent(.isGlassTintingEnabled) var persistedValue: Bool?
-                core.ui.toggleGlassTinting(on: !(persistedValue == true))
+                    @Persistent(.isGlassTintingEnabled) var persistedValue: Bool?
+                    core.ui.toggleGlassTinting(on: !(persistedValue == true))
 
-                core.hud.showSuccess(
-                    text: "Glass Tinting \(persistedValue == true ? "Enabled" : "Disabled")"
-                )
+                    core.hud.showSuccess(
+                        text: "Glass Tinting \(persistedValue == true ? "Enabled" : "Disabled")"
+                    )
+                }
             }
 
-            guard UIApplication.isFullyV26Compatible else { return nil }
-            let prefix = UIApplication.isGlassTintingEnabled ? "Disable" : "Enable"
+            let isFullyV26Compatible = MainActor.assumeIsolated { UIApplication.isFullyV26Compatible }
+            let isGlassTintingEnabled = MainActor.assumeIsolated { UIApplication.isGlassTintingEnabled }
+
+            guard isFullyV26Compatible else { return nil }
+            let prefix = isGlassTintingEnabled ? "Disable" : "Enable"
             return .init(
                 title: "\(prefix) Glass Tinting",
                 perform: toggleGlassTintingAction
@@ -342,25 +378,38 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var toggleTimebombAction: DevModeAction {
-            @Dependency(\.build) var build: Build
-
             func toggleTimebomb() {
+                @Dependency(\.build) var build: Build
                 @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
                 build.setIsTimebombActive(!build.isTimebombActive)
-                coreHUD.showSuccess(text: "Timebomb \(build.isTimebombActive ? "Enabled" : "Disabled")")
+                Task { @MainActor in
+                    coreHUD.showSuccess(
+                        text: "Timebomb \(build.isTimebombActive ? "Enabled" : "Disabled")"
+                    )
+                }
             }
 
-            return .init(title: "\(build.isTimebombActive ? "Disable" : "Enable") Build Expiry Timebomb", perform: toggleTimebomb)
+            let isTimebombActive = MainActor.assumeIsolated {
+                @Dependency(\.build) var build: Build
+                return build.isTimebombActive
+            }
+
+            return .init(
+                title: "\(isTimebombActive ? "Disable" : "Enable") Build Expiry Timebomb",
+                perform: toggleTimebomb
+            )
         }
 
         private static var viewLoggerSessionRecordAction: DevModeAction {
             func viewLoggerSessionRecord() {
-                @Dependency(\.quickViewer) var quickViewer: QuickViewer
-                if let exception = quickViewer.preview(
-                    filesAtPaths: [Logger.sessionRecordFilePath.path()],
-                    embedded: true
-                ) {
-                    Logger.log(exception, with: .toast)
+                Task { @MainActor in
+                    @Dependency(\.quickViewer) var quickViewer: QuickViewer
+                    if let exception = quickViewer.preview(
+                        filesAtPaths: [Logger.sessionRecordFilePath.path()],
+                        embedded: true
+                    ) {
+                        Logger.log(exception, with: .toast)
+                    }
                 }
             }
 

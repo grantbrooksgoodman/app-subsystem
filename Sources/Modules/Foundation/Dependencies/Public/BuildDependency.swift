@@ -8,8 +8,14 @@
 /* Native */
 import Foundation
 
+// final class BuildResolver: @unchecked Sendable {
+//    static let shared = BuildResolver()
+//    var build: Build?
+//    private init() {}
+// }
+
 // swiftlint:disable:next identifier_name
-var _build: Build!
+nonisolated(unsafe) var _build: Build!
 
 public enum BuildDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> Build {

@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct Effect<Action> {
+public struct Effect<Action>: Sendable {
     // MARK: - Type Aliases
 
     public typealias Operation = @Sendable (Send<Action>) async -> Void
@@ -33,7 +33,10 @@ public extension Effect {
 
     // MARK: - Fire & Forget
 
-    static func fireAndForget(priority: TaskPriority? = nil, operation: @escaping () async -> Void) -> Self {
+    static func fireAndForget(
+        priority: TaskPriority? = nil,
+        operation: @Sendable @escaping () async -> Void
+    ) -> Self {
         .run(priority: priority) { _ in
             await operation()
         }
@@ -41,7 +44,10 @@ public extension Effect {
 
     // MARK: - Run
 
-    static func run(priority: TaskPriority? = nil, operation: @escaping Operation) -> Self {
+    static func run(
+        priority: TaskPriority? = nil,
+        operation: @escaping Operation
+    ) -> Self {
         DependencyScopes.withEscapedDependencies { dependencies in
             self.init(priority: priority) { send in
                 await dependencies.withValue {
@@ -54,7 +60,7 @@ public extension Effect {
     static func run<S: AsyncSequence>(
         priority: TaskPriority? = nil,
         _ sequence: S
-    ) -> Self where S.Element == Action, S.Element: Sendable {
+    ) -> Self where S.Element == Action, S.Element: Sendable, S: Sendable {
         assert(
             !String(describing: type(of: sequence)).localizedStandardContains("AsyncPublisher") &&
                 !String(describing: type(of: sequence)).localizedStandardContains("AsyncThrowingPublisher")
@@ -95,7 +101,7 @@ public extension Effect {
 
 public extension Effect {
     func map<MappedAction>(
-        _ toMapAction: @escaping (Action) -> (MappedAction)
+        _ toMapAction: @Sendable @escaping (Action) -> (MappedAction)
     ) -> Effect<MappedAction> {
         .run { send in
             await operation(

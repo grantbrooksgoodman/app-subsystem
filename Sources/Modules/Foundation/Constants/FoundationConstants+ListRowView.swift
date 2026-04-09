@@ -13,12 +13,13 @@ import SwiftUI
 
 extension FoundationConstants.CGFloats {
     enum ListRowView {
+        /* MARK: Properties */
+
         static let chevronImageFrameMaxHeight: CGFloat = 14
         static let chevronImageFrameMaxWidth: CGFloat = 14
 
         static let footerLabelHorizontalPadding: CGFloat = 16
         static let footerLabelSystemFontScale: CGFloat = 13.5
-        static let frameMinHeight: CGFloat = UIApplication.isFullyV26Compatible ? 48 : 44
 
         static let headerLabelHorizontalPadding: CGFloat = 16
         static let headerLabelSystemFontScale: CGFloat = 13.5
@@ -29,7 +30,17 @@ extension FoundationConstants.CGFloats {
 
         static let titleLabelLeadingPadding: CGFloat = 5
 
-        static let verticalPadding: CGFloat = UIApplication.isFullyV26Compatible ? 12 : 8
+        /* MARK: Computed Properties */
+
+        @MainActor
+        static var frameMinHeight: CGFloat {
+            UIApplication.isFullyV26Compatible ? 48 : 44
+        }
+
+        @MainActor
+        static var verticalPadding: CGFloat {
+            UIApplication.isFullyV26Compatible ? 12 : 8
+        }
     }
 }
 

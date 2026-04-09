@@ -20,11 +20,11 @@ public enum AppSubsystem {
 
     public static let delegates = Delegates.shared
 
-    private(set) static var didInitialize = false
+    private(set) nonisolated(unsafe) static var didInitialize = false
 
     /* MARK: Initialize */
 
-    // swiftlint:disable:next function_parameter_count
+    @MainActor // swiftlint:disable:next function_parameter_count
     public static func initialize(
         appStoreBuildNumber: Int,
         buildMilestone: Build.Milestone,
@@ -39,19 +39,22 @@ public enum AppSubsystem {
 
         /* MARK: Bundle Properties Setup */
 
-        guard !didInitialize else { fatalError(
-            "AppSubsystem.initialize(...) may only be called once per application lifecycle"
-        ) }
+        guard !didInitialize else {
+            fatalError(
+                "AppSubsystem.initialize(...) may only be called once per application lifecycle"
+            )
+        }
 
         didInitialize = true
-
-        _build = .init(
-            appStoreBuildNumber: appStoreBuildNumber,
-            codeName: codeName,
-            finalName: finalName,
-            loggingEnabled: loggingEnabled,
-            milestone: buildMilestone
-        )
+        MainActor.assumeIsolated {
+            _build = .init(
+                appStoreBuildNumber: appStoreBuildNumber,
+                codeName: codeName,
+                finalName: finalName,
+                loggingEnabled: loggingEnabled,
+                milestone: buildMilestone
+            )
+        }
 
         core.utils.setLanguageCode(languageCode)
 
@@ -145,7 +148,7 @@ public enum AppSubsystem {
 
 // swiftlint:disable identifier_name
 public extension AppSubsystem {
-    final class Delegates {
+    final class Delegates: @unchecked Sendable {
         /* MARK: Properties */
 
         public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared

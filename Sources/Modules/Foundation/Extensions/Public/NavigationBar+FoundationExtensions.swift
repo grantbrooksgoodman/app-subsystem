@@ -12,10 +12,11 @@ import Foundation
 import Foundation
 import UIKit
 
+@MainActor
 public extension NavigationBar {
     // MARK: - Types
 
-    enum ItemPlacement: CaseIterable {
+    enum ItemPlacement: CaseIterable, Sendable {
         case leading
         case trailing
     }
@@ -27,26 +28,25 @@ public extension NavigationBar {
 
     // MARK: - Methods
 
+    // TODO: Audit whether this needs explicit @MainActor annotation.
     static func removeAllItemGlassTint() {
-        Task { @MainActor in
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-            let extantGlassViews = knownTintedItems.reduce(into: [Int: UIColor]()) { partialResult, keyPair in
-                if !uiApplication.presentedViews.filter({ $0.tag == keyPair.key }).isEmpty {
-                    partialResult[keyPair.key] = keyPair.value
-                }
+        let extantGlassViews = knownTintedItems.reduce(into: [Int: UIColor]()) { partialResult, keyPair in
+            if !uiApplication.presentedViews.filter({ $0.tag == keyPair.key }).isEmpty {
+                partialResult[keyPair.key] = keyPair.value
             }
-
-            extantGlassViews.forEach { glassView in
-                uiApplication
-                    .presentedViews
-                    .filter { $0.tag == glassView.key }
-                    .forEach { $0.backgroundColor = nil }
-            }
-
-            isObservingTraitCollectionChanges = false
-            knownTintedItems = [:]
         }
+
+        extantGlassViews.forEach { glassView in
+            uiApplication
+                .presentedViews
+                .filter { $0.tag == glassView.key }
+                .forEach { $0.backgroundColor = nil }
+        }
+
+        isObservingTraitCollectionChanges = false
+        knownTintedItems = [:]
     }
 
     static func setItemGlassTint(
@@ -57,15 +57,17 @@ public extension NavigationBar {
         guard UIApplication.isGlassTintingEnabled else { return }
 
         guard delay > .zero else {
-            Task { @MainActor in
-                _setItemGlassTint(color, for: placement)
-            }
-
-            return
+            return _setItemGlassTint(
+                color,
+                for: placement
+            )
         }
 
         Task.delayed(by: delay) { @MainActor in
-            _setItemGlassTint(color, for: placement)
+            _setItemGlassTint(
+                color,
+                for: placement
+            )
         }
     }
 

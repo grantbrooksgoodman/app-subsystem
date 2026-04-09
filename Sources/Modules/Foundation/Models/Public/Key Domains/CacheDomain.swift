@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct CacheDomain: CaseIterable, Hashable {
+public struct CacheDomain: CaseIterable, Hashable, @unchecked Sendable {
     // MARK: - Properties
 
     public let clear: () -> Void

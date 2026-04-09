@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 public extension UIColor {
     static var accent: UIColor { theme.color(for: .accent) }
     static var background: UIColor { theme.color(for: .background) }

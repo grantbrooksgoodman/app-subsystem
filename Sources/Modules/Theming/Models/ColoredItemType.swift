@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct ColoredItemType: Hashable {
+public struct ColoredItemType: Hashable, Sendable {
     // MARK: - Properties
 
     public let rawValue: String

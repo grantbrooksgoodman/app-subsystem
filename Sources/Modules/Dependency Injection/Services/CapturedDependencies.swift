@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct CapturedDependencies {
+public struct CapturedDependencies: Sendable {
     // MARK: - Properties
 
     let dependencies = DependencyValues.current

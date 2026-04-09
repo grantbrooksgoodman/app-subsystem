@@ -9,7 +9,7 @@
 import Combine
 import Foundation
 
-public final class Build {
+public final class Build: @unchecked Sendable {
     // MARK: - Types
 
     public enum Milestone: String {

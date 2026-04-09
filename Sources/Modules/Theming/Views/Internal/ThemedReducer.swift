@@ -75,19 +75,19 @@ struct ThemedReducer: Reducer {
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .viewAppeared:
-            state.previousNavigationBarAppearance = NavigationBar.currentAppearance
+            state.previousNavigationBarAppearance = MainActor.assumeIsolated { NavigationBar.currentAppearance }
             guard let navigationBarAppearance = state.navigationBarAppearance else { return .none }
-            NavigationBar.setAppearance(navigationBarAppearance)
+            MainActor.assumeIsolated { NavigationBar.setAppearance(navigationBarAppearance) }
 
         case .viewDisappeared:
             guard state.restoresNavigationBarAppearanceOnDisappear,
                   state.navigationBarAppearance != nil,
                   let previousNavigationBarAppearance = state.previousNavigationBarAppearance else { return .none }
-            NavigationBar.setAppearance(previousNavigationBarAppearance)
+            MainActor.assumeIsolated { NavigationBar.setAppearance(previousNavigationBarAppearance) }
 
         case .appearanceChanged:
             if let navigationBarAppearance = state.navigationBarAppearance {
-                NavigationBar.setAppearance(navigationBarAppearance)
+                MainActor.assumeIsolated { NavigationBar.setAppearance(navigationBarAppearance) }
             }
 
             state.objectID = UUID()

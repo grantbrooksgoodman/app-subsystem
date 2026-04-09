@@ -11,16 +11,16 @@ import Foundation
 /* Proprietary */
 import Translator
 
-public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate {
+public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unchecked Sendable {
     // MARK: - Properties
 
-    @LockIsolated private var archive = Set<Translation>()
+    private let archive = LockIsolated<Set<Translation>>(wrappedValue: [])
     @Persistent(.translationArchive) private var persistedArchive: Set<Translation>?
-    @LockIsolated private var translationsForInputValueEncodedHashes = [String: Translation]()
+    private let translationsForInputValueEncodedHashes = LockIsolated<[String: Translation]>(wrappedValue: [:])
 
     // MARK: - Init
 
-    fileprivate init() { archive = persistedArchive ?? [] }
+    fileprivate init() { archive.wrappedValue = persistedArchive ?? [] }
 
     // MARK: - Register with Dependencies
 
@@ -32,19 +32,19 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
     // MARK: - Add Value
 
     public func addValue(_ translation: Translation) {
-        $archive.insert(translation)
+        archive.projectedValue.insert(translation)
         persistArchive()
 
-        $translationsForInputValueEncodedHashes.withValue {
+        translationsForInputValueEncodedHashes.projectedValue.withValue {
             $0 = $0.filter { $0.value != translation }
         }
     }
 
     public func addValues(_ translations: Set<Translation>) {
-        $archive.formUnion(translations)
+        archive.projectedValue.formUnion(translations)
         persistArchive()
 
-        $translationsForInputValueEncodedHashes.withValue {
+        translationsForInputValueEncodedHashes.projectedValue.withValue {
             $0 = $0.filter { !translations.contains($0.value) }
         }
     }
@@ -55,16 +55,16 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
         inputValueEncodedHash hash: String,
         languagePair: LanguagePair
     ) -> Translation? {
-        if let value = $translationsForInputValueEncodedHashes[hash],
+        if let value = translationsForInputValueEncodedHashes.projectedValue[hash],
            value.languagePair == languagePair {
             return value
         }
 
-        guard let translation = archive.first(where: {
+        guard let translation = archive.wrappedValue.first(where: {
             $0.input.value.encodedHash == hash && $0.languagePair == languagePair
         }) else { return nil }
 
-        $translationsForInputValueEncodedHashes[hash] = translation
+        translationsForInputValueEncodedHashes.projectedValue[hash] = translation
         return translation
     }
 
@@ -82,11 +82,11 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
             inputValueEncodedHash: hash,
             languagePair: languagePair
         ) {
-            $archive.remove(value)
+            archive.projectedValue.remove(value)
             persistArchive()
         }
 
-        $translationsForInputValueEncodedHashes.withValue {
+        translationsForInputValueEncodedHashes.projectedValue.withValue {
             $0 = $0.filter { !satisfiesConstraints($0.value) }
         }
     }
@@ -94,15 +94,15 @@ public final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate
     // MARK: - Clear Archive
 
     public func clearArchive() {
-        archive = []
+        archive.wrappedValue = []
         persistedArchive = nil
-        translationsForInputValueEncodedHashes = [:]
+        translationsForInputValueEncodedHashes.wrappedValue = [:]
     }
 
     // MARK: - Auxiliary
 
     private func persistArchive() {
-        let archiveSnapshot = archive
+        let archiveSnapshot = archive.wrappedValue
         persistedArchive = archiveSnapshot.isEmpty ? nil : archiveSnapshot
     }
 }

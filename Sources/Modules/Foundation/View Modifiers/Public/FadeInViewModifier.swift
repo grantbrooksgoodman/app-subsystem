@@ -30,7 +30,12 @@ private struct FadeInViewModifier: ViewModifier {
         content
             .opacity(opacity)
             .onAppear {
-                func animateOpacity() { withAnimation(.easeIn(duration: duration.timeInterval)) { opacity = 1 } }
+                func animateOpacity() {
+                    withAnimation(.easeIn(duration: duration.timeInterval)) {
+                        MainActor.assumeIsolated { opacity = 1 }
+                    }
+                }
+
                 guard delay != .zero else { return animateOpacity() }
                 Task.delayed(by: delay) { @MainActor in
                     animateOpacity()

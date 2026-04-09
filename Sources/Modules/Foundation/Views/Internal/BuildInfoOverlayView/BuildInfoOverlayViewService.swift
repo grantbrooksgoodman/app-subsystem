@@ -30,7 +30,9 @@ struct BuildInfoOverlayViewService {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
             let viewBuildInformationAction: AKAction = .init("View Build Information") {
-                self.viewBuildInformationButtonTapped()
+                Task { @MainActor in
+                    self.viewBuildInformationButtonTapped()
+                }
             }
 
             let developerModeButtonTitle = "\(build.isDeveloperModeEnabled ? "Disable" : "Enable") Developer Mode"
@@ -65,13 +67,19 @@ struct BuildInfoOverlayViewService {
         Task { @MainActor in
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-            let reportBugAction: AKAction = .init("Report Bug") { reportDelegate.reportBug() }
+            let reportBugAction: AKAction = .init("Report Bug") {
+                Task { @MainActor in
+                    reportDelegate.reportBug()
+                }
+            }
 
             await AKActionSheet(
                 title: "File a Report",
                 actions: [
                     .init(AppSubsystem.delegates.localizedStrings.sendFeedback) {
-                        reportDelegate.sendFeedback()
+                        Task { @MainActor in
+                            reportDelegate.sendFeedback()
+                        }
                     },
                     reportBugAction,
                 ],
@@ -107,6 +115,7 @@ struct BuildInfoOverlayViewService {
         ))
     }
 
+    @MainActor
     private func viewBuildInformationButtonTapped() {
         let buildMilestoneString = "Build Milestone\n\(build.milestone.rawValue.capitalized)"
         let bundleVersionString = "Bundle Version\n\(build.bundleVersion) (\(String(build.buildNumber)))"

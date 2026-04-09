@@ -22,6 +22,8 @@ public protocol Exceptionable {
     var userInfo: [String: Any]? { get }
 }
 
+extension Callback: @unchecked Sendable {}
+
 public extension Callback {
     func get() throws -> Success {
         switch self {

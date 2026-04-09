@@ -25,6 +25,7 @@ public struct GroupedListView: View {
 
     // MARK: - Init
 
+    @MainActor
     public init(
         _ rows: [ListRowView.Configuration],
         headerText: String? = nil,
@@ -113,6 +114,7 @@ private extension Array where Element == ListRowView.Configuration {
         return concatenated
     }
 
+    @MainActor
     var strippingMetadata: [ListRowView.Configuration] {
         reduce(into: [ListRowView.Configuration]()) { partialResult, configuration in
             partialResult.append(.init(

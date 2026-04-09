@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct UserDefaultsKey: Hashable {
+public struct UserDefaultsKey: Hashable, Sendable {
     // MARK: - Properties
 
     public let rawValue: String

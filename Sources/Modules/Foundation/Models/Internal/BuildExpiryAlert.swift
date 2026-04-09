@@ -12,6 +12,7 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 final class BuildExpiryAlert {
     // MARK: - Dependencies
 
@@ -57,7 +58,6 @@ final class BuildExpiryAlert {
 
     // MARK: - Present / Dismiss
 
-    @MainActor
     func present() async {
         guard RootWindowStatus.shared.rootView != .forcedUpdateModalPage else { return }
         alertKitConfig.overrideTranslationTimeoutConfig(
@@ -121,13 +121,17 @@ final class BuildExpiryAlert {
                 }
             }
 
-            @MainActor
+            @Sendable
             func disableAction() {
-                guard uiApplication.isPresentingAlertController else {
-                    return core.gcd.after(.milliseconds(100)) { disableAction() }
-                }
+                Task { @MainActor in
+                    guard uiApplication.isPresentingAlertController else {
+                        return core.gcd.after(.milliseconds(100)) {
+                            disableAction()
+                        }
+                    }
 
-                textInputAlert.disableAction(at: 1)
+                    textInputAlert.disableAction(at: 1)
+                }
             }
 
             disableAction()
@@ -191,7 +195,11 @@ final class BuildExpiryAlert {
 
     private func setTimer() {
         guard uiApplication.isPresentingAlertController else {
-            return core.gcd.after(.milliseconds(100)) { self.setTimer() }
+            return core.gcd.after(.milliseconds(100)) {
+                Task { @MainActor in
+                    self.setTimer()
+                }
+            }
         }
 
         guard let exitTimer = exitTimer,

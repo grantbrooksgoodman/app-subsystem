@@ -11,7 +11,7 @@ import Foundation
 public typealias ExceptionMetadata = Exception.Metadata
 
 public extension Exception {
-    struct Metadata: MetadataProtocol {
+    struct Metadata: MetadataProtocol, @unchecked Sendable {
         // MARK: - Properties
 
         public let fileName: String

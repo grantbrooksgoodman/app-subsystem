@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct AppException: Hashable {
+public struct AppException: Hashable, Sendable {
     // MARK: - Properties
 
     public let errorCode: String

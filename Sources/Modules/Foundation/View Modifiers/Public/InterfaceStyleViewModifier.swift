@@ -47,7 +47,11 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 
     private func overrideStyle() {
         guard uiApplication.applicationState == .active else {
-            return core.gcd.after(.milliseconds(10)) { overrideStyle() }
+            return core.gcd.after(.milliseconds(10)) {
+                Task { @MainActor in
+                    overrideStyle()
+                }
+            }
         }
 
         guard uiApplication.interfaceStyle != interfaceStyle else { return }

@@ -9,7 +9,7 @@
 import Foundation
 import QuickLook
 
-public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+public final class QuickViewer: NSObject, QLPreviewControllerDataSource, @preconcurrency QLPreviewControllerDelegate {
     // MARK: - Types
 
     private final class PreviewItem: NSObject, QLPreviewItem {

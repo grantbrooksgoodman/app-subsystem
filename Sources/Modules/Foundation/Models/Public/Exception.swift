@@ -9,7 +9,7 @@
 import CryptoKit
 import Foundation
 
-public struct Exception: Equatable, Exceptionable, Swift.Error {
+public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Sendable {
     // MARK: - Types
 
     enum UserInfo: String {

@@ -11,7 +11,8 @@ import UIKit
 
 public enum UIApplicationDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> UIApplication {
-        .shared
+        @MainActorIsolated var uiApplication = UIApplication.shared
+        return uiApplication
     }
 }
 

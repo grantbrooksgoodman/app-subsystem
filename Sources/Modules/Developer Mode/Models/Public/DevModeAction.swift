@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct DevModeAction {
+public struct DevModeAction: @unchecked Sendable {
     // MARK: - Properties
 
     public let isDestructive: Bool

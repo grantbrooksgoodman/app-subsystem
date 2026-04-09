@@ -12,6 +12,7 @@ import Foundation
 import AlertKit
 import Translator
 
+@MainActor
 struct TranslationDelegate: AlertKit.TranslationDelegate {
     // MARK: - Dependencies
 

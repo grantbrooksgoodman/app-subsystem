@@ -17,7 +17,7 @@ import Translator
 public enum Logger {
     // MARK: - Types
 
-    public enum AlertType {
+    public enum AlertType: Sendable {
         /* MARK: Cases */
 
         case errorAlert
@@ -73,17 +73,17 @@ public enum Logger {
 
     // MARK: - Properties
 
-    public private(set) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
-    public private(set) static var filter: Filter?
-    public private(set) static var reportsErrorsAutomatically = false
-    public private(set) static var subscribedDomains = [LoggerDomain]()
+    public private(set) nonisolated(unsafe) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
+    public private(set) nonisolated(unsafe) static var filter: Filter?
+    public private(set) nonisolated(unsafe) static var reportsErrorsAutomatically = false
+    public private(set) nonisolated(unsafe) static var subscribedDomains = [LoggerDomain]()
 
     private static let ioLock = NSLock()
     private static let sessionID = UUID()
     private static let utf8BOM = Data([0xEF, 0xBB, 0xBF])
 
-    private static var currentTimeLastCalled = Date.now
-    private static var streamOpen = false
+    private nonisolated(unsafe) static var currentTimeLastCalled = Date.now
+    private nonisolated(unsafe) static var streamOpen = false
 
     // MARK: - Computed Properties
 
@@ -169,7 +169,6 @@ public enum Logger {
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none
     ) {
-        @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
         func showAlertIfNeeded() {
@@ -197,7 +196,10 @@ public enum Logger {
 
             if exception.isReportable,
                Logger.reportsErrorsAutomatically {
-                alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
+                Task { @MainActor in
+                    @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+                    alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
+                }
             }
         }
 
@@ -506,8 +508,7 @@ public enum Logger {
         exception: Exception? = nil,
         text: String? = nil
     ) {
-        Task {
-            @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+        Task { @MainActor in
             @Dependency(\.build) var build: Build
             @Dependency(\.coreKit) var core: CoreKit
 
@@ -571,7 +572,12 @@ public enum Logger {
                     guard let exception,
                           exception.isReportable,
                           !Logger.reportsErrorsAutomatically else { return nil }
-                    return { alertKitConfig.reportDelegate?.fileReport(exception.hydrated) }
+                    return {
+                        Task { @MainActor in
+                            @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+                            alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
+                        }
+                    }
                 }
 
                 Toast.show(

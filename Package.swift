@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 
 /* Native */
 import PackageDescription
@@ -10,7 +10,6 @@ let package = Package(
     platforms: [
         .iOS(.v17),
         .tvOS(.v17),
-        .macOS(.v14),
     ],
     products: [
         .library(
@@ -19,9 +18,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/grantbrooksgoodman/alert-kit", branch: "main"),
-        .package(url: "https://github.com/grantbrooksgoodman/component-kit", branch: "main"),
-        .package(url: "https://github.com/grantbrooksgoodman/translator", branch: "main"),
+        .package(url: "https://github.com/grantbrooksgoodman/alert-kit", branch: "swift-6"),
+        .package(url: "https://github.com/grantbrooksgoodman/component-kit", branch: "swift-6"),
+        .package(url: "https://github.com/grantbrooksgoodman/translator", branch: "swift-6"),
 //        .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "main"),
 //        .package(url: "https://github.com/realm/SwiftLint", branch: "main"),
     ],
@@ -34,6 +33,7 @@ let package = Package(
                 .product(name: "Translator", package: "translator", moduleAliases: nil),
             ],
             path: "Sources",
+            swiftSettings: [.swiftLanguageMode(.v6)],
             plugins: [ /* .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint") */ ]
         ),
     ]

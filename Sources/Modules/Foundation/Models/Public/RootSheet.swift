@@ -9,7 +9,7 @@
 import Foundation
 import SwiftUI
 
-public struct RootSheet {
+public struct RootSheet: @unchecked Sendable {
     // MARK: - Properties
 
     public let view: AnyView

@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public final class NavigationCoordinatorResolver {
+public final class NavigationCoordinatorResolver: @unchecked Sendable {
     // MARK: - Properties
 
     public static let shared = NavigationCoordinatorResolver()

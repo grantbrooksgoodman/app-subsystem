@@ -44,16 +44,20 @@ struct BuildInfoOverlayReducer: Reducer {
 
         var backgroundColor: Color { .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1) }
         var isDeveloperModeEnabled: Bool { Dependency(\.build.isDeveloperModeEnabled).wrappedValue }
+
+        @MainActor
         var isUserInteractionDisabled: Bool {
-            Dependency(\.uiApplication.isPresentingAlertController).wrappedValue || RootWindowStatus.shared.rootView == .expiryPage
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
+            return uiApplication.isPresentingAlertController || RootWindowStatus.shared.rootView == .expiryPage
         }
 
         var sendFeedbackButtonText: String { AppSubsystem.delegates.localizedStrings.sendFeedback } // swiftlint:disable:next identifier_name
 
+        @MainActor
         fileprivate var _statsLabelText: String {
             @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-            @Dependency(\.uiApplication.presentedViews.count) var presentedViewsCount: Int
-            return "\(presentedViewsCount) views // \(appMemoryFootprint ?? 0)MB in use"
+            @Dependency(\.uiApplication) var uiApplication: UIApplication
+            return "\(uiApplication.presentedViews.count) views // \(appMemoryFootprint ?? 0)MB in use"
         }
 
         /* MARK: Init */
@@ -96,7 +100,7 @@ struct BuildInfoOverlayReducer: Reducer {
             state.shouldUseTranslucentAppearance = shouldUseTranslucentAppearance
 
         case .updateStatsLabelText:
-            state.statsLabelText = state._statsLabelText
+            state.statsLabelText = MainActor.assumeIsolated { state._statsLabelText }
             return .task(priority: .background, delay: .seconds(1)) {
                 .updateStatsLabelText
             }

@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 public extension Toast {
-    enum Style: Equatable {
+    enum Style: Equatable, Sendable {
         // MARK: - Cases
 
         case error

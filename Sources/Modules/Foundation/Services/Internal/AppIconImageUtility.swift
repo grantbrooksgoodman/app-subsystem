@@ -19,7 +19,7 @@ final class AppIconImageUtility {
 
     // MARK: - Properties
 
-    static let shared = AppIconImageUtility()
+    nonisolated(unsafe) static let shared = AppIconImageUtility()
 
     @Cached(CacheKey.localAppIconImage) private var cachedLocalAppIconImage: UIImage?
     @Cached(CacheKey.remoteAppIconImage) private var cachedRemoteAppIconImage: UIImage?
@@ -85,7 +85,9 @@ final class AppIconImageUtility {
         }
     }
 
-    private func getRemoteAppIconImage(completion: @escaping (Callback<UIImage, Exception>) -> Void) {
+    private func getRemoteAppIconImage(
+        completion: @escaping @Sendable (Callback<UIImage, Exception>) -> Void
+    ) {
         @Dependency(\.mainBundle) var mainBundle: Bundle
         @Dependency(\.urlSession) var urlSession: URLSession
 
@@ -114,8 +116,8 @@ final class AppIconImageUtility {
                 return completion(.failure(
                     error == nil ? .init(
                         "Failed to resolve standard resolution image.",
-                        metadata: .init(sender: self)
-                    ) : .init(error, metadata: .init(sender: self))
+                        metadata: .init(sender: Self.self)
+                    ) : .init(error, metadata: .init(sender: Self.self))
                 ))
             }
 
@@ -124,11 +126,12 @@ final class AppIconImageUtility {
                     return completion(.failure(
                         error == nil ? .init(
                             "Failed to resolve high resolution image.",
-                            metadata: .init(sender: self)
-                        ) : .init(error, metadata: .init(sender: self))
+                            metadata: .init(sender: Self.self)
+                        ) : .init(error, metadata: .init(sender: Self.self))
                     ))
                 }
 
+                // FIXME: Warning here.
                 self.cachedRemoteAppIconImage = image
                 return completion(.success(image))
             }.resume()

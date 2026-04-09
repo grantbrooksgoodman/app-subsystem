@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 public enum RootWindowScene {
     // MARK: - Properties
 
@@ -16,7 +17,6 @@ public enum RootWindowScene {
 
     // MARK: - Instantiate
 
-    @MainActor
     public static func instantiate(_ scene: UIScene, rootView: any View) -> UIWindow {
         rootWindowScene.instantiate(scene, rootView: rootView)
     }
@@ -28,6 +28,7 @@ public enum RootWindowScene {
     }
 }
 
+@MainActor
 private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
     // MARK: - Dependencies
 
@@ -37,8 +38,10 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: - Instantiate
 
-    @MainActor
-    fileprivate func instantiate(_ scene: UIScene, rootView: any View) -> UIWindow {
+    fileprivate func instantiate(
+        _ scene: UIScene,
+        rootView: any View
+    ) -> UIWindow {
         guard let windowScene = scene as? UIWindowScene else { return .init() }
 
         // Root window
@@ -119,7 +122,10 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: - UIGestureRecognizer
 
-    fileprivate func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    fileprivate func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldReceive touch: UITouch
+    ) -> Bool {
         Observables.rootViewTapped.trigger()
         return false
     }

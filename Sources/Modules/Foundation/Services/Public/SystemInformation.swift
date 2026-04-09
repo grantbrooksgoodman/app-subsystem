@@ -141,7 +141,7 @@ public enum SystemInformation {
 
     private static func stringFromSystemInformation(withLevels: [Int32]) throws -> String {
         let optionalString = try getInformation(withLevels: withLevels).withUnsafeBufferPointer { dataPointer -> String? in
-            dataPointer.baseAddress.flatMap { String(validatingUTF8: $0) }
+            dataPointer.baseAddress.flatMap { String(validatingCString: $0) }
         }
 
         guard let returnedString = optionalString else {

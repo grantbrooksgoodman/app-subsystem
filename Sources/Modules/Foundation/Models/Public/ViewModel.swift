@@ -174,9 +174,9 @@ public extension ViewModelOf {
 
     @MainActor
     func yield(while predicate: @escaping (State) -> Bool) async {
-        _ = await $state
-            .values
-            .first(where: { !predicate($0) })
+        for await state in $state.values {
+            if !predicate(state) { break }
+        }
     }
 }
 

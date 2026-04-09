@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 public final class NavigationCoordinator<N: Navigating>: ObservableObject {
     // MARK: - Properties
 
@@ -37,8 +38,6 @@ public final class NavigationCoordinator<N: Navigating>: ObservableObject {
     // MARK: - Navigate To
 
     public func navigate(to route: N.Route) {
-        DispatchQueue.main.async {
-            self.navigating.navigate(to: route, on: &self.state)
-        }
+        navigating.navigate(to: route, on: &state)
     }
 }

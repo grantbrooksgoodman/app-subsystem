@@ -13,6 +13,7 @@ import UIKit
 import AlertKit
 import Translator
 
+@MainActor
 public extension Toast {
     // MARK: - Types
 
@@ -192,7 +193,7 @@ public extension Toast {
                   !isShowingToast else {
                 Task.delayed(
                     by: UIApplication.isBlockingUserInteraction ? .milliseconds(100) : .seconds(1)
-                ) {
+                ) { @MainActor in
                     show(
                         toast,
                         onTap: onTap
@@ -242,3 +243,5 @@ private extension Array where Element == Translation {
         (first(where: { $0.input.value == inputString })?.output ?? inputString).sanitized
     }
 }
+
+extension Toast: @unchecked Sendable {}

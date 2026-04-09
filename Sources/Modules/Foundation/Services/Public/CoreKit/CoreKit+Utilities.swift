@@ -24,7 +24,6 @@ public extension CoreKit {
 
         // MARK: - Dependencies
 
-        @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
         @Dependency(\.fileManager) private var fileManager: FileManager
         @Dependency(\.uiApplication) private var uiApplication: UIApplication
         @Dependency(\.uiControl) private var uiControl: UIControl
@@ -67,12 +66,14 @@ public extension CoreKit {
 
         /// Returns to the Home screen before terminating the application.
         public func exitGracefully(terminateAfter duration: Duration = .seconds(1)) {
-            uiControl
-                .sendAction(
-                    #selector(NSXPCConnection.suspend),
-                    to: uiApplication,
-                    for: nil
-                )
+            Task { @MainActor in
+                uiControl
+                    .sendAction(
+                        #selector(NSXPCConnection.suspend),
+                        to: uiApplication,
+                        for: nil
+                    )
+            }
 
             GCD.shared.after(duration) { exit(0) }
         }
@@ -106,11 +107,14 @@ public extension CoreKit {
         }
 
         public func setLanguageCode(_ languageCode: String, override: Bool = false) {
-            alertKitConfig.overrideTargetLanguageCode(languageCode)
-            RuntimeStorage.store(languageCode, as: .languageCode)
+            Task { @MainActor in
+                @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+                alertKitConfig.overrideTargetLanguageCode(languageCode)
+                RuntimeStorage.store(languageCode, as: .languageCode)
 
-            guard override else { return }
-            RuntimeStorage.store(languageCode, as: .overriddenLanguageCode)
+                guard override else { return }
+                RuntimeStorage.store(languageCode, as: .overriddenLanguageCode)
+            }
         }
 
         // MARK: - Computed Property Getters
@@ -157,7 +161,8 @@ public extension CoreKit {
 
 private enum UIControlDependency: DependencyKey {
     static func resolve(_: DependencyValues) -> UIControl {
-        .init()
+        @MainActorIsolated var uiControl = UIControl()
+        return uiControl
     }
 }
 

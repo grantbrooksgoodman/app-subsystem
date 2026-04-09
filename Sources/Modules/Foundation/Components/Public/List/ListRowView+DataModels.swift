@@ -25,6 +25,7 @@ public extension ListRowView {
 
         // MARK: - Init
 
+        @MainActor
         public init(
             _ interaction: Interaction,
             headerText: String? = nil,

@@ -12,6 +12,7 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 public enum ThemeService {
     // MARK: - Properties
 
@@ -62,7 +63,11 @@ public enum ThemeService {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         guard uiApplication.applicationState == .active else {
-            return core.gcd.after(.milliseconds(10)) { self.setStyle() }
+            return core.gcd.after(.milliseconds(10)) {
+                Task { @MainActor in
+                    self.setStyle()
+                }
+            }
         }
 
         let currentThemeStyle = currentTheme.style

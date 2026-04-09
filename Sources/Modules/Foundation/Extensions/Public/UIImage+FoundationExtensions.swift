@@ -34,7 +34,10 @@ public extension UIImage {
         return image
     }
 
-    static func downloadedFrom(_ link: String, completion: @escaping (_ image: UIImage?) -> Void) {
+    static func downloadedFrom(
+        _ link: String,
+        completion: @escaping @Sendable (_ image: UIImage?) -> Void
+    ) {
         guard let url = URL(string: link) else {
             completion(nil)
             return
@@ -45,7 +48,10 @@ public extension UIImage {
         }
     }
 
-    static func downloadedFrom(_ url: URL, completion: @escaping (_ image: UIImage?) -> Void) {
+    static func downloadedFrom(
+        _ url: URL,
+        completion: @escaping @Sendable (_ image: UIImage?) -> Void
+    ) {
         @Dependency(\.urlSession) var urlSession: URLSession
 
         urlSession.dataTask(with: url) { data, _, _ in

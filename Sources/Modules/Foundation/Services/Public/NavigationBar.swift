@@ -9,13 +9,13 @@
 import Foundation
 import UIKit
 
-public enum NavigationBarAppearance: Equatable {
+public enum NavigationBarAppearance: Equatable, @unchecked Sendable {
     case custom(NavigationBarConfiguration, scrollEdgeConfig: NavigationBarConfiguration? = nil)
     case `default`(scrollEdgeConfig: NavigationBarConfiguration? = nil)
     case themed(scrollEdgeConfig: NavigationBarConfiguration? = nil, showsDivider: Bool = true)
 }
 
-public struct NavigationBarConfiguration: Equatable {
+public struct NavigationBarConfiguration: Equatable, @unchecked Sendable {
     // MARK: - Properties
 
     public let backgroundColor: UIColor
@@ -25,6 +25,7 @@ public struct NavigationBarConfiguration: Equatable {
 
     // MARK: - Computed Properties
 
+    @MainActor
     public var uiNavigationBarAppearance: UINavigationBarAppearance {
         let appearance = UINavigationBarAppearance()
 
@@ -64,6 +65,7 @@ public struct NavigationBarConfiguration: Equatable {
     }
 }
 
+@MainActor
 public enum NavigationBar {
     // MARK: - Properties
 
@@ -73,11 +75,11 @@ public enum NavigationBar {
 
     public static var height: CGFloat {
         typealias Floats = FoundationConstants.CGFloats.NavigationBar
-        @Dependency(\.uiApplication.presentedViewControllers) var viewControllers: [UIViewController]
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-        let minimumCurrentHeight = viewControllers
+        let minimumCurrentHeight = uiApplication.presentedViewControllers
             .compactMap { $0 as? UINavigationController }
-            .map(\.navigationBar.frame.height)
+            .map { $0.navigationBar.frame.height }
             .sorted()
             .first ?? Floats.defaultHeight
 
@@ -113,8 +115,8 @@ public enum NavigationBar {
             }
         }
 
-        @Dependency(\.uiApplication.presentedViewControllers) var presentedViewControllers: [UIViewController]
-        presentedViewControllers.forEach { toggleNavigationBarIsHidden($0) }
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        uiApplication.presentedViewControllers.forEach { toggleNavigationBarIsHidden($0) }
     }
 
     public static func setAppearance(_ appearance: NavigationBarAppearance) {
@@ -141,7 +143,8 @@ public enum NavigationBar {
     }
 
     private static func setAppearance(_ standardAppearance: UINavigationBarAppearance, scrollEdgeAppearance: UINavigationBarAppearance?) {
-        @Dependency(\.uiApplication.presentedViewControllers) var presentedViewControllers: [UIViewController]
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        let presentedViewControllers = uiApplication.presentedViewControllers
 
         let barButtonItemColor = standardAppearance.titleTextAttributes[.strokeColor] as? UIColor
         UIBarButtonItem.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).tintColor = barButtonItemColor

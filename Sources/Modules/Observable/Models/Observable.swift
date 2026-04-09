@@ -10,7 +10,7 @@ import Foundation
 
 public typealias Nil = NSNull
 
-public final class Observable<T>: ObservableProtocol {
+public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     // MARK: - Properties
 
     public let key: ObservableKey

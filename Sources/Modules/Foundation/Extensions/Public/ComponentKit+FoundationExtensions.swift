@@ -12,6 +12,7 @@ import SwiftUI
 /* Proprietary */
 import ComponentKit
 
+@MainActor
 public extension ComponentKit {
     func button(
         symbolName: String,

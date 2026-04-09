@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 @propertyWrapper
 public struct ObservedDependency<Value>: DynamicProperty where Value: ObservableObject {
     // MARK: - Properties

@@ -12,12 +12,13 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
-extension CoreKit: AlertKit.PresentationDelegate {
+extension CoreKit: @MainActor AlertKit.PresentationDelegate {
     // MARK: - Properties
 
+    @MainActor
     public var presentedAlertControllers: [UIAlertController] {
-        @Dependency(\.uiApplication.presentedViewControllers) var presentedViewControllers: [UIViewController]
-        return presentedViewControllers.compactMap { $0 as? UIAlertController }
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        return uiApplication.presentedViewControllers.compactMap { $0 as? UIAlertController }
     }
 
     // MARK: - Methods

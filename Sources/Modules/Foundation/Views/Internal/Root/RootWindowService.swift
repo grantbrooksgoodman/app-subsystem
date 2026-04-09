@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 final class RootWindowService {
     // MARK: - Object Lifecycle
 
@@ -46,7 +47,9 @@ final class RootWindowService {
             name: UIResponder.keyboardWillShowNotification,
             object: nil
         ) { notification in
-            guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+            guard let keyboardFrame = notification.userInfo?[
+                UIResponder.keyboardFrameEndUserInfoKey
+            ] as? NSValue else { return }
             Toast.updateFrameForKeyboardAppearance(keyboardFrame.cgRectValue.height)
         }
     }
@@ -56,11 +59,17 @@ final class RootWindowService {
         @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
 
         defer {
-            core.gcd.after(.milliseconds(50)) { self.startRaisingWindow() }
+            core.gcd.after(.milliseconds(50)) {
+                Task { @MainActor in
+                    self.startRaisingWindow()
+                }
+            }
         }
 
         guard let mainWindow,
-              let rootOverlayWindow = mainWindow.subviews.first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") }),
+              let rootOverlayWindow = mainWindow.subviews.first(where: {
+                  $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW")
+              }),
               mainWindow.subviews.last != rootOverlayWindow else { return }
 
         mainWindow.bringSubviewToFront(rootOverlayWindow)

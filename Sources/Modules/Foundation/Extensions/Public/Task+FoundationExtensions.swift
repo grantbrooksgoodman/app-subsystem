@@ -61,8 +61,8 @@ public extension Task where Success == Void, Failure == Never {
     /// - Note: Debouncing is global to the `TaskRegistry` backing this extension. Any call site using the
     ///   same `key` will participate in the same debounce “lane”.
     @discardableResult
-    static func debounced(
-        _ key: AnyHashable,
+    static func debounced<K: Hashable & Sendable>(
+        _ key: K,
         delay duration: Duration,
         priority: TaskPriority? = nil,
         operation: @escaping @Sendable () async -> Void
@@ -136,20 +136,22 @@ private actor TaskRegistry {
 
     // MARK: - Methods
 
-    fileprivate func clearIfTokenMatches(
+    fileprivate func clearIfTokenMatches<K: Hashable & Sendable>(
         _ token: UUID,
-        for key: AnyHashable
+        for key: K
     ) {
+        let key = AnyHashable(key)
         // Clear only if we are still the latest task registered for this key.
         guard tasks[key]?.token == token else { return }
         tasks[key] = nil
     }
 
-    fileprivate func set(
+    fileprivate func set<K: Hashable & Sendable>(
         _ task: Task<Void, Never>,
         token: UUID,
-        for key: AnyHashable
+        for key: K
     ) {
+        let key = AnyHashable(key)
         tasks[key]?.task.cancel()
         tasks[key] = .init(
             token,

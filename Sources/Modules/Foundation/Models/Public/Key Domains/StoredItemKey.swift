@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct StoredItemKey: Hashable {
+public struct StoredItemKey: Hashable, Sendable {
     // MARK: - Properties
 
     public let rawValue: String

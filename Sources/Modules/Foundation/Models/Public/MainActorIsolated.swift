@@ -105,14 +105,14 @@ public struct MainActorIsolated<Value>: @unchecked Sendable {
     // MARK: - Nonisolated Accessors
 
     /// Call with a read-only closure from any context; runs on the main actor.
-    public nonisolated func read<T>(
+    public nonisolated func read<T: Sendable>(
         _ body: @MainActor (Value) throws -> T
     ) async rethrows -> T {
         try await MainActor.run { try body(box.value) }
     }
 
     /// Call with an inout closure from any context; runs on the main actor.
-    public nonisolated func withValue<T>(
+    public nonisolated func withValue<T: Sendable>(
         _ body: @MainActor (inout Value) throws -> T
     ) async rethrows -> T {
         try await MainActor.run {

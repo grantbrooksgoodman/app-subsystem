@@ -180,6 +180,7 @@ public extension NavigationWindow.Toolbar {
 
         // MARK: - Init
 
+        @MainActor
         public init(
             _ text: String,
             color: Color = .navigationBarTitle

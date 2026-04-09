@@ -22,7 +22,7 @@ public enum DevModeService {
 
     // MARK: - Properties
 
-    private static var appActions: [DevModeAction] = AppSubsystem.delegates.devModeAppActions?.appActions ?? []
+    private nonisolated(unsafe) static var appActions: [DevModeAction] = AppSubsystem.delegates.devModeAppActions?.appActions ?? []
     private static var subsystemActions: [DevModeAction] { DevModeAction.Subsystem.available }
 
     // MARK: - Action Addition
@@ -190,6 +190,8 @@ public enum DevModeService {
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
         build.setIsDeveloperModeEnabled(enabled)
-        coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
+        Task { @MainActor in
+            coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
+        }
     }
 }

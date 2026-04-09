@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct CoreKit {
+public struct CoreKit: Sendable {
     // MARK: - Properties
 
     public let gcd: GCD

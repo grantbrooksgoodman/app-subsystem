@@ -9,7 +9,7 @@
 import Foundation
 import SwiftUI
 
-struct RootOverlayViewObserver: Observer {
+struct RootOverlayViewObserver: Observer, @unchecked Sendable {
     // MARK: - Type Aliases
 
     typealias R = RootOverlayReducer

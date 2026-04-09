@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 public extension HeaderView.PeripheralButtonType {
     static func backButton(
         foregroundColor: Color = .accent,

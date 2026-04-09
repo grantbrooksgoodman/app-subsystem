@@ -65,21 +65,29 @@ struct ForcedUpdateModalPageReducer: Reducer {
 
             state.versionLabelText = "v\(build.bundleVersion) (\(String(build.buildNumber))\(build.milestone.shortString)/\(build.bundleRevision.lowercased()))"
 
+            @Sendable
             func hideInteractiveContent() {
-                Toast.hide()
+                Task { @MainActor in
+                    Toast.hide()
 
-                uiApplication
-                    .windows
-                    .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
-                    .alpha = 0
+                    uiApplication
+                        .windows
+                        .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
+                        .alpha = 0
 
-                uiApplication.dismissAlertControllers(animated: false)
-                uiApplication.dismissSheets(animated: false)
-                uiApplication.resignFirstResponders()
+                    uiApplication.dismissAlertControllers(animated: false)
+                    uiApplication.dismissSheets(animated: false)
+                    uiApplication.resignFirstResponders()
 
-                guard !build.isDeveloperModeEnabled else { return }
-                core.gcd.after(.milliseconds(100)) { hideInteractiveContent() }
-            }; hideInteractiveContent()
+                    guard !build.isDeveloperModeEnabled else { return }
+                    core.gcd.after(.milliseconds(100)) { hideInteractiveContent() }
+                }
+            }
+
+            let hideInteractiveContentTask: Effect<Action> = .task { @MainActor in
+                hideInteractiveContent()
+                return .none
+            }
 
             let remoteAppIconImageTask: Effect<Action> = .task {
                 let result = await AppIconImageUtility.shared.remoteAppIconImage
@@ -91,7 +99,9 @@ struct ForcedUpdateModalPageReducer: Reducer {
                 return .resolveReturned(result)
             }
 
-            return remoteAppIconImageTask.merge(with: resolveTask)
+            return hideInteractiveContentTask
+                .merge(with: remoteAppIconImageTask)
+                .merge(with: resolveTask)
 
         case .installButtonTapped:
             guard let installButtonRedirectURL = state.installButtonRedirectURL else { return .none }

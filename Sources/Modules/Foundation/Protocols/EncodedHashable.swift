@@ -20,13 +20,13 @@ public extension EncodedHashable {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
         let compiledString = hashFactors.joined()
 
-        if let storedValue = EncodedHashStore.$storedEncodedHashesForCompiledHashFactorStrings[compiledString] {
+        if let storedValue = EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings.projectedValue[compiledString] {
             return storedValue
         }
 
         do {
             let encodedHash = try jsonEncoder.encode(hashFactors).encodedHash
-            EncodedHashStore.$storedEncodedHashesForCompiledHashFactorStrings[compiledString] = encodedHash
+            EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings.projectedValue[compiledString] = encodedHash
             return encodedHash
         } catch {
             Logger.log(.init(error, metadata: .init(sender: self)))
@@ -38,13 +38,12 @@ public extension EncodedHashable {
 enum EncodedHashStore {
     // MARK: - Properties
 
-    @LockIsolated
-    static var storedEncodedHashesForCompiledHashFactorStrings = [String: String]()
+    static let storedEncodedHashesForCompiledHashFactorStrings = LockIsolated<[String: String]>(wrappedValue: [:])
 
     // MARK: - Clear Cache
 
     static func clearStore() {
-        storedEncodedHashesForCompiledHashFactorStrings = .init()
+        storedEncodedHashesForCompiledHashFactorStrings.wrappedValue = [:]
     }
 }
 

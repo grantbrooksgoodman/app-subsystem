@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public final class Timeout {
+public final class Timeout: @unchecked Sendable {
     // MARK: - Dependencies
 
     @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD

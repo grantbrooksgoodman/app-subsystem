@@ -7,7 +7,8 @@
 
 /* Native */
 import Foundation
-import Translator
+
+@preconcurrency import Translator
 import UIKit
 
 public extension TranslationService {
@@ -97,47 +98,57 @@ public extension TranslationService {
         languagePair: LanguagePair,
         hud hudConfig: (appearsAfter: Duration, isModal: Bool)?,
         timeout timeoutConfig: (duration: Duration, returnsInputs: Bool),
-        completion: @escaping (Callback<[Translation], Exception>) -> Void
+        completion: @Sendable @escaping (Callback<[Translation], Exception>) -> Void
     ) {
         @Dependency(\.coreKit) var core: CoreKit
         @Dependency(\.translationService) var translator: TranslationService
-        var didComplete = false
+
+        let didComplete = LockIsolated(wrappedValue: false)
+        let translations = LockIsolated<[Translation]>(wrappedValue: [])
+        let exception = LockIsolated<Exception?>(wrappedValue: nil)
 
         if let hudConfig {
-            core.gcd.after(hudConfig.appearsAfter) {
-                guard !didComplete else { return }
+            Task.delayed(by: hudConfig.appearsAfter) { @MainActor in
+                guard !didComplete.wrappedValue else { return }
                 core.hud.showProgress(isModal: hudConfig.isModal)
             }
         }
 
-        var canComplete: Bool {
-            guard !didComplete else { return false }
-            didComplete = true
-            guard hudConfig != nil else { return true }
-            core.hud.hide()
-            return true
+        func canComplete() -> Bool {
+            didComplete.projectedValue.withValue {
+                guard !$0 else { return false }
+                $0 = true
+                return true
+            }
         }
 
-        var exception: Exception?
-        var translations = [Translation]()
-
         func complete(timedOut: Bool) {
-            guard canComplete else { return }
+            guard canComplete() else { return }
 
-            if let exception {
+            if hudConfig != nil {
+                Task { @MainActor in
+                    @Dependency(\.coreKit) var core: CoreKit
+                    core.hud.hide()
+                }
+            }
+
+            let currentException = exception.wrappedValue
+            let currentTranslations = translations.wrappedValue
+
+            if let currentException {
                 guard timeoutConfig.returnsInputs else {
-                    return completion(.failure(exception))
+                    return completion(.failure(currentException))
                 }
 
                 Logger.log(
-                    exception,
+                    currentException,
                     domain: .translation
                 )
 
-                return completion(.success(translations))
+                return completion(.success(currentTranslations))
             }
 
-            guard translations.count == inputs.count else {
+            guard currentTranslations.count == inputs.count else {
                 return completion(.failure(.init(
                     "Mismatched ratio returned.",
                     metadata: .init(sender: self)
@@ -157,20 +168,23 @@ public extension TranslationService {
                 )
             }
 
-            return completion(.success(translations))
+            return completion(.success(currentTranslations))
         }
 
         let timeout = Timeout(after: timeoutConfig.duration) {
-            translations.append(contentsOf: inputs
-                .filter { !translations.map(\.input).contains($0) }
-                .map {
+            translations.projectedValue.withValue { existingTranslations in
+                let missing = inputs.filter { input in
+                    !existingTranslations.map(\.input).contains(input)
+                }
+                let fallbacks = missing.map { input in
                     Translation(
-                        input: $0,
-                        output: $0.original.sanitized,
+                        input: input,
+                        output: input.original.sanitized,
                         languagePair: languagePair
                     )
                 }
-            )
+                existingTranslations.append(contentsOf: fallbacks)
+            }
 
             return complete(timedOut: true)
         }
@@ -184,9 +198,9 @@ public extension TranslationService {
             timeout.cancel()
 
             switch getTranslationsResult {
-            case let .success(_translations): translations = _translations
+            case let .success(_translations): translations.wrappedValue = _translations
             case let .failure(error):
-                exception = .init(
+                exception.wrappedValue = .init(
                     error,
                     metadata: .init(sender: self)
                 )

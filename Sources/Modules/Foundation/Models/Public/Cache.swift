@@ -67,36 +67,8 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 }
 
 private enum Cache {
-    fileprivate static let value: NSCache<NSString, AnyObject> = .init()
-
-    @LockIsolated fileprivate static var didReachMemoryCeiling = false {
-        didSet {
-            guard didReachMemoryCeiling != oldValue else { return }
-            @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-
-            switch didReachMemoryCeiling {
-            case true:
-                Logger.log(
-                    .init(
-                        "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
-                        userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                        metadata: .init(sender: AppSubsystem.self)
-                    ),
-                    domain: .caches
-                )
-
-            case false:
-                Logger.log(
-                    .init(
-                        "Memory footprint sufficiently low; caching re-enabled.",
-                        userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                        metadata: .init(sender: AppSubsystem.self)
-                    ),
-                    domain: .caches
-                )
-            }
-        }
-    }
+    fileprivate nonisolated(unsafe) static let value: NSCache<NSString, AnyObject> = .init()
+    fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(wrappedValue: false)
 }
 
 extension Cached: Cacheable {
@@ -110,7 +82,31 @@ extension Cached: Cacheable {
         @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
         let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
         let currentMemoryUsage = appMemoryFootprint ?? 0
-        Cache.didReachMemoryCeiling = currentMemoryUsage >= memoryUsageCeiling
+        let newValue = currentMemoryUsage >= memoryUsageCeiling
+        let oldValue = Cache.didReachMemoryCeiling.wrappedValue
+        Cache.didReachMemoryCeiling.wrappedValue = newValue
+        if newValue != oldValue {
+            switch newValue {
+            case true:
+                Logger.log(
+                    .init(
+                        "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
+                        userInfo: ["MemoryFootprintMB": currentMemoryUsage],
+                        metadata: .init(sender: AppSubsystem.self)
+                    ),
+                    domain: .caches
+                )
+            case false:
+                Logger.log(
+                    .init(
+                        "Memory footprint sufficiently low; caching re-enabled.",
+                        userInfo: ["MemoryFootprintMB": currentMemoryUsage],
+                        metadata: .init(sender: AppSubsystem.self)
+                    ),
+                    domain: .caches
+                )
+            }
+        }
         return currentMemoryUsage < memoryUsageCeiling
     }
 

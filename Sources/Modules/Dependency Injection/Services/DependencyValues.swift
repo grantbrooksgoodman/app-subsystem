@@ -8,13 +8,13 @@
 /* Native */
 import Foundation
 
-public struct DependencyValues: Sendable {
+public struct DependencyValues: @unchecked Sendable {
     // MARK: - Properties
 
     @TaskLocal static var current = Self()
 
     private var resolverCache = ResolverCache()
-    private var storage = [ObjectIdentifier: any Sendable]()
+    private var storage = [ObjectIdentifier: Any]()
 
     // MARK: - Subscript
 
@@ -50,7 +50,7 @@ extension DependencyValues {
 private final class ResolverCache: @unchecked Sendable {
     // MARK: - Properties
 
-    private var cache = [ObjectIdentifier: any Sendable]()
+    private var cache = [ObjectIdentifier: Any]()
     private var lock = NSRecursiveLock()
 
     // MARK: - Methods

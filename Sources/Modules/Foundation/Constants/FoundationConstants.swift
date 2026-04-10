@@ -43,7 +43,9 @@ public extension CacheDomain {
     /* MARK: Methods */
 
     private static func clearAppIconImageCache() {
-        AppIconImageUtility.shared.clearCache()
+        Task { @MainActor in
+            AppIconImageUtility.shared.clearCache()
+        }
     }
 
     private static func clearEncodedHashCache() {
@@ -123,7 +125,7 @@ public enum Observables {
     static let rootViewSheet: Observable<AnyView?> = .init(.rootViewSheet, nil)
     static let rootViewTapped: Observable<Nil> = .init(key: .rootViewTapped)
     static let rootViewToast: Observable<Toast?> = .init(.rootViewToast, nil)
-    static let rootViewToastAction: Observable<(() -> Void)?> = .init(.rootViewToastAction, nil)
+    static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(.rootViewToastAction, nil)
     static let themedViewAppearanceChanged: Observable<Nil> = .init(key: .themedViewAppearanceChanged)
 }
 

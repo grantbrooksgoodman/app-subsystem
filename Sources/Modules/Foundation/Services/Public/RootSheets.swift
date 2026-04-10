@@ -8,17 +8,17 @@
 /* Native */
 import Foundation
 
+@MainActor
 public enum RootSheets {
     // MARK: - Properties
 
-    private nonisolated(unsafe) static var onDismiss: (() -> Void)?
+    private static var onDismiss: (@MainActor () -> Void)?
 
     // MARK: - Present
 
-    @MainActor
     public static func present(
         _ sheet: RootSheet,
-        onDismiss: (() -> Void)? = nil
+        onDismiss: (@MainActor () -> Void)? = nil
     ) {
         Observables.rootViewSheet.value = sheet.view
         self.onDismiss = onDismiss
@@ -26,7 +26,6 @@ public enum RootSheets {
 
     // MARK: - Dismiss
 
-    @MainActor
     public static func dismiss() {
         Observables.rootViewSheet.value = nil
         onDismiss?()

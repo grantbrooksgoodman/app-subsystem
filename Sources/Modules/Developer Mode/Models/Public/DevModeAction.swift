@@ -8,11 +8,11 @@
 /* Native */
 import Foundation
 
-public struct DevModeAction: @unchecked Sendable {
+public struct DevModeAction: Sendable {
     // MARK: - Properties
 
     public let isDestructive: Bool
-    public let perform: () -> Void
+    public let perform: @Sendable () -> Void
     public let title: String
 
     // MARK: - Init
@@ -20,7 +20,7 @@ public struct DevModeAction: @unchecked Sendable {
     public init(
         title: String,
         isDestructive: Bool = false,
-        perform: @escaping () -> Void
+        perform: @escaping @Sendable () -> Void
     ) {
         self.title = title
         self.isDestructive = isDestructive

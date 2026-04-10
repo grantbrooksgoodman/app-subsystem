@@ -46,15 +46,13 @@ public enum AppSubsystem {
         }
 
         didInitialize = true
-        MainActor.assumeIsolated {
-            _build = .init(
-                appStoreBuildNumber: appStoreBuildNumber,
-                codeName: codeName,
-                finalName: finalName,
-                loggingEnabled: loggingEnabled,
-                milestone: buildMilestone
-            )
-        }
+        _build = .init(
+            appStoreBuildNumber: appStoreBuildNumber,
+            codeName: codeName,
+            finalName: finalName,
+            loggingEnabled: loggingEnabled,
+            milestone: buildMilestone
+        )
 
         core.utils.setLanguageCode(languageCode)
 
@@ -91,7 +89,7 @@ public enum AppSubsystem {
 
         /* MARK: Build Info Overlay Setup */
 
-        core.gcd.after(.milliseconds(50)) {
+        Task.delayed(by: .milliseconds(50)) { @MainActor in
             @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
             if let hidesBuildInfoOverlay,
                _build.isDeveloperModeEnabled {

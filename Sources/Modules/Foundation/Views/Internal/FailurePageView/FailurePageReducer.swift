@@ -84,8 +84,8 @@ struct FailurePageReducer: Reducer {
             let exception = state.exception
             state.didReportBug = true
             return .fireAndForget { @MainActor in
-                @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-                alertKitConfig.reportDelegate?.fileReport(exception)
+                @Dependency(\.alertKitConfig.reportDelegate) var reportDelegate: (any AlertKit.ReportDelegate)?
+                reportDelegate?.fileReport(exception)
             }
         }
 

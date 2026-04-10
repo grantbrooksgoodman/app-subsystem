@@ -73,35 +73,51 @@ public enum Logger {
 
     // MARK: - Properties
 
-    public private(set) nonisolated(unsafe) static var domainsExcludedFromSessionRecord = [LoggerDomain]()
-    public private(set) nonisolated(unsafe) static var filter: Filter?
-    public private(set) nonisolated(unsafe) static var reportsErrorsAutomatically = false
-    public private(set) nonisolated(unsafe) static var subscribedDomains = [LoggerDomain]()
-
+    private static let currentTimeLastCalled = LockIsolated<Date>(wrappedValue: .now)
+    private static let _domainsExcludedFromSessionRecord = LockIsolated<[LoggerDomain]>(wrappedValue: [])
+    private static let _filter = LockIsolated<Filter?>(wrappedValue: nil)
     private static let ioLock = NSLock()
+    private static let _reportsErrorsAutomatically = LockIsolated<Bool>(wrappedValue: false)
     private static let sessionID = UUID()
+    private static let streamOpen = LockIsolated<Bool>(wrappedValue: false)
+    private static let _subscribedDomains = LockIsolated<[LoggerDomain]>(wrappedValue: [])
     private static let utf8BOM = Data([0xEF, 0xBB, 0xBF])
 
-    private nonisolated(unsafe) static var currentTimeLastCalled = Date.now
-    private nonisolated(unsafe) static var streamOpen = false
-
     // MARK: - Computed Properties
+
+    public static var domainsExcludedFromSessionRecord: [LoggerDomain] {
+        _domainsExcludedFromSessionRecord.wrappedValue
+    }
+
+    public static var filter: Filter? {
+        _filter.wrappedValue
+    }
+
+    public static var reportsErrorsAutomatically: Bool {
+        _reportsErrorsAutomatically.wrappedValue
+    }
 
     public static var sessionRecordFilePath: URL {
         @Dependency(\.fileManager) var fileManager: FileManager
         return fileManager.temporaryDirectory.appending(path: "\(sessionID.uuidString).txt")
     }
 
+    public static var subscribedDomains: [LoggerDomain] {
+        _subscribedDomains.wrappedValue
+    }
+
     private static var elapsedTime: String {
-        let time = String(abs(currentTimeLastCalled.seconds(from: Date.now)))
+        let time = String(abs(currentTimeLastCalled.wrappedValue.seconds(from: Date.now)))
         return time == "0" ? "" : " @ \(time)s FLC"
     }
 
     // MARK: - Domain Subscription
 
     public static func subscribe(to domain: LoggerDomain) {
-        subscribedDomains.append(domain)
-        subscribedDomains = subscribedDomains.unique
+        _subscribedDomains.projectedValue.withValue {
+            $0.append(domain)
+            $0 = $0.unique
+        }
     }
 
     public static func subscribe(to domains: [LoggerDomain]) {
@@ -109,7 +125,9 @@ public enum Logger {
     }
 
     public static func unsubscribe(from domain: LoggerDomain) {
-        subscribedDomains = subscribedDomains.filter { $0 != domain }
+        _subscribedDomains.projectedValue.withValue {
+            $0 = $0.filter { $0 != domain }
+        }
     }
 
     public static func unsubscribe(from domains: [LoggerDomain]) {
@@ -119,15 +137,15 @@ public enum Logger {
     // MARK: - Setters
 
     public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
-        self.domainsExcludedFromSessionRecord = domainsExcludedFromSessionRecord
+        _domainsExcludedFromSessionRecord.wrappedValue = domainsExcludedFromSessionRecord
     }
 
     public static func setFilter(_ filter: Filter?) {
-        self.filter = filter
+        _filter.wrappedValue = filter
     }
 
     public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
-        self.reportsErrorsAutomatically = reportsErrorsAutomatically
+        _reportsErrorsAutomatically.wrappedValue = reportsErrorsAutomatically
     }
 
     // MARK: - Logging
@@ -176,7 +194,7 @@ public enum Logger {
             showAlert(alertType, exception: exception)
         }
 
-        if filter == .reportableExceptionsOnly,
+        if _filter.wrappedValue == .reportableExceptionsOnly,
            !exception.isReportable {
             return
         }
@@ -186,24 +204,24 @@ public enum Logger {
         let functionName = exception.metadata.function.components(separatedBy: "(")[0]
         let lineNumber = exception.metadata.line
 
-        if let filterFileNames = filter?.fileNames {
+        if let filterFileNames = _filter.wrappedValue?.fileNames {
             guard filterFileNames.contains(fileName) else { return }
         }
 
         defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
-            currentTimeLastCalled = Date.now
+            currentTimeLastCalled.wrappedValue = Date.now
             showAlertIfNeeded()
 
             if exception.isReportable,
-               Logger.reportsErrorsAutomatically {
+               Logger._reportsErrorsAutomatically.wrappedValue {
                 Task { @MainActor in
-                    @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-                    alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
+                    @Dependency(\.alertKitConfig.reportDelegate) var reportDelegate: (any AlertKit.ReportDelegate)?
+                    reportDelegate?.fileReport(exception.hydrated)
                 }
             }
         }
 
-        guard !streamOpen else {
+        guard !streamOpen.wrappedValue else {
             return logToStream(
                 exception.descriptor,
                 domain: domain,
@@ -259,7 +277,8 @@ public enum Logger {
             line: line
         )
 
-        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+        if _filter.wrappedValue == .exceptionsOnly ||
+            _filter.wrappedValue == .reportableExceptionsOnly {
             return
         }
 
@@ -268,16 +287,16 @@ public enum Logger {
         let functionName = metadata.function.components(separatedBy: "(")[0]
         let lineNumber = metadata.line
 
-        if let filterFileNames = filter?.fileNames {
+        if let filterFileNames = _filter.wrappedValue?.fileNames {
             guard filterFileNames.contains(fileName) else { return }
         }
 
         defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
-            currentTimeLastCalled = Date.now
+            currentTimeLastCalled.wrappedValue = Date.now
             showAlertIfNeeded()
         }
 
-        guard !streamOpen else {
+        guard !streamOpen.wrappedValue else {
             return logToStream(
                 text,
                 domain: domain,
@@ -313,7 +332,8 @@ public enum Logger {
             line: line
         )
 
-        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+        if _filter.wrappedValue == .exceptionsOnly ||
+            _filter.wrappedValue == .reportableExceptionsOnly {
             return
         }
 
@@ -322,24 +342,30 @@ public enum Logger {
         let functionName = metadata.function.components(separatedBy: "(")[0]
         let lineNumber = metadata.line
 
-        if let filterFileNames = filter?.fileNames {
+        if let filterFileNames = _filter.wrappedValue?.fileNames {
             guard filterFileNames.contains(fileName) else { return }
         }
 
-        guard !streamOpen else {
-            guard let message else { return }
-            return logToStream(
-                message,
-                domain: domain,
-                line: line
-            )
+        let streamOpen = streamOpen.projectedValue.withValue { _streamOpen -> Bool in
+            guard !_streamOpen else {
+                if let message {
+                    logToStream(
+                        message,
+                        domain: domain,
+                        line: line
+                    )
+                }
+
+                return false
+            }
+
+            guard canLog(to: domain) else { return false }
+            _streamOpen = true
+            currentTimeLastCalled.wrappedValue = Date.now
+            return true
         }
 
-        if canLog(to: domain) {
-            streamOpen = true
-            currentTimeLastCalled = Date.now
-        }
-
+        guard streamOpen else { return }
         guard let message else {
             log( // swiftlint:disable:next line_length
                 "\n*---------- STREAM OPENED @ \(dateFormatter.string(from: Date.now)) ----------*\n[\(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased())]\n\(sender).\(functionName)()\(elapsedTime)",
@@ -359,11 +385,12 @@ public enum Logger {
         domain: LoggerDomain = .general,
         line: Int
     ) {
-        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+        if _filter.wrappedValue == .exceptionsOnly ||
+            _filter.wrappedValue == .reportableExceptionsOnly {
             return
         }
 
-        guard streamOpen else {
+        guard streamOpen.wrappedValue else {
             log(message, sender: self)
             return
         }
@@ -382,16 +409,17 @@ public enum Logger {
     ) {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
-        if filter == .exceptionsOnly || filter == .reportableExceptionsOnly {
+        if _filter.wrappedValue == .exceptionsOnly ||
+            _filter.wrappedValue == .reportableExceptionsOnly {
             return
         }
 
         defer {
-            streamOpen = false
-            currentTimeLastCalled = Date.now
+            streamOpen.wrappedValue = false
+            currentTimeLastCalled.wrappedValue = Date.now
         }
 
-        guard streamOpen else {
+        guard streamOpen.wrappedValue else {
             guard let message else { return }
             return log(message, sender: self)
         }
@@ -417,7 +445,7 @@ public enum Logger {
     private static func canLog(to domain: LoggerDomain) -> Bool {
         @Dependency(\.build) var build: Build
         guard build.loggingEnabled,
-              subscribedDomains.contains(domain) else { return false }
+              _subscribedDomains.wrappedValue.contains(domain) else { return false }
         return true
     }
 
@@ -441,7 +469,7 @@ public enum Logger {
             domain: domain
         )
 
-        currentTimeLastCalled = Date.now
+        currentTimeLastCalled.wrappedValue = Date.now
         showAlertIfNeeded()
     }
 
@@ -481,7 +509,7 @@ public enum Logger {
             print(text)
         }
 
-        guard !domainsExcludedFromSessionRecord.contains(domain) else { return }
+        guard !_domainsExcludedFromSessionRecord.wrappedValue.contains(domain) else { return }
 
         let text = addPrecedingNewline ? "\n\(text)" : text
         guard let data = text.data(using: .utf8) else { return }
@@ -526,8 +554,10 @@ public enum Logger {
             switch type {
             case .errorAlert:
                 guard let exception else {
-                    showAlert(.normalAlert, text: text)
-                    return
+                    return showAlert(
+                        .normalAlert,
+                        text: text
+                    )
                 }
 
                 let errorAlert = AKErrorAlert(
@@ -537,7 +567,7 @@ public enum Logger {
 
                 var translationOptionKeys: [AKErrorAlert.TranslationOptionKey] = shouldTranslate ? [.errorDescription] : []
                 if exception.isReportable,
-                   !Logger.reportsErrorsAutomatically {
+                   !Logger._reportsErrorsAutomatically.wrappedValue {
                     translationOptionKeys.append(.sendErrorReportButtonTitle)
                 }
 
@@ -565,17 +595,17 @@ public enum Logger {
                    exception.isReportable {
                     let strings = AppSubsystem.delegates.localizedStrings
                     title = userFacingDescriptor
-                    message = Logger.reportsErrorsAutomatically ? strings.errorReported : strings.tapToReport
+                    message = Logger._reportsErrorsAutomatically.wrappedValue ? strings.errorReported : strings.tapToReport
                 }
 
-                var reportAction: (() -> Void)? {
+                var reportAction: (@Sendable () -> Void)? {
                     guard let exception,
                           exception.isReportable,
-                          !Logger.reportsErrorsAutomatically else { return nil }
+                          !Logger._reportsErrorsAutomatically.wrappedValue else { return nil }
                     return {
                         Task { @MainActor in
-                            @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
-                            alertKitConfig.reportDelegate?.fileReport(exception.hydrated)
+                            @Dependency(\.alertKitConfig.reportDelegate) var reportDelegate: (any AlertKit.ReportDelegate)?
+                            reportDelegate?.fileReport(exception.hydrated)
                         }
                     }
                 }
@@ -599,7 +629,7 @@ public enum Logger {
 
 extension Logger {
     struct AlertKitLogger: AlertKit.LoggerDelegate {
-        var reportsErrorsAutomatically: Bool { Logger.reportsErrorsAutomatically }
+        var reportsErrorsAutomatically: Bool { Logger._reportsErrorsAutomatically.wrappedValue }
         init() {}
         func log(
             _ text: String,

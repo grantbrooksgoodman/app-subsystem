@@ -28,7 +28,7 @@ public extension NavigationBar {
 
     // MARK: - Methods
 
-    // TODO: Audit whether this needs explicit @MainActor annotation.
+    // FIXME: Audit whether this needs explicit @MainActor annotation.
     static func removeAllItemGlassTint() {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
@@ -71,7 +71,6 @@ public extension NavigationBar {
         }
     }
 
-    @MainActor
     private static func startObservingTraitCollectionChanges() {
         @Dependency(\.notificationCenter) var notificationCenter: NotificationCenter
         @Dependency(\.uiApplication) var uiApplication: UIApplication
@@ -111,7 +110,6 @@ public extension NavigationBar {
         }
     }
 
-    @MainActor
     private static func _setItemGlassTint(_ color: UIColor, for placement: ItemPlacement) {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         @Dependency(\.uiApplication) var uiApplication: UIApplication

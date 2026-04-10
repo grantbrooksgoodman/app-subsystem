@@ -24,15 +24,6 @@ public extension CoreKit {
 
         // MARK: - Methods
 
-        public func after(
-            _ duration: Duration,
-            do effect: @escaping @Sendable () -> Void
-        ) {
-            mainQueue.asyncAfter(deadline: .now() + .milliseconds(.init(duration.milliseconds))) {
-                effect()
-            }
-        }
-
         public func syncOnMain(
             do effect: @escaping @Sendable () -> Void
         ) {

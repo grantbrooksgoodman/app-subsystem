@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 public extension UIView {
     // MARK: - Properties
 
@@ -50,20 +51,16 @@ public extension UIView {
     }
 
     func removeSubviews(for string: String, animated: Bool = true) {
-        Task { @MainActor in
-            let subviews = subviews(for: string)
+        let subviews = subviews(for: string)
+        guard animated else {
+            return subviews.forEach { $0.removeFromSuperview() }
+        }
 
-            guard animated else {
-                subviews.forEach { $0.removeFromSuperview() }
-                return
-            }
-
-            for subview in subviews {
-                UIView.animate(withDuration: 0.2) {
-                    subview.alpha = 0
-                } completion: { _ in
-                    subview.removeFromSuperview()
-                }
+        for subview in subviews {
+            UIView.animate(withDuration: 0.2) {
+                subview.alpha = 0
+            } completion: { _ in
+                subview.removeFromSuperview()
             }
         }
     }

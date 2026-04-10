@@ -13,7 +13,7 @@ import UIKit
 import AlertKit
 
 @MainActor
-struct InspectionDelegate: @MainActor AlertKit.InspectionDelegate {
+struct InspectionDelegate: AlertKit.InspectionDelegate {
     // MARK: - Init
 
     private init() {}

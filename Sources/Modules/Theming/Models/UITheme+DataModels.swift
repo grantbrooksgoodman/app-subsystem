@@ -12,7 +12,7 @@ import UIKit
 public extension UITheme {
     // MARK: - ColoredItem
 
-    struct ColoredItem: Equatable {
+    struct ColoredItem: Equatable, Sendable {
         /* MARK: Properties */
 
         public let type: ColoredItemType
@@ -20,7 +20,10 @@ public extension UITheme {
 
         /* MARK: Init */
 
-        public init(_ type: ColoredItemType, set: ColorSet) {
+        public init(
+            _ type: ColoredItemType,
+            set: ColorSet
+        ) {
             self.type = type
             self.set = set
         }
@@ -28,7 +31,7 @@ public extension UITheme {
 
     // MARK: - ColorSet
 
-    struct ColorSet: Equatable {
+    struct ColorSet: Equatable, Sendable {
         /* MARK: Properties */
 
         public let primary: UIColor

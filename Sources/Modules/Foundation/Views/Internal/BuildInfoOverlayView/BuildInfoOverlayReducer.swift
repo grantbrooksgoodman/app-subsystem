@@ -47,8 +47,8 @@ struct BuildInfoOverlayReducer: Reducer {
 
         @MainActor
         var isUserInteractionDisabled: Bool {
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
-            return uiApplication.isPresentingAlertController || RootWindowStatus.shared.rootView == .expiryPage
+            Dependency(\.uiApplication.isPresentingAlertController).wrappedValue ||
+                RootWindowStatus.shared.rootView == .expiryPage
         }
 
         var sendFeedbackButtonText: String { AppSubsystem.delegates.localizedStrings.sendFeedback } // swiftlint:disable:next identifier_name
@@ -56,8 +56,8 @@ struct BuildInfoOverlayReducer: Reducer {
         @MainActor
         fileprivate var _statsLabelText: String {
             @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
-            return "\(uiApplication.presentedViews.count) views // \(appMemoryFootprint ?? 0)MB in use"
+            @Dependency(\.uiApplication.presentedViews.count) var presentedViewsCount: Int
+            return "\(presentedViewsCount) views // \(appMemoryFootprint ?? 0)MB in use"
         }
 
         /* MARK: Init */
@@ -82,7 +82,9 @@ struct BuildInfoOverlayReducer: Reducer {
             }
 
         case .buildInfoButtonTapped:
-            viewService.buildInfoButtonTapped()
+            return .fireAndForget { @MainActor in
+                viewService.buildInfoButtonTapped()
+            }
 
         case .breadcrumbsDidCapture:
             state.developerModeIndicatorDotColor = .red
@@ -94,13 +96,15 @@ struct BuildInfoOverlayReducer: Reducer {
             state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
 
         case .sendFeedbackButtonTapped:
-            viewService.sendFeedbackButtonTapped()
+            return .fireAndForget { @MainActor in
+                viewService.sendFeedbackButtonTapped()
+            }
 
         case let .shouldUseTranslucentAppearanceChanged(shouldUseTranslucentAppearance):
             state.shouldUseTranslucentAppearance = shouldUseTranslucentAppearance
 
         case .updateStatsLabelText:
-            state.statsLabelText = MainActor.assumeIsolated { state._statsLabelText }
+            state.statsLabelText = state._statsLabelText
             return .task(priority: .background, delay: .seconds(1)) {
                 .updateStatsLabelText
             }

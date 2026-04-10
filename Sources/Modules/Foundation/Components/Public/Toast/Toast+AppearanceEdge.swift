@@ -9,7 +9,7 @@
 import Foundation
 
 public extension Toast {
-    enum AppearanceEdge: Equatable {
+    enum AppearanceEdge: Equatable, Sendable {
         case bottom
         case top
     }

@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public protocol Observer {
+public protocol Observer: Sendable {
     // MARK: - Associated Types
 
     associatedtype R: Reducer

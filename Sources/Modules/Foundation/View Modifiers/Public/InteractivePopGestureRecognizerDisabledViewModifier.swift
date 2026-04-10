@@ -10,16 +10,16 @@ import Foundation
 import SwiftUI
 import UIKit
 
+@MainActor
 public enum InteractivePopGestureRecognizer {
     // MARK: - Properties
 
-    public private(set) nonisolated(unsafe) static var isEnabled = true
+    public private(set) static var isEnabled = true
 
     // MARK: - Set Is Enabled
 
     public static func setIsEnabled(_ isEnabled: Bool) {
-        @Dependency(\.uiApplication) var uiApplication: UIApplication
-        let applicationState = MainActor.assumeIsolated { uiApplication.applicationState }
+        @Dependency(\.uiApplication.applicationState) var applicationState: UIApplication.State
         guard applicationState == .active else { return }
         self.isEnabled = isEnabled
     }

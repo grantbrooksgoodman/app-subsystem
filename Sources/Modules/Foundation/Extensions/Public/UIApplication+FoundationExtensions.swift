@@ -130,7 +130,6 @@ public extension UIApplication {
 
     // MARK: - Methods
 
-    @MainActor
     func dismissAlertControllers(animated: Bool = true) {
         guard isPresentingAlertController else { return }
         presentedViewControllers
@@ -138,7 +137,6 @@ public extension UIApplication {
             .forEach { $0.dismiss(animated: animated) }
     }
 
-    @MainActor
     func dismissSheets(animated: Bool = true) {
         guard isPresentingSheet else { return }
         presentedViewControllers
@@ -152,7 +150,6 @@ public extension UIApplication {
         return view.traversedSubviews.first(where: { $0.isFirstResponder })
     }
 
-    @MainActor
     func overrideUserInterfaceStyle(_ style: UIUserInterfaceStyle) {
         presentedViewControllers.forEach { $0.overrideUserInterfaceStyle = style }
         windows.forEach { $0.overrideUserInterfaceStyle = style }

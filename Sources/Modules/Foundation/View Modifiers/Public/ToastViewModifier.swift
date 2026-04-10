@@ -14,10 +14,6 @@ private struct ToastViewModifier: ViewModifier {
 
     private typealias Floats = FoundationConstants.CGFloats.ToastView
 
-    // MARK: - Dependencies
-
-    @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
-
     // MARK: - Properties
 
     @State private var appearanceEdge: Toast.AppearanceEdge?
@@ -112,7 +108,9 @@ private struct ToastViewModifier: ViewModifier {
         case let .ephemeral(duration):
             let dismissTask: DispatchWorkItem = .init { dismiss() }
             dismissWorkItem = dismissTask
-            coreGCD.after(duration) { dismissTask.perform() }
+            Task.delayed(by: duration) { @MainActor in
+                dismissTask.perform()
+            }
         default: ()
         }
     }

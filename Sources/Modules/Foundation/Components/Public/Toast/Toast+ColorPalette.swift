@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 public extension Toast {
-    struct ColorPalette: Equatable {
+    struct ColorPalette: Equatable, Sendable {
         // MARK: - Properties
 
         public let accent: Color?

@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-struct ThemedViewObserver: Observer, @unchecked Sendable {
+struct ThemedViewObserver: Observer {
     // MARK: - Type Aliases
 
     typealias R = ThemedReducer

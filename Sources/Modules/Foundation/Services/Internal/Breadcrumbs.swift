@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 @MainActor
-final class Breadcrumbs: @preconcurrency AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
+final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
     // MARK: - Dependencies
 
     @Dependency(\.build) private var build: Build

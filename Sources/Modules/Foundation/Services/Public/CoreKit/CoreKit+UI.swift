@@ -177,10 +177,8 @@ public extension CoreKit {
             if dismissSheets { uiApplication.dismissSheets() }
             uiApplication.resignFirstResponders()
 
-            GCD.shared.after(.milliseconds(100)) {
-                Task { @MainActor in
-                    self.dismissInteractiveContent(dismissSheets: dismissSheets)
-                }
+            Task.delayed(by: .milliseconds(100)) { @MainActor in
+                dismissInteractiveContent(dismissSheets: dismissSheets)
             }
         }
 
@@ -207,18 +205,17 @@ public extension CoreKit {
         ) {
             guard !UIApplication.isBlockingUserInteraction,
                   !uiApplication.isPresentingAlertController else {
-                return GCD.shared.after(.milliseconds(100)) {
-                    Task { @MainActor in
-                        queuePresentation(
-                            of: viewController,
-                            animated: animated,
-                            embedded: embedded
-                        )
-                    }
+                Task.delayed(by: .milliseconds(100)) { @MainActor in
+                    queuePresentation(
+                        of: viewController,
+                        animated: animated,
+                        embedded: embedded
+                    )
                 }
+                return
             }
 
-            GCD.shared.syncOnMain {
+            GCD.shared.syncOnMain { // FIXME: Audit usage of Task here.
                 Task { @MainActor in
                     present(
                         viewController,

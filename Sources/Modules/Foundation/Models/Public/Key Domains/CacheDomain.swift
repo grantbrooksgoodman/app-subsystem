@@ -8,10 +8,10 @@
 /* Native */
 import Foundation
 
-public struct CacheDomain: CaseIterable, Hashable, @unchecked Sendable {
+public struct CacheDomain: CaseIterable, Hashable, Sendable {
     // MARK: - Properties
 
-    public let clear: () -> Void
+    public let clear: @Sendable () -> Void
     public let rawValue: String
 
     // MARK: - Computed Properties
@@ -22,7 +22,10 @@ public struct CacheDomain: CaseIterable, Hashable, @unchecked Sendable {
 
     // MARK: - Init
 
-    public init(_ rawValue: String, clear: @escaping () -> Void) {
+    public init(
+        _ rawValue: String,
+        clear: @escaping @Sendable () -> Void
+    ) {
         self.rawValue = rawValue
         self.clear = clear
     }

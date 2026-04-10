@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct TranslatedLabelStringCollection: Hashable {
+public struct TranslatedLabelStringCollection: Hashable, Sendable {
     // MARK: - Properties
 
     public let rawValue: String

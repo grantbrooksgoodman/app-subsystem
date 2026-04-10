@@ -34,11 +34,11 @@ import Foundation
 /// Access to `wrappedValue` is main actor-only; `$` helpers work from anywhere.
 @dynamicMemberLookup
 @propertyWrapper
-public struct MainActorIsolated<Value>: @unchecked Sendable {
+public struct MainActorIsolated<Value>: Sendable {
     // MARK: - Types
 
     // Box holds the actual storage and the lazy initializer.
-    private final class Box: @unchecked Sendable {
+    private final class Box: Sendable {
         /* MARK: Properties */
 
         private let initial: @MainActor @Sendable () -> Value
@@ -61,7 +61,7 @@ public struct MainActorIsolated<Value>: @unchecked Sendable {
 
         /* MARK: Init */
 
-        init(initial: @MainActor @Sendable @escaping () -> Value) {
+        init(initial: @escaping @MainActor @Sendable () -> Value) {
             self.initial = initial
         }
     }
@@ -73,7 +73,7 @@ public struct MainActorIsolated<Value>: @unchecked Sendable {
     // MARK: - Init
 
     /// Typical use: `@MainActorIsolated var service = UIService()`.
-    public init(wrappedValue: @MainActor @Sendable @autoclosure @escaping () -> Value) {
+    public init(wrappedValue: @autoclosure @escaping @MainActor @Sendable () -> Value) {
         self.box = Box(initial: wrappedValue)
     }
 

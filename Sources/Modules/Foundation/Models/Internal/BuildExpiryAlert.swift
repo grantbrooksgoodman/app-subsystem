@@ -125,9 +125,8 @@ final class BuildExpiryAlert {
             func disableAction() {
                 Task { @MainActor in
                     guard uiApplication.isPresentingAlertController else {
-                        return core.gcd.after(.milliseconds(100)) {
-                            disableAction()
-                        }
+                        try? await Task.sleep(for: .milliseconds(100))
+                        return disableAction()
                     }
 
                     textInputAlert.disableAction(at: 1)
@@ -190,28 +189,26 @@ final class BuildExpiryAlert {
 
         uiApplication.dismissAlertControllers()
         core.ui.present(alertController)
-        core.gcd.after(.seconds(5)) { fatalError("Evaluation period ended") }
+        Task.delayed(by: .seconds(5)) { fatalError("Evaluation period ended") }
     }
 
     private func setTimer() {
         guard uiApplication.isPresentingAlertController else {
-            return core.gcd.after(.milliseconds(100)) {
-                Task { @MainActor in
-                    self.setTimer()
-                }
+            Task.delayed(by: .milliseconds(100)) { @MainActor in
+                setTimer()
             }
+            return
         }
 
         guard let exitTimer = exitTimer,
               exitTimer.isValid else {
-            self.exitTimer = .scheduledTimer(
+            return self.exitTimer = .scheduledTimer(
                 timeInterval: 1,
                 target: self,
                 selector: #selector(decrementSecond),
                 userInfo: nil,
                 repeats: true
             )
-            return
         }
     }
 }

@@ -113,7 +113,7 @@ public enum DevModeService {
     }
 
     private static func presentActionSheet(domain: ActionDomain) {
-        Task {
+        Task { @MainActor in
             let actions = domain == .application ? appActions : subsystemActions
             var akActions = [AKAction]()
 
@@ -190,8 +190,6 @@ public enum DevModeService {
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
         build.setIsDeveloperModeEnabled(enabled)
-        Task { @MainActor in
-            coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
-        }
+        coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
     }
 }

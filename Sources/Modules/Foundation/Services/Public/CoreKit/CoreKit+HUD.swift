@@ -10,18 +10,13 @@ import Foundation
 import UIKit
 
 public extension CoreKit {
-    @MainActor
     struct HUD: Sendable {
         // MARK: - Types
 
-        public enum HUDImage {
+        public enum HUDImage: Sendable {
             case success
             case exclamation
         }
-
-        // MARK: - Dependencies
-
-        @Dependency(\.uiApplication) private var uiApplication: UIApplication
 
         // MARK: - Properties
 
@@ -35,47 +30,53 @@ public extension CoreKit {
 
         // MARK: - Methods
 
-        public func flash(_ text: String? = nil, image: HUDImage) {
-            var alertIcon: AlertIcon?
-            var animatedIcon: AnimatedIcon?
+        public func flash(
+            _ text: String? = nil,
+            image: HUDImage
+        ) {
+            Task { @MainActor in
+                var alertIcon: AlertIcon?
+                var animatedIcon: AnimatedIcon?
 
-            switch image {
-            case .success:
-                animatedIcon = .succeed
-            case .exclamation:
-                alertIcon = .exclamation
-            }
+                switch image {
+                case .success:
+                    animatedIcon = .succeed
+                case .exclamation:
+                    alertIcon = .exclamation
+                }
 
-            var resolvedText = text
-            if let text,
-               text.hasSuffix(".") {
-                resolvedText = text.dropSuffix()
-            }
+                var resolvedText = text
+                if let text,
+                   text.hasSuffix(".") {
+                    resolvedText = text.dropSuffix()
+                }
 
-            guard let alertIcon else {
-                guard let animatedIcon else { return }
-                return ProgressHUD.show(
+                guard let alertIcon else {
+                    guard let animatedIcon else { return }
+                    return ProgressHUD.show(
+                        resolvedText,
+                        icon: animatedIcon,
+                        interaction: true
+                    )
+                }
+
+                ProgressHUD.show(
                     resolvedText,
-                    icon: animatedIcon,
+                    icon: alertIcon,
                     interaction: true
                 )
             }
-
-            ProgressHUD.show(
-                resolvedText,
-                icon: alertIcon,
-                interaction: true
-            )
         }
 
-        public func hide(after delay: Duration = .milliseconds(250)) {
-            HUD.isBlockingUserInteraction.wrappedValue = false
-            UI.shared.unblockUserInteraction()
-            ProgressHUD.dismiss()
-            GCD.shared.after(delay) {
-                Task { @MainActor in
-                    ProgressHUD.remove()
-                }
+        public func hide(
+            after delay: Duration = .milliseconds(250)
+        ) {
+            Task { @MainActor in
+                HUD.isBlockingUserInteraction.wrappedValue = false
+                UI.shared.unblockUserInteraction()
+                ProgressHUD.dismiss()
+                try? await Task.sleep(for: delay)
+                ProgressHUD.remove()
             }
         }
 
@@ -84,22 +85,29 @@ public extension CoreKit {
             after delay: Duration? = nil,
             isModal: Bool = false
         ) {
-            @Sendable
-            func showHUD() {
-                Task { @MainActor in
-                    ProgressHUD.show(text)
-                    guard isModal else { return }
-                    HUD.isBlockingUserInteraction.wrappedValue = true
-                    UI.shared.blockUserInteraction(dismissSheets: false)
+            Task { @MainActor in
+                @Sendable
+                func showHUD() {
+                    Task { @MainActor in
+                        ProgressHUD.show(text)
+                        guard isModal else { return }
+                        HUD.isBlockingUserInteraction.wrappedValue = true
+                        UI.shared.blockUserInteraction(dismissSheets: false)
+                    }
                 }
-            }
 
-            guard let delay else { return showHUD() }
-            GCD.shared.after(delay) { showHUD() }
+                guard let delay else { return showHUD() }
+                try? await Task.sleep(for: delay)
+                showHUD()
+            }
         }
 
-        public func showSuccess(text: String? = nil) {
-            ProgressHUD.showSucceed(text)
+        public func showSuccess(
+            text: String? = nil
+        ) {
+            Task { @MainActor in
+                ProgressHUD.showSucceed(text)
+            }
         }
     }
 }

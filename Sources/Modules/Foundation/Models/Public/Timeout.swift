@@ -9,10 +9,6 @@
 import Foundation
 
 public final class Timeout: @unchecked Sendable {
-    // MARK: - Dependencies
-
-    @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
-
     // MARK: - Properties
 
     private var callback: (() -> Void)?
@@ -25,8 +21,10 @@ public final class Timeout: @unchecked Sendable {
         callback: @escaping () -> Void
     ) {
         self.callback = callback
-        coreGCD.after(duration) {
-            guard self.isValid else { return }
+        Task { [weak self] in
+            try? await Task.sleep(for: duration)
+            guard let self,
+                  self.isValid else { return }
             self.invoke()
         }
     }

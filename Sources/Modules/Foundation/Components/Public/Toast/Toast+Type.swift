@@ -9,7 +9,7 @@
 import Foundation
 
 public extension Toast {
-    enum ToastType: Equatable {
+    enum ToastType: Equatable, Sendable {
         // MARK: - Cases
 
         case banner(

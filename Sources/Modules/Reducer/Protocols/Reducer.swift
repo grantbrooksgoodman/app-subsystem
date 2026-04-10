@@ -8,10 +8,11 @@
 /* Native */
 import Foundation
 
+@MainActor
 public protocol Reducer<State, Action> {
     // MARK: - Associated Types
 
-    associatedtype Action
+    associatedtype Action: Sendable
     associatedtype ReducerBody
     associatedtype State: Equatable
 

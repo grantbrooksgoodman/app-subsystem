@@ -92,7 +92,7 @@ import Foundation
 ///     within ``LockIsolatedProjection/withValue(_:)``. Keep isolated operations
 ///     small and focused.
 @propertyWrapper
-public final class LockIsolated<Value>: @unchecked Sendable {
+public final class LockIsolated<Value>: Sendable {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>
@@ -116,7 +116,7 @@ public final class LockIsolated<Value>: @unchecked Sendable {
 }
 
 @dynamicMemberLookup
-public struct LockIsolatedProjection<Value>: @unchecked Sendable {
+public struct LockIsolatedProjection<Value>: Sendable {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>

@@ -65,17 +65,18 @@ public extension CoreKit {
         }
 
         /// Returns to the Home screen before terminating the application.
+        @MainActor
         public func exitGracefully(terminateAfter duration: Duration = .seconds(1)) {
-            Task { @MainActor in
-                uiControl
-                    .sendAction(
-                        #selector(NSXPCConnection.suspend),
-                        to: uiApplication,
-                        for: nil
-                    )
-            }
+            uiControl
+                .sendAction(
+                    #selector(NSXPCConnection.suspend),
+                    to: uiApplication,
+                    for: nil
+                )
 
-            GCD.shared.after(duration) { exit(0) }
+            Task.delayed(by: duration) { @MainActor in
+                exit(0)
+            }
         }
 
         /// The mapping of supported language codes to language names, localized based on provided value.
@@ -106,7 +107,10 @@ public extension CoreKit {
             setLanguageCode(Locale.systemLanguageCode)
         }
 
-        public func setLanguageCode(_ languageCode: String, override: Bool = false) {
+        public func setLanguageCode(
+            _ languageCode: String,
+            override: Bool = false
+        ) {
             Task { @MainActor in
                 @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
                 alertKitConfig.overrideTargetLanguageCode(languageCode)

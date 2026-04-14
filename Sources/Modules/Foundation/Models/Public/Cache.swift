@@ -67,8 +67,18 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 }
 
 private enum Cache {
-    fileprivate nonisolated(unsafe) static let value: NSCache<NSString, AnyObject> = .init()
+    // MARK: - Properties
+
     fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(wrappedValue: false)
+
+    private static let _value = LockIsolated<NSCache<NSString, AnyObject>>(wrappedValue: .init())
+
+    // MARK: - Computed Properties
+
+    fileprivate static var value: NSCache<NSString, AnyObject> {
+        get { _value.wrappedValue }
+        set { _value.wrappedValue = newValue }
+    }
 }
 
 extension Cached: Cacheable {
@@ -80,11 +90,13 @@ extension Cached: Cacheable {
 
     private var canCacheNewValue: Bool {
         @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-        let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
         let currentMemoryUsage = appMemoryFootprint ?? 0
+        let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
+
         let newValue = currentMemoryUsage >= memoryUsageCeiling
         let oldValue = Cache.didReachMemoryCeiling.wrappedValue
         Cache.didReachMemoryCeiling.wrappedValue = newValue
+
         if newValue != oldValue {
             switch newValue {
             case true:
@@ -96,6 +108,7 @@ extension Cached: Cacheable {
                     ),
                     domain: .caches
                 )
+
             case false:
                 Logger.log(
                     .init(
@@ -107,6 +120,7 @@ extension Cached: Cacheable {
                 )
             }
         }
+
         return currentMemoryUsage < memoryUsageCeiling
     }
 

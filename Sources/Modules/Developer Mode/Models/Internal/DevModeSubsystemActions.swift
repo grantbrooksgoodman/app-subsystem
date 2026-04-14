@@ -37,6 +37,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         // MARK: - Standard Actions
 
         private static var changeThemeAction: DevModeAction {
+            @Sendable
             func changeTheme() {
                 Task { @MainActor in
                     var actions = [AKAction]()
@@ -61,10 +62,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            return .init(title: "Change Theme", perform: changeTheme)
+            return .init(
+                title: "Change Theme",
+                perform: changeTheme
+            )
         }
 
         private static var eraseContentAndSettingsAction: DevModeAction {
+            @Sendable
             func eraseContentAndSettings() {
                 @Dependency(\.coreKit) var core: CoreKit
 
@@ -97,9 +102,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
                 let clearCachesAction: AKAction = .init("Clear Caches") {
                     perform(clearCaches: true)
-                    Task { @MainActor in
-                        core.hud.showSuccess(text: "Cleared Caches")
-                    }
+                    core.hud.showSuccess(text: "Cleared Caches")
                 }
 
                 let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
@@ -108,9 +111,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         return
                     }
 
-                    Task { @MainActor in
-                        core.hud.showSuccess(text: "Erased Documents Directory")
-                    }
+                    core.hud.showSuccess(text: "Erased Documents Directory")
                 }
 
                 let eraseTemporaryDirectoryAction: AKAction = .init("Erase Temporary Directory") {
@@ -119,16 +120,12 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         return
                     }
 
-                    Task { @MainActor in
-                        core.hud.showSuccess(text: "Erased Temporary Directory")
-                    }
+                    core.hud.showSuccess(text: "Erased Temporary Directory")
                 }
 
                 let resetUserDefaultsAction: AKAction = .init("Reset UserDefaults") {
                     perform(resetUserDefaults: true)
-                    Task { @MainActor in
-                        core.hud.showSuccess(text: "Reset UserDefaults")
-                    }
+                    core.hud.showSuccess(text: "Reset UserDefaults")
                 }
 
                 let eraseAllContentAndSettingsAction: AKAction = .init("Erase All Content & Settings", style: .destructivePreferred) {
@@ -139,9 +136,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         eraseTemporaryDirectory: true
                     )
 
-                    Task { @MainActor in
-                        core.hud.showSuccess()
-                    }
+                    core.hud.showSuccess()
                 }
 
                 Task {
@@ -158,7 +153,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            return .init(title: "Erase Content & Settings", perform: eraseContentAndSettings)
+            return .init(
+                title: "Erase Content & Settings",
+                perform: eraseContentAndSettings
+            )
         }
 
         private static var overrideLanguageCodeAction: DevModeAction {
@@ -194,9 +192,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         }
 
                         core.utils.setLanguageCode(input, override: true)
-                        Task { @MainActor in
-                            core.hud.showSuccess()
-                        }
+                        core.hud.showSuccess()
                     }
 
                     @Sendable
@@ -204,9 +200,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         RuntimeStorage.remove(.overriddenLanguageCode)
                         core.utils.restoreDeviceLanguageCode()
                         guard showSuccess else { return }
-                        Task { @MainActor in
-                            core.hud.showSuccess()
-                        }
+                        core.hud.showSuccess()
                     }
 
                     guard RuntimeStorage.retrieve(.overriddenLanguageCode) == nil else {
@@ -230,11 +224,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     let setToRandomLanguageCodeAction: AKAction = .init("Set to Random Language Code") {
                         guard let languageCode = RuntimeStorage.languageCodeDictionary?.keys.randomElement() else { return }
                         core.utils.setLanguageCode(languageCode, override: true)
-                        Task { @MainActor in
-                            core.hud.showSuccess(
-                                text: "Set to \(languageCode.englishLanguageName ?? languageCode.languageName ?? languageCode.uppercased())"
-                            )
-                        }
+                        core.hud.showSuccess(
+                            text: "Set to \(languageCode.englishLanguageName ?? languageCode.languageName ?? languageCode.uppercased())"
+                        )
                     }
 
                     let specifyLanguageCodeAction: AKAction = .init("Specify Language Code") {
@@ -260,6 +252,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var toggleBreadcrumbsAction: DevModeAction {
+            @Sendable
             func toggleBreadcrumbs() {
                 Task { @MainActor in
                     @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
@@ -287,16 +280,15 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
                     @Sendable
                     func startCapture(_ savesToPhotos: Bool) {
-                        AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
-                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
-                            Logger.log(exception, with: .errorAlert)
-                        } else {
-                            Task { @MainActor in
+                        Task { @MainActor in
+                            AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
+                            if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
+                                Logger.log(exception, with: .errorAlert)
+                            } else {
                                 coreHUD.showSuccess()
+                                DevModeService.removeAction(withTitle: "Start Breadcrumbs Capture")
+                                DevModeService.insertAction(toggleBreadcrumbsAction, after: overrideLanguageCodeAction)
                             }
-
-                            DevModeService.removeAction(withTitle: "Start Breadcrumbs Capture")
-                            DevModeService.insertAction(toggleBreadcrumbsAction, after: overrideLanguageCodeAction)
                         }
                     }
 
@@ -328,7 +320,8 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            let command = AppSubsystem.delegates.breadcrumbsCapture.isCapturing ? "Stop" : "Start"
+            let isCapturing = MainActor.assumeIsolated { AppSubsystem.delegates.breadcrumbsCapture.isCapturing }
+            let command = isCapturing ? "Stop" : "Start"
             return .init(
                 title: "\(command) Breadcrumbs Capture",
                 isDestructive: command == "Stop",
@@ -337,6 +330,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var toggleBuildInfoOverlayAction: DevModeAction {
+            @Sendable
             func toggleBuildInfoOverlay() {
                 let isHidden = Observables.isBuildInfoOverlayHidden.value
                 switch isHidden {
@@ -353,6 +347,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var toggleGlassTintingAction: DevModeAction? {
+            @Sendable
             func toggleGlassTintingAction() {
                 Task { @MainActor in
                     @Dependency(\.coreKit) var core: CoreKit
@@ -378,15 +373,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var toggleTimebombAction: DevModeAction {
+            @Sendable
             func toggleTimebomb() {
                 @Dependency(\.build) var build: Build
                 @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
                 build.setIsTimebombActive(!build.isTimebombActive)
-                Task { @MainActor in
-                    coreHUD.showSuccess(
-                        text: "Timebomb \(build.isTimebombActive ? "Enabled" : "Disabled")"
-                    )
-                }
+                coreHUD.showSuccess(
+                    text: "Timebomb \(build.isTimebombActive ? "Enabled" : "Disabled")"
+                )
             }
 
             let isTimebombActive = MainActor.assumeIsolated {
@@ -401,6 +395,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         }
 
         private static var viewLoggerSessionRecordAction: DevModeAction {
+            @Sendable
             func viewLoggerSessionRecord() {
                 Task { @MainActor in
                     @Dependency(\.quickViewer) var quickViewer: QuickViewer
@@ -413,7 +408,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 }
             }
 
-            return .init(title: "View Logger Session Record", perform: viewLoggerSessionRecord)
+            return .init(
+                title: "View Logger Session Record",
+                perform: viewLoggerSessionRecord
+            )
         }
     }
 }

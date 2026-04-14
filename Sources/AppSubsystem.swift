@@ -20,7 +20,14 @@ public enum AppSubsystem {
 
     public static let delegates = Delegates.shared
 
-    private(set) nonisolated(unsafe) static var didInitialize = false
+    private static let _didInitialize = LockIsolated<Bool>(wrappedValue: false)
+
+    /* MARK: Computed Properties */
+
+    static var didInitialize: Bool {
+        get { _didInitialize.wrappedValue }
+        set { _didInitialize.wrappedValue = newValue }
+    }
 
     /* MARK: Initialize */
 
@@ -46,15 +53,13 @@ public enum AppSubsystem {
         }
 
         didInitialize = true
-        MainActor.assumeIsolated {
-            _build = .init(
-                appStoreBuildNumber: appStoreBuildNumber,
-                codeName: codeName,
-                finalName: finalName,
-                loggingEnabled: loggingEnabled,
-                milestone: buildMilestone
-            )
-        }
+        _build = .init(
+            appStoreBuildNumber: appStoreBuildNumber,
+            codeName: codeName,
+            finalName: finalName,
+            loggingEnabled: loggingEnabled,
+            milestone: buildMilestone
+        )
 
         core.utils.setLanguageCode(languageCode)
 
@@ -91,7 +96,7 @@ public enum AppSubsystem {
 
         /* MARK: Build Info Overlay Setup */
 
-        core.gcd.after(.milliseconds(50)) {
+        Task.delayed(by: .milliseconds(50)) { @MainActor in
             @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
             if let hidesBuildInfoOverlay,
                _build.isDeveloperModeEnabled {
@@ -151,18 +156,46 @@ public extension AppSubsystem {
     final class Delegates: @unchecked Sendable {
         /* MARK: Properties */
 
-        public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared
-        public private(set) var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate?
-        public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
-        public private(set) var devModeAppActions: DevModeAppActionDelegate?
-        public private(set) var exceptionMetadata: ExceptionMetadataDelegate?
-        public private(set) var forcedUpdateModal: ForcedUpdateModalDelegate?
-        public private(set) var localizedStrings: LocalizedStringsDelegate = DefaultLocalizedStringsDelegate()
-        public private(set) var loggerDomainSubscription: LoggerDomainSubscriptionDelegate = DefaultLoggerDomainSubscriptionDelegate()
-        public private(set) var permanentUserDefaultsKeys: PermanentUserDefaultsKeyDelegate?
-        public private(set) var uiThemeList: UIThemeListDelegate = DefaultUIThemeListDelegate()
+        @LockIsolated public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared
+        @LockIsolated public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
+        @LockIsolated public private(set) var localizedStrings: LocalizedStringsDelegate = DefaultLocalizedStringsDelegate()
+        @LockIsolated public private(set) var loggerDomainSubscription: LoggerDomainSubscriptionDelegate = DefaultLoggerDomainSubscriptionDelegate()
+        @LockIsolated public private(set) var uiThemeList: UIThemeListDelegate = DefaultUIThemeListDelegate()
 
         fileprivate static let shared = Delegates()
+
+        private let _buildInfoOverlayDotIndicatorColor = LockIsolated<BuildInfoOverlayDotIndicatorColorDelegate?>(wrappedValue: nil)
+        private let _devModeAppActions = LockIsolated<DevModeAppActionDelegate?>(wrappedValue: nil)
+        private let _exceptionMetadata = LockIsolated<ExceptionMetadataDelegate?>(wrappedValue: nil)
+        private let _forcedUpdateModal = LockIsolated<ForcedUpdateModalDelegate?>(wrappedValue: nil)
+        private let _permanentUserDefaultsKeys = LockIsolated<PermanentUserDefaultsKeyDelegate?>(wrappedValue: nil)
+
+        /* MARK: Computed Properties */
+
+        public var buildInfoOverlayDotIndicatorColor: BuildInfoOverlayDotIndicatorColorDelegate? {
+            get { _buildInfoOverlayDotIndicatorColor.wrappedValue }
+            set { _buildInfoOverlayDotIndicatorColor.wrappedValue = newValue }
+        }
+
+        public var devModeAppActions: DevModeAppActionDelegate? {
+            get { _devModeAppActions.wrappedValue }
+            set { _devModeAppActions.wrappedValue = newValue }
+        }
+
+        public var exceptionMetadata: ExceptionMetadataDelegate? {
+            get { _exceptionMetadata.wrappedValue }
+            set { _exceptionMetadata.wrappedValue = newValue }
+        }
+
+        public var forcedUpdateModal: ForcedUpdateModalDelegate? {
+            get { _forcedUpdateModal.wrappedValue }
+            set { _forcedUpdateModal.wrappedValue = newValue }
+        }
+
+        public var permanentUserDefaultsKeys: PermanentUserDefaultsKeyDelegate? {
+            get { _permanentUserDefaultsKeys.wrappedValue }
+            set { _permanentUserDefaultsKeys.wrappedValue = newValue }
+        }
 
         /* MARK: Init */
 

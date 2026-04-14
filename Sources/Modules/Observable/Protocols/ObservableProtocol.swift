@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public protocol ObservableProtocol {
+public protocol ObservableProtocol: Sendable {
     // MARK: - Properties
 
     var key: ObservableKey { get }

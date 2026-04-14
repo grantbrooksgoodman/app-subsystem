@@ -13,7 +13,7 @@ import MessageUI
 import AlertKit
 
 @MainActor
-public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, @unchecked Sendable {
+public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
     // MARK: - Dependencies
 
     @Dependency(\.build) private var build: Build

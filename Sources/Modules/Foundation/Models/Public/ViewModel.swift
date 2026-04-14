@@ -12,8 +12,8 @@ import SwiftUI
 
 public typealias ViewModel<R> = ViewModelOf<R.State, R.Action> where R: Reducer
 
-@MainActor
 @dynamicMemberLookup
+@MainActor
 public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     // MARK: - Properties
 
@@ -147,8 +147,8 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     }
 }
 
+@MainActor
 public extension ViewModelOf {
-    @MainActor
     func send(_ action: Action, while predicate: @escaping (State) -> Bool) async {
         let task = self.send(action)
         await withTaskCancellationHandler {
@@ -158,7 +158,6 @@ public extension ViewModelOf {
         }
     }
 
-    @MainActor
     func send(
         _ action: Action,
         animation: Animation?,
@@ -172,7 +171,6 @@ public extension ViewModelOf {
         }
     }
 
-    @MainActor
     func yield(while predicate: @escaping (State) -> Bool) async {
         for await state in $state.values {
             if !predicate(state) { break }

@@ -59,10 +59,8 @@ final class RootWindowService {
         @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
 
         defer {
-            core.gcd.after(.milliseconds(50)) {
-                Task { @MainActor in
-                    self.startRaisingWindow()
-                }
+            Task.delayed(by: .milliseconds(50)) { @MainActor in
+                startRaisingWindow()
             }
         }
 

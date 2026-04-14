@@ -22,14 +22,21 @@ public enum DevModeService {
 
     // MARK: - Properties
 
-    private nonisolated(unsafe) static var appActions: [DevModeAction] = AppSubsystem.delegates.devModeAppActions?.appActions ?? []
-    private static var subsystemActions: [DevModeAction] { DevModeAction.Subsystem.available }
+    private static let appActions = LockIsolated<[DevModeAction]>(wrappedValue: AppSubsystem.delegates.devModeAppActions?.appActions ?? [])
+
+    // MARK: - Computed Properties
+
+    private static var subsystemActions: [DevModeAction] {
+        DevModeAction.Subsystem.available
+    }
 
     // MARK: - Action Addition
 
     public static func addAction(_ action: DevModeAction) {
-        appActions.removeAll(where: { $0.metadata(isEqual: action) })
-        appActions.append(action)
+        appActions.projectedValue.withValue {
+            $0.removeAll(where: { $0.metadata(isEqual: action) })
+            $0.append(action)
+        }
     }
 
     public static func addActions(_ actions: [DevModeAction]) {
@@ -42,23 +49,32 @@ public enum DevModeService {
         _ action: DevModeAction,
         after precedingAction: DevModeAction
     ) {
-        guard let index = appActions.firstIndex(where: { $0.metadata(isEqual: precedingAction) }) else { return }
-        insertAction(action, at: index + 1)
+        appActions.projectedValue.withValue {
+            guard let index = $0.firstIndex(where: {
+                $0.metadata(isEqual: precedingAction)
+            }) else { return }
+
+            insertAction(
+                action,
+                at: index + 1
+            )
+        }
     }
 
     public static func insertAction(
         _ action: DevModeAction,
         at index: Int
     ) {
-        guard index < appActions.count else {
-            guard index == appActions.count else { return }
-            addAction(action)
-            return
-        }
+        appActions.projectedValue.withValue {
+            guard index < $0.count else {
+                guard index == $0.count else { return }
+                return addAction(action)
+            }
 
-        guard index > -1 else { return }
-        appActions.removeAll(where: { $0.metadata(isEqual: action) })
-        appActions.insert(action, at: index)
+            guard index > -1 else { return }
+            $0.removeAll(where: { $0.metadata(isEqual: action) })
+            $0.insert(action, at: index)
+        }
     }
 
     public static func insertActions(
@@ -72,22 +88,34 @@ public enum DevModeService {
         _ action: DevModeAction,
         before succeedingAction: DevModeAction
     ) {
-        guard let index = appActions.firstIndex(where: { $0.metadata(isEqual: succeedingAction) }) else { return }
-        insertAction(action, at: index)
+        appActions.projectedValue.withValue {
+            guard let index = $0.firstIndex(where: {
+                $0.metadata(isEqual: succeedingAction)
+            }) else { return }
+
+            insertAction(
+                action,
+                at: index
+            )
+        }
     }
 
     // MARK: - Action Removal
 
     public static func removeAction(at index: Int) {
-        guard index < appActions.count,
-              index > -1 else { return }
+        appActions.projectedValue.withValue {
+            guard index < $0.count,
+                  index > -1 else { return }
 
-        appActions.remove(at: index)
+            $0.remove(at: index)
+        }
     }
 
     public static func removeAction(withTitle: String) {
-        guard appActions.contains(where: { $0.title == withTitle }) else { return }
-        appActions.removeAll(where: { $0.title == withTitle })
+        appActions.projectedValue.withValue {
+            guard $0.contains(where: { $0.title == withTitle }) else { return }
+            $0.removeAll(where: { $0.title == withTitle })
+        }
     }
 
     // MARK: - Menu Presentation
@@ -97,7 +125,7 @@ public enum DevModeService {
             @Dependency(\.uiApplication) var uiApplication: UIApplication
 
             guard !uiApplication.isPresentingAlertController else { return }
-            guard !appActions.isEmpty else { return presentActionSheet(domain: .subsystem) }
+            guard !appActions.wrappedValue.isEmpty else { return presentActionSheet(domain: .subsystem) }
 
             let actions: [AKAction] = [
                 .init("App Domain") { presentActionSheet(domain: .application) },
@@ -113,21 +141,29 @@ public enum DevModeService {
     }
 
     private static func presentActionSheet(domain: ActionDomain) {
-        Task {
-            let actions = domain == .application ? appActions : subsystemActions
+        Task { @MainActor in
             var akActions = [AKAction]()
-
-            akActions = actions.map { devModeAction in
-                .init(
-                    devModeAction.title,
-                    style: devModeAction.isDestructive ? .destructive : .default
-                ) {
-                    devModeAction.perform()
+            appActions.projectedValue.withValue {
+                let actions = domain == .application ? $0 : subsystemActions
+                akActions = actions.map { devModeAction in
+                    .init(
+                        devModeAction.title,
+                        style: devModeAction.isDestructive ? .destructive : .default
+                    ) {
+                        devModeAction.perform()
+                    }
                 }
-            }
 
-            if !appActions.isEmpty {
-                akActions.append(.init("Back", style: .cancel) { DevModeService.presentActionSheet() })
+                if !$0.isEmpty {
+                    akActions.append(
+                        .init(
+                            "Back",
+                            style: .cancel
+                        ) {
+                            DevModeService.presentActionSheet()
+                        }
+                    )
+                }
             }
 
             await AKActionSheet(
@@ -190,8 +226,6 @@ public enum DevModeService {
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
         build.setIsDeveloperModeEnabled(enabled)
-        Task { @MainActor in
-            coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
-        }
+        coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
     }
 }

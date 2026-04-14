@@ -39,21 +39,24 @@ public enum ThemeService {
 
     // MARK: - Set Theme
 
-    public static func setTheme(_ theme: UITheme, checkStyle: Bool = true) {
-        Task { @MainActor in
-            @Persistent(.pendingThemeID) var pendingThemeID: String?
+    public static func setTheme(
+        _ theme: UITheme,
+        checkStyle: Bool = true
+    ) {
+        @Persistent(.pendingThemeID) var pendingThemeID: String?
 
-            guard checkStyle else { return currentTheme = theme }
-            guard currentTheme.style == theme.style else {
+        guard checkStyle else { return currentTheme = theme }
+        guard currentTheme.style == theme.style else {
+            Task { @MainActor in
                 await AKAlert(
                     message: "The new appearance will take effect the next time you restart the app."
                 ).present()
-                return pendingThemeID = theme.encodedHash
             }
-
-            pendingThemeID = nil
-            currentTheme = theme
+            return pendingThemeID = theme.encodedHash
         }
+
+        pendingThemeID = nil
+        currentTheme = theme
     }
 
     // MARK: - Auxiliary
@@ -63,11 +66,10 @@ public enum ThemeService {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         guard uiApplication.applicationState == .active else {
-            return core.gcd.after(.milliseconds(10)) {
-                Task { @MainActor in
-                    self.setStyle()
-                }
+            Task.delayed(by: .milliseconds(10)) { @MainActor in
+                setStyle()
             }
+            return
         }
 
         let currentThemeStyle = currentTheme.style

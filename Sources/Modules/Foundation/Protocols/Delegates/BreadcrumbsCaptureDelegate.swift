@@ -9,6 +9,7 @@
 import Foundation
 
 public extension AppSubsystem.Delegates {
+    @MainActor
     protocol BreadcrumbsCaptureDelegate {
         // MARK: - Properties
 

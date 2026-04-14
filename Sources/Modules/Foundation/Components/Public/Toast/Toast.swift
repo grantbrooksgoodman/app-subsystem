@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public struct Toast: Equatable {
+public struct Toast: Equatable, Sendable {
     // MARK: - Properties
 
     public let message: String

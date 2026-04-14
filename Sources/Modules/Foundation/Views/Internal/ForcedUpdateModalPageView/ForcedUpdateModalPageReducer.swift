@@ -80,7 +80,8 @@ struct ForcedUpdateModalPageReducer: Reducer {
                     uiApplication.resignFirstResponders()
 
                     guard !build.isDeveloperModeEnabled else { return }
-                    core.gcd.after(.milliseconds(100)) { hideInteractiveContent() }
+                    try? await Task.sleep(for: .milliseconds(100))
+                    hideInteractiveContent()
                 }
             }
 
@@ -105,7 +106,7 @@ struct ForcedUpdateModalPageReducer: Reducer {
 
         case .installButtonTapped:
             guard let installButtonRedirectURL = state.installButtonRedirectURL else { return .none }
-            Task { @MainActor in
+            return .fireAndForget { @MainActor in
                 uiApplication.open(installButtonRedirectURL)
             }
 

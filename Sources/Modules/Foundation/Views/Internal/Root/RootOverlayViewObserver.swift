@@ -9,7 +9,7 @@
 import Foundation
 import SwiftUI
 
-struct RootOverlayViewObserver: Observer, @unchecked Sendable {
+struct RootOverlayViewObserver: Observer {
     // MARK: - Type Aliases
 
     typealias R = RootOverlayReducer
@@ -61,7 +61,7 @@ struct RootOverlayViewObserver: Observer, @unchecked Sendable {
             send(.toastChanged(value))
 
         case .rootViewToastAction:
-            guard let value = observable.value as? (() -> Void) else {
+            guard let value = observable.value as? (@Sendable () -> Void) else {
                 send(.toastActionChanged(nil))
                 return
             }

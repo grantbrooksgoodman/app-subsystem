@@ -9,7 +9,7 @@
 import Foundation
 
 public extension Toast {
-    enum PerpetuationStrategy: Equatable {
+    enum PerpetuationStrategy: Equatable, Sendable {
         case ephemeral(Duration)
         case persistent
     }

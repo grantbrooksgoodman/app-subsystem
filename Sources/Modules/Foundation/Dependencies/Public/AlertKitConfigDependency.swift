@@ -13,8 +13,8 @@ import AlertKit
 
 public enum AlertKitConfigDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> AlertKit.Config {
-        @MainActorIsolated var config = AlertKit.Config.shared
-        return config
+        @MainActorIsolated var alertKitConfig = AlertKit.Config.shared
+        return alertKitConfig
     }
 }
 

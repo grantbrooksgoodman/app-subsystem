@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-public struct UITheme: CaseIterable, Equatable, EncodedHashable, @unchecked Sendable {
+public struct UITheme: CaseIterable, Equatable, EncodedHashable, Sendable {
     // MARK: - Properties
 
     public let name: String

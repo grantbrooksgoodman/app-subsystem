@@ -100,21 +100,21 @@ public extension TranslationService {
         timeout timeoutConfig: (duration: Duration, returnsInputs: Bool),
         completion: @Sendable @escaping (Callback<[Translation], Exception>) -> Void
     ) {
-        @Dependency(\.coreKit) var core: CoreKit
+        @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
         @Dependency(\.translationService) var translator: TranslationService
 
         let didComplete = LockIsolated(wrappedValue: false)
-        let translations = LockIsolated<[Translation]>(wrappedValue: [])
         let exception = LockIsolated<Exception?>(wrappedValue: nil)
+        let translations = LockIsolated<[Translation]>(wrappedValue: [])
 
         if let hudConfig {
             Task.delayed(by: hudConfig.appearsAfter) { @MainActor in
                 guard !didComplete.wrappedValue else { return }
-                core.hud.showProgress(isModal: hudConfig.isModal)
+                coreHUD.showProgress(isModal: hudConfig.isModal)
             }
         }
 
-        func canComplete() -> Bool {
+        var canComplete: Bool {
             didComplete.projectedValue.withValue {
                 guard !$0 else { return false }
                 $0 = true
@@ -123,12 +123,11 @@ public extension TranslationService {
         }
 
         func complete(timedOut: Bool) {
-            guard canComplete() else { return }
-
+            guard canComplete else { return }
             if hudConfig != nil {
                 Task { @MainActor in
-                    @Dependency(\.coreKit) var core: CoreKit
-                    core.hud.hide()
+                    @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
+                    coreHUD.hide()
                 }
             }
 
@@ -173,17 +172,19 @@ public extension TranslationService {
 
         let timeout = Timeout(after: timeoutConfig.duration) {
             translations.projectedValue.withValue { existingTranslations in
-                let missing = inputs.filter { input in
+                let missingTranslations = inputs.filter { input in
                     !existingTranslations.map(\.input).contains(input)
                 }
-                let fallbacks = missing.map { input in
+
+                let fallbackTranslations = missingTranslations.map { input in
                     Translation(
                         input: input,
                         output: input.original.sanitized,
                         languagePair: languagePair
                     )
                 }
-                existingTranslations.append(contentsOf: fallbacks)
+
+                existingTranslations.append(contentsOf: fallbackTranslations)
             }
 
             return complete(timedOut: true)

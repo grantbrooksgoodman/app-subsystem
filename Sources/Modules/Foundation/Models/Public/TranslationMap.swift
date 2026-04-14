@@ -34,7 +34,7 @@ public struct TranslationInputMap: Equatable {
     }
 }
 
-public struct TranslationOutputMap: Equatable {
+public struct TranslationOutputMap: Equatable, Sendable {
     // MARK: - Properties
 
     public let key: TranslatedLabelStringCollection

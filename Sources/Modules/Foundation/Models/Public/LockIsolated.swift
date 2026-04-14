@@ -92,7 +92,7 @@ import Foundation
 ///     within ``LockIsolatedProjection/withValue(_:)``. Keep isolated operations
 ///     small and focused.
 @propertyWrapper
-public final class LockIsolated<Value>: @unchecked Sendable {
+public final class LockIsolated<Value>: Sendable {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>
@@ -116,7 +116,7 @@ public final class LockIsolated<Value>: @unchecked Sendable {
 }
 
 @dynamicMemberLookup
-public struct LockIsolatedProjection<Value>: @unchecked Sendable {
+public struct LockIsolatedProjection<Value>: Sendable {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>
@@ -173,7 +173,16 @@ private final class _LockIsolated<Value>: @unchecked Sendable {
         _ operation: (inout Value) throws -> T
     ) rethrows -> T {
         try lock.sync {
-            try operation(&_value)
+            // Operate on a local copy rather than passing &_value directly.
+            // If `operation` re-enters the lock and reads _value (e.g. via
+            // `wrappedValue.getter`), Swift's exclusivity checker would abort
+            // because `&_value` would be simultaneously read-borrowed while
+            // the inout write-borrow from `operation` is still active.
+            // Using a copy keeps the inout borrow on the local variable,
+            // leaving _value free for re-entrant reads within the same thread.
+            var value = _value
+            defer { _value = value }
+            return try operation(&value)
         }
     }
 

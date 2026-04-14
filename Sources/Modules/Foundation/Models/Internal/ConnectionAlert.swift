@@ -12,10 +12,10 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 enum ConnectionAlert {
     // MARK: - Present
 
-    @MainActor
     static func present() async {
         @Dependency(\.build) var build: Build
         @Dependency(\.uiApplication) var uiApplication: UIApplication

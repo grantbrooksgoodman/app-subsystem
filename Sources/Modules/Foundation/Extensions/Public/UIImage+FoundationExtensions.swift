@@ -12,10 +12,11 @@ import SwiftUI
 public extension UIImage {
     // MARK: - Properties
 
+    @MainActor
     static var appIcon: UIImage? {
         get async {
             let utility = AppIconImageUtility.shared
-            return (await utility.remoteAppIconImage) ?? utility.localAppIconImage
+            return await (utility.remoteAppIconImage) ?? utility.localAppIconImage
         }
     }
 

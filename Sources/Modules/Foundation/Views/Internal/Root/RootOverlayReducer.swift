@@ -24,7 +24,7 @@ struct RootOverlayReducer: Reducer {
         case isBuildInfoOverlayHiddenChanged(Bool)
         case isPresentingSheetChanged(Bool)
         case sheetChanged(AnyView?)
-        case toastActionChanged((() -> Void)?)
+        case toastActionChanged((@Sendable () -> Void)?)
         case toastChanged(Toast?)
     }
 
@@ -43,8 +43,8 @@ struct RootOverlayReducer: Reducer {
 
         @MainActor
         var buildInfoOverlayYOffset: CGFloat {
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
-            return (uiApplication.mainWindow?.safeAreaInsets.bottom ?? 0) == 0 ? 10 : 30
+            @Dependency(\.uiApplication.mainWindow?.safeAreaInsets.bottom) var safeAreaBottomInsets: CGFloat?
+            return (safeAreaBottomInsets ?? 0) == 0 ? 10 : 30
         }
 
         /* MARK: Init */

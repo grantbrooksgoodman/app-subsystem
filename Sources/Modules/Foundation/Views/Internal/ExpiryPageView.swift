@@ -13,10 +13,6 @@ import SwiftUI
 import AlertKit
 
 struct ExpiryPageView: View {
-    // MARK: - Dependencies
-
-    @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
-
     // MARK: - Init
 
     init() {}
@@ -31,8 +27,8 @@ struct ExpiryPageView: View {
         .background(Color.black)
         .edgesIgnoringSafeArea(.all)
         .onAppear {
-            coreGCD.after(.milliseconds(1500)) {
-                Task { await BuildExpiryAlert.shared.present() }
+            Task.delayed(by: .milliseconds(1500)) {
+                await BuildExpiryAlert.shared.present()
             }
         }
     }

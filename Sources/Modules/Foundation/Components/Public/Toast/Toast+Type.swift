@@ -9,7 +9,7 @@
 import Foundation
 
 public extension Toast {
-    enum ToastType: Equatable {
+    enum ToastType: Equatable, Sendable {
         // MARK: - Cases
 
         case banner(
@@ -25,36 +25,36 @@ public extension Toast {
         public var appearanceEdge: Toast.AppearanceEdge? {
             switch self {
             case let .banner(style: _, appearanceEdge: appearanceEdge, colorPalette: _, showsDismissButton: _):
-                return appearanceEdge
+                appearanceEdge
             default:
-                return nil
+                nil
             }
         }
 
         public var colorPalette: Toast.ColorPalette? {
             switch self {
             case let .banner(style: _, appearanceEdge: _, colorPalette: colorPalette, showsDismissButton: _):
-                return colorPalette
+                colorPalette
             default:
-                return nil
+                nil
             }
         }
 
         public var showsDismissButton: Bool? {
             switch self {
             case let .banner(style: _, appearanceEdge: _, colorPalette: _, showsDismissButton: showsDismissButton):
-                return showsDismissButton
+                showsDismissButton
             default:
-                return nil
+                nil
             }
         }
 
         public var style: Toast.Style {
             switch self {
             case let .banner(style: style, appearanceEdge: _, colorPalette: _, showsDismissButton: _):
-                return style
+                style
             case let .capsule(style: style):
-                return style
+                style
             }
         }
     }

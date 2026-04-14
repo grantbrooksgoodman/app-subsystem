@@ -18,7 +18,6 @@ public struct CoreKit: Sendable {
 
     // MARK: - Init
 
-    // TODO: AUDIT THIS.
     init(
         gcd: GCD,
         hud: HUD,

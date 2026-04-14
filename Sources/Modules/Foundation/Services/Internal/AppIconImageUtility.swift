@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 final class AppIconImageUtility {
     // MARK: - Types
 
@@ -19,7 +20,7 @@ final class AppIconImageUtility {
 
     // MARK: - Properties
 
-    nonisolated(unsafe) static let shared = AppIconImageUtility()
+    static let shared = AppIconImageUtility()
 
     @Cached(CacheKey.localAppIconImage) private var cachedLocalAppIconImage: UIImage?
     @Cached(CacheKey.remoteAppIconImage) private var cachedRemoteAppIconImage: UIImage?
@@ -131,8 +132,9 @@ final class AppIconImageUtility {
                     ))
                 }
 
-                // FIXME: Warning here.
-                self.cachedRemoteAppIconImage = image
+                Task { @MainActor in
+                    self.cachedRemoteAppIconImage = image
+                }
                 return completion(.success(image))
             }.resume()
         }.resume()

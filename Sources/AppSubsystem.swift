@@ -15,6 +15,78 @@ import Translator
 
 // MARK: - AppSubsystem
 
+/// A foundational framework for building iOS and tvOS applications with
+/// structured state management, dependency injection, and reactive
+/// observation.
+///
+/// AppSubsystem provides the core architecture that an application is built
+/// on top of. It manages build lifecycle, theming, logging, localization,
+/// and developer tools so that application code can focus on features rather
+/// than infrastructure.
+///
+/// ## Overview
+///
+/// The framework is organized around a few central ideas:
+///
+/// - **Reducers and view models.** UI state is managed through a
+///   unidirectional data flow. Each screen defines a ``Reducer`` that
+///   describes how state changes in response to actions. A ``ViewModel``
+///   connects that reducer to SwiftUI, publishing state and accepting
+///   actions through bindings.
+///
+/// - **Dependency injection.** Services and configuration are provided
+///   through the `@Dependency` property wrapper rather than singletons or
+///   initializer parameters. Dependencies are resolved at the call site and
+///   can be overridden for testing or previews.
+///
+/// - **Reactive observation.** Shared values that cross feature boundaries
+///   are expressed as ``Observable`` instances. Views subscribe to them
+///   through the ``Observer`` protocol, which dispatches changes to the
+///   appropriate reducer on the main actor.
+///
+/// - **Theming.** Appearance is driven by a ``UITheme`` value that can be
+///   swapped at runtime. Views that adopt the theming system automatically
+///   update when the active theme changes.
+///
+/// ## Bootstrapping
+///
+/// Call ``initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``
+/// once at application launch, typically inside your `App` initializer or
+/// `application(_:didFinishLaunchingWithOptions:)`:
+///
+///     @main
+///     struct MyApp: App {
+///         init() {
+///             AppSubsystem.initialize(
+///                 appStoreBuildNumber: 1,
+///                 buildMilestone: .alpha,
+///                 codeName: "Bluebird",
+///                 finalName: "My App",
+///                 languageCode: "en",
+///                 loggingEnabled: true
+///             )
+///         }
+///
+///         var body: some Scene { ... }
+///     }
+///
+/// This single call configures the build environment, logging, localization,
+/// theming, and all internal subsystem services. It may only be called once
+/// per application lifecycle.
+///
+/// ## Customization via Delegates
+///
+/// Default behavior can be replaced or extended by registering delegates on
+/// ``delegates`` before or after initialization. Delegates with sensible
+/// defaults (localized strings, theme list, logger subscriptions) are
+/// provided out of the box; optional delegates (exception metadata, forced
+/// update modals, developer mode actions) can be registered as needed:
+///
+///     AppSubsystem.delegates.register(
+///         exceptionMetadataDelegate: myExceptionDelegate,
+///         uiThemeListDelegate: myThemeListDelegate
+///     )
+///
 public enum AppSubsystem {
     /* MARK: Properties */
 
@@ -31,6 +103,23 @@ public enum AppSubsystem {
 
     /* MARK: Initialize */
 
+    /// Configures the subsystem and prepares all internal services for use.
+    ///
+    /// Call this method once at application launch. It sets up the build
+    /// environment, registers framework delegates, configures logging and
+    /// localization, and restores the active theme from persistent storage.
+    ///
+    /// - Parameters:
+    ///   - appStoreBuildNumber: The build number submitted to the App Store.
+    ///   - buildMilestone: The current stage of the release cycle.
+    ///   - codeName: An internal code name for this release.
+    ///   - finalName: The user-facing application name.
+    ///   - languageCode: The default language code for localization.
+    ///   - loggingEnabled: A Boolean value that determines whether the
+    ///     logger produces output.
+    ///
+    /// - Warning: This method must be called on the main actor. Calling it
+    ///   more than once per application lifecycle results in a fatal error.
     @MainActor // swiftlint:disable:next function_parameter_count
     public static func initialize(
         appStoreBuildNumber: Int,
@@ -153,6 +242,20 @@ public enum AppSubsystem {
 
 // swiftlint:disable identifier_name
 public extension AppSubsystem {
+    /// A registry of application-level delegates that customize the
+    /// subsystem's behavior.
+    ///
+    /// Access the shared instance through ``AppSubsystem.delegates``.
+    /// Delegates with sensible defaults are provided automatically. Optional
+    /// delegates start as `nil` and can be registered at any time:
+    ///
+    ///     AppSubsystem.delegates.register(
+    ///         exceptionMetadataDelegate: myDelegate
+    ///     )
+    ///
+    /// You can also register delegates individually:
+    ///
+    ///     AppSubsystem.delegates.registerExceptionMetadataDelegate(myDelegate)
     final class Delegates: @unchecked Sendable {
         /* MARK: Properties */
 

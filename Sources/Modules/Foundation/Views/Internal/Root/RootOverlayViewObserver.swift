@@ -16,13 +16,13 @@ struct RootOverlayViewObserver: Observer {
 
     // MARK: - Properties
 
-    let id = UUID()
     let observedValues: [any ObservableProtocol] = [
         Observables.isBuildInfoOverlayHidden,
         Observables.rootViewSheet,
         Observables.rootViewToast,
         Observables.rootViewToastAction,
     ]
+
     let viewModel: ViewModel<RootOverlayReducer>
 
     // MARK: - Init
@@ -33,48 +33,35 @@ struct RootOverlayViewObserver: Observer {
 
     // MARK: - Observer Conformance
 
-    func linkObservables() {
-        Observers.link(RootOverlayViewObserver.self, with: observedValues)
-    }
-
     func onChange(of observable: Observable<Any>) {
         Logger.log(
-            "\(observable.value is Nil ? "Triggered" : "Observed change of") .\(observable.key.rawValue).",
+            "\(observable.value is Nil ? "Triggered" : "Observed change of") \(observable).",
             domain: .observer,
             sender: self
         )
 
-        switch observable.key {
-        case .isBuildInfoOverlayHidden:
-            guard let value = observable.value as? Bool else { return }
-            send(.isBuildInfoOverlayHiddenChanged(value))
+        switch observable {
+        case Observables.isBuildInfoOverlayHidden:
+            send(.isBuildInfoOverlayHiddenChanged(
+                Observables.isBuildInfoOverlayHidden.value
+            ))
 
-        case .rootViewSheet:
-            send(.sheetChanged(observable.value as? AnyView))
+        case Observables.rootViewSheet:
+            send(.sheetChanged(
+                Observables.rootViewSheet.value
+            ))
 
-        case .rootViewToast:
-            guard let value = observable.value as? Toast else {
-                send(.toastChanged(nil))
-                return
-            }
+        case Observables.rootViewToast:
+            send(.toastChanged(
+                Observables.rootViewToast.value
+            ))
 
-            send(.toastChanged(value))
-
-        case .rootViewToastAction:
-            guard let value = observable.value as? (@Sendable () -> Void) else {
-                send(.toastActionChanged(nil))
-                return
-            }
-
-            send(.toastActionChanged(value))
+        case Observables.rootViewToastAction:
+            send(.toastActionChanged(
+                Observables.rootViewToastAction.value
+            ))
 
         default: ()
-        }
-    }
-
-    func send(_ action: RootOverlayReducer.Action) {
-        Task { @MainActor in
-            viewModel.send(action)
         }
     }
 }

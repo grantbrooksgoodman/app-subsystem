@@ -62,7 +62,7 @@ public enum ThemeService {
     // MARK: - Auxiliary
 
     private static func setStyle() {
-        @Dependency(\.coreKit) var core: CoreKit
+        @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         guard uiApplication.applicationState == .active else {
@@ -74,6 +74,6 @@ public enum ThemeService {
 
         let currentThemeStyle = currentTheme.style
         guard uiApplication.interfaceStyle != currentThemeStyle else { return }
-        core.ui.overrideUserInterfaceStyle(currentThemeStyle)
+        coreUI.overrideUserInterfaceStyle(currentThemeStyle)
     }
 }

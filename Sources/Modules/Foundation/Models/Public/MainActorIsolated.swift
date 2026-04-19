@@ -9,29 +9,62 @@
 @preconcurrency import Combine
 import Foundation
 
-/// A container used to create and hold a main actor-isolated value from any isolation context. Access to the value itself must be done from the main actor.
+/// A property wrapper that holds a main-actor-isolated value while
+/// remaining `Sendable` itself.
+///
+/// Use `@MainActorIsolated` when you need to store a main-actor-bound
+/// value – such as a UIKit service or a published object – inside a
+/// type that must be `Sendable`. The wrapper defers initialization
+/// until the value is first accessed on the main actor, so it is safe
+/// to declare from any isolation context:
 ///
 /// ```swift
-/// // Declaration:
-/// @MainActorIsolated var service = Service.shared
+/// @MainActorIsolated var windowService = WindowService.shared
+/// ```
 ///
-/// // Usage off the main actor:
-/// await $service.read { $0.doSomething() }
-/// await $service.withValue { $0.value = newValue }
+/// ## Accessing the Value
 ///
-/// // Usage on the main actor:
+/// On the main actor, the wrapped value is available directly through
+/// the property name and supports `@dynamicMemberLookup` for
+/// key-path access:
+///
+/// ```swift
 /// @MainActor
-/// func method() {
-///     service.doSomething()
-/// }
-///
-/// func method() {
-///     Task { @MainActor in
-///         service.doSomething()
-///     }
+/// func updateTitle() {
+///     windowService.title = "Home"
 /// }
 /// ```
-/// Access to `wrappedValue` is main actor-only; `$` helpers work from anywhere.
+///
+/// From a non-main-actor context, use the projected value (`$`)
+/// helpers to hop to the main actor safely:
+///
+/// ```swift
+/// // Read-only access:
+/// let title = await $windowService.read { $0.title }
+///
+/// // Mutating access:
+/// await $windowService.withValue { $0.title = "Settings" }
+/// ```
+///
+/// ## Lazy Initialization
+///
+/// The value is created lazily on first access. The initializer
+/// expression is captured as an `@autoclosure` and is evaluated on
+/// the main actor, so it is safe to reference main-actor-isolated
+/// state in the default value.
+///
+/// - Note: Because ``read(_:)`` and ``withValue(_:)`` dispatch to the
+///   main actor via `MainActor.run`, they are `async` and must be
+///   awaited. Avoid calling them from the main actor itself, as this
+///   introduces an unnecessary suspension point. On the main actor,
+///   access the wrapped value directly.
+///
+/// - Warning: Accessing ``wrappedValue`` from outside the main actor
+///   is a concurrency violation. If you are not already on the main
+///   actor, use ``read(_:)`` or ``withValue(_:)`` through the
+///   projected value instead.
+///
+/// - SeeAlso: ``LockIsolated``
 @dynamicMemberLookup
 @propertyWrapper
 public struct MainActorIsolated<Value>: Sendable {
@@ -72,17 +105,31 @@ public struct MainActorIsolated<Value>: Sendable {
 
     // MARK: - Init
 
-    /// Typical use: `@MainActorIsolated var service = UIService()`.
+    /// Creates a main-actor-isolated wrapper with a lazily evaluated
+    /// default value.
+    ///
+    /// The `wrappedValue` expression is captured as an `@autoclosure`
+    /// and is not evaluated until the value is first accessed on the
+    /// main actor.
+    ///
+    /// - Parameter wrappedValue: An autoclosure that produces the
+    ///   initial value. Evaluated on the main actor.
     public init(wrappedValue: @autoclosure @escaping @MainActor @Sendable () -> Value) {
         self.box = Box(initial: wrappedValue)
     }
 
     // MARK: - Projected / Wrapped Value
 
-    /// The wrapper itself (for helpers).
+    /// The wrapper instance, accessible via the `$` prefix.
+    ///
+    /// Use the projected value to call ``read(_:)`` or
+    /// ``withValue(_:)`` from a non-main-actor context.
     public var projectedValue: MainActorIsolated<Value> { self }
 
-    /// Main actor access to the underlying value.
+    /// The underlying value.
+    ///
+    /// This property is available only on the main actor. Accessing
+    /// it from another isolation context is a concurrency violation.
     @MainActor
     public var wrappedValue: Value {
         get { box.value }
@@ -91,11 +138,14 @@ public struct MainActorIsolated<Value>: Sendable {
 
     // MARK: - Subscript
 
+    /// Reads a property of the underlying value by key path.
     @MainActor
     public subscript<Subject>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
         wrappedValue[keyPath: keyPath]
     }
 
+    /// Reads or writes a property of the underlying value by key
+    /// path.
     @MainActor
     public subscript<Subject>(dynamicMember keyPath: WritableKeyPath<Value, Subject>) -> Subject {
         get { wrappedValue[keyPath: keyPath] }
@@ -104,14 +154,33 @@ public struct MainActorIsolated<Value>: Sendable {
 
     // MARK: - Nonisolated Accessors
 
-    /// Call with a read-only closure from any context; runs on the main actor.
+    /// Performs a read-only operation on the value from any isolation
+    /// context.
+    ///
+    /// The closure is dispatched to the main actor via
+    /// `MainActor.run`. The return value must be `Sendable` so that
+    /// it can safely cross isolation boundaries.
+    ///
+    /// - Parameter body: A closure that receives the current value.
+    ///
+    /// - Returns: The value returned by `body`.
     public nonisolated func read<T: Sendable>(
         _ body: @MainActor (Value) throws -> T
     ) async rethrows -> T {
         try await MainActor.run { try body(box.value) }
     }
 
-    /// Call with an inout closure from any context; runs on the main actor.
+    /// Performs a mutating operation on the value from any isolation
+    /// context.
+    ///
+    /// The closure is dispatched to the main actor via
+    /// `MainActor.run`. Mutations made through the `inout` parameter
+    /// are written back to the underlying storage when the closure
+    /// returns.
+    ///
+    /// - Parameter body: A closure that receives the value as `inout`.
+    ///
+    /// - Returns: The value returned by `body`.
     public nonisolated func withValue<T: Sendable>(
         _ body: @MainActor (inout Value) throws -> T
     ) async rethrows -> T {

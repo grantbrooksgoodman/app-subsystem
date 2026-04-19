@@ -46,7 +46,20 @@ private struct FadeInViewModifier: ViewModifier {
 }
 
 public extension View {
-    func fadeIn(_ duration: Duration = .milliseconds(500), delay: Duration = .zero) -> some View {
-        modifier(FadeInViewModifier(duration, delay: delay))
+    /// Fades the view in with an ease-in animation.
+    ///
+    /// - Parameters:
+    ///   - duration: The animation duration. The default is 500
+    ///     milliseconds.
+    ///   - delay: The time to wait before starting the animation.
+    ///     The default is zero.
+    func fadeIn(
+        _ duration: Duration = .milliseconds(500),
+        delay: Duration = .zero
+    ) -> some View {
+        modifier(FadeInViewModifier(
+            duration,
+            delay: delay
+        ))
     }
 }

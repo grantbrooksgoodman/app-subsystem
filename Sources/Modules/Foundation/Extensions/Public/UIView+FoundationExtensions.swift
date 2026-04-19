@@ -13,9 +13,11 @@ import UIKit
 public extension UIView {
     // MARK: - Properties
 
+    /// A string describing the view's type.
     var descriptor: String { .init(type(of: self)) }
 
-    /// Recursively traverses the view hierarchy to resolve all associated subviews.
+    /// All subviews in the hierarchy below this view, resolved
+    /// recursively.
     var traversedSubviews: [UIView] {
         var subviews = [UIView]()
         func getSubviews(for view: UIView) {
@@ -26,7 +28,7 @@ public extension UIView {
         return subviews
     }
 
-    /// Recursively traverses the view hierarchy to resolve all associated superviews.
+    /// All superviews above this view, resolved recursively.
     var traversedSuperviews: [UIView] {
         var superviews = [UIView]()
         var currentView = self
@@ -39,18 +41,27 @@ public extension UIView {
 
     // MARK: - Methods
 
+    /// Adds the gesture recognizer, or enables it if it is already
+    /// attached.
     func addOrEnable(_ gestureRecognizer: UIGestureRecognizer) {
         guard let existingGestureRecognizer = gestureRecognizers?
             .first(where: { $0 == gestureRecognizer }) else { return addGestureRecognizer(gestureRecognizer) }
         existingGestureRecognizer.isEnabled = true
     }
 
+    /// Returns the first direct subview whose tag matches the
+    /// semantic tag for the given string.
     func firstSubview(for string: String) -> UIView? {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         return subviews.first(where: { $0.tag == coreUI.semTag(for: string) })
     }
 
-    func removeSubviews(for string: String, animated: Bool = true) {
+    /// Removes all direct subviews matching the semantic tag for the
+    /// given string.
+    func removeSubviews(
+        for string: String,
+        animated: Bool = true
+    ) {
         let subviews = subviews(for: string)
         guard animated else {
             return subviews.forEach { $0.removeFromSuperview() }
@@ -65,6 +76,8 @@ public extension UIView {
         }
     }
 
+    /// Returns all direct subviews matching the semantic tag for
+    /// the given string.
     func subviews(for string: String) -> [UIView] {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         return subviews.filter { $0.tag == coreUI.semTag(for: string) }

@@ -9,10 +9,18 @@
 import Foundation
 import SwiftUI
 
+/// The phase of a UIKit navigation controller transition.
 public enum NavigationTransition {
+    /// The view controller has finished appearing.
     case didAppear
+
+    /// The view controller has finished disappearing.
     case didDisappear
+
+    /// The view controller is about to appear.
     case willAppear
+
+    /// The view controller is about to disappear.
     case willDisappear
 }
 
@@ -184,6 +192,16 @@ private final class TransitionTrackingViewController: UIViewController {
 }
 
 public extension View {
+    /// Performs an action at the specified phase of a UIKit
+    /// navigation controller transition.
+    ///
+    /// The closure receives the duration of the transition animation,
+    /// or ``Duration/zero`` if no transition coordinator is present.
+    ///
+    /// - Parameters:
+    ///   - transition: The transition phase to observe.
+    ///   - effect: The closure to execute. The closure receives the
+    ///     transition's animation duration.
     func onNavigationTransition(
         _ transition: NavigationTransition,
         effect: @escaping ((Duration) -> Void)

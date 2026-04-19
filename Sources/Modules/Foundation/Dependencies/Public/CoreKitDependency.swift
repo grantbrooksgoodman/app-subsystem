@@ -8,6 +8,7 @@
 /* Native */
 import Foundation
 
+/// The dependency key that provides a ``CoreKit`` instance.
 public enum CoreKitDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> CoreKit {
         @MainActorIsolated var coreKit = CoreKit(
@@ -22,6 +23,7 @@ public enum CoreKitDependency: DependencyKey {
 }
 
 public extension DependencyValues {
+    /// The shared ``CoreKit`` instance.
     var coreKit: CoreKit {
         get { self[CoreKitDependency.self] }
         set { self[CoreKitDependency.self] = newValue }

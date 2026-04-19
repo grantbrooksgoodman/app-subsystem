@@ -10,64 +10,64 @@ import Foundation
 import SwiftUI
 
 public extension Toast {
+    /// The semantic style of a toast, which determines its icon and
+    /// default color.
+    ///
+    /// Each case carries a predefined system image name and accent
+    /// color appropriate for the severity it represents. Use ``none``
+    /// when the toast does not require an icon.
     enum Style: Equatable, Sendable {
         // MARK: - Cases
 
+        /// An error condition that requires the user's attention.
         case error
+
+        /// A neutral informational message.
         case info
+
+        /// A confirmation that an operation completed successfully.
         case success
+
+        /// A cautionary notice.
         case warning
+
+        /// No semantic style. The toast displays without an icon.
         case none
 
         // MARK: - Constants Accessors
 
-        private typealias Strings = FoundationConstants.Strings.ToastView
         private typealias Colors = FoundationConstants.Colors.ToastView
+        private typealias Strings = FoundationConstants.Strings.ToastView
 
         // MARK: - Properties
 
-        public var bannerIconSystemImageName: String? {
+        var bannerIconSystemImageName: String? {
             switch self {
-            case .error:
-                return Strings.bannerErrorIconImageSystemName
-            case .info:
-                return Strings.bannerInfoIconImageSystemName
-            case .success:
-                return Strings.bannerSuccessIconImageSystemName
-            case .warning:
-                return Strings.bannerWarningIconImageSystemName
-            case .none:
-                return nil
+            case .error: Strings.bannerErrorIconImageSystemName
+            case .info: Strings.bannerInfoIconImageSystemName
+            case .success: Strings.bannerSuccessIconImageSystemName
+            case .warning: Strings.bannerWarningIconImageSystemName
+            case .none: nil
             }
         }
 
-        public var capsuleIconSystemImageName: String? {
+        var capsuleIconSystemImageName: String? {
             switch self {
-            case .error:
-                return Strings.capsuleErrorIconImageSystemName
-            case .info:
-                return Strings.capsuleInfoIconImageSystemName
-            case .success:
-                return Strings.capsuleSuccessIconImageSystemName
-            case .warning:
-                return Strings.capsuleWarningIconImageSystemName
-            case .none:
-                return nil
+            case .error: Strings.capsuleErrorIconImageSystemName
+            case .info: Strings.capsuleInfoIconImageSystemName
+            case .success: Strings.capsuleSuccessIconImageSystemName
+            case .warning: Strings.capsuleWarningIconImageSystemName
+            case .none: nil
             }
         }
 
-        public var defaultColor: Color? {
+        var defaultColor: Color? {
             switch self {
-            case .error:
-                return Colors.defaultErrorColor
-            case .info:
-                return Colors.defaultInfoColor
-            case .success:
-                return Colors.defaultSuccessColor
-            case .warning:
-                return Colors.defaultWarningColor
-            case .none:
-                return nil
+            case .error: Colors.defaultErrorColor
+            case .info: Colors.defaultInfoColor
+            case .success: Colors.defaultSuccessColor
+            case .warning: Colors.defaultWarningColor
+            case .none: nil
             }
         }
     }

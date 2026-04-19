@@ -8,6 +8,7 @@
 /* Native */
 import Foundation
 
+/// The dependency key that provides a ``QuickViewer`` instance.
 public enum QuickViewerDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> QuickViewer {
         @MainActorIsolated var quickViewer = QuickViewer()
@@ -16,6 +17,7 @@ public enum QuickViewerDependency: DependencyKey {
 }
 
 public extension DependencyValues {
+    /// The shared ``QuickViewer`` instance.
     var quickViewer: QuickViewer {
         get { self[QuickViewerDependency.self] }
         set { self[QuickViewerDependency.self] = newValue }

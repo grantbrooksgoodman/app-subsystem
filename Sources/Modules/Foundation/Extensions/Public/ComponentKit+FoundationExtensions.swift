@@ -14,6 +14,7 @@ import ComponentKit
 
 @MainActor
 public extension ComponentKit {
+    /// Returns a symbol button tinted with the current theme's `.accent` color.
     func button(
         symbolName: String,
         weight: SwiftUI.Font.Weight? = nil,
@@ -29,6 +30,7 @@ public extension ComponentKit {
         )
     }
 
+    /// Returns a text button tinted with the current theme's `.accent` color.
     func button(
         _ text: String,
         font: ComponentKit.Font = .system,
@@ -44,6 +46,8 @@ public extension ComponentKit {
         )
     }
 
+    /// Returns a bordered-prominent capsule button with themed
+    /// defaults.
     func capsuleButton(
         _ text: String,
         backgroundColor: Color = .accent,
@@ -76,6 +80,7 @@ public extension ComponentKit {
         }
     }
 
+    /// Returns a symbol image tinted with the current theme's `.accent` color.
     func symbol(
         _ systemName: String,
         weight: SwiftUI.Font.Weight? = nil,
@@ -89,6 +94,7 @@ public extension ComponentKit {
         )
     }
 
+    /// Returns a text view using the current theme's `.titleText` color.
     func text(
         _ text: String,
         font: ComponentKit.Font = .system,

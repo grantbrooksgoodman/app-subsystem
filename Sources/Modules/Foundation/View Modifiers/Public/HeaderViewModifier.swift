@@ -272,7 +272,26 @@ private struct HeaderViewModifier: ViewModifier {
 }
 
 public extension View {
-    /// - Parameter attributes: Choosing a themed `appearance` value overrides all color values to those of the system theme.
+    /// Applies a configurable header to the view, with support for
+    /// leading, center, and trailing items.
+    ///
+    /// On iOS 26 and later, the header uses an inline navigation bar
+    /// with toolbar items. On earlier versions, it falls back to a
+    /// custom ``HeaderView``.
+    ///
+    /// - Parameters:
+    ///   - leftItem: The button displayed on the leading edge.
+    ///   - centerItem: The title or image displayed in the center.
+    ///   - rightItem: The button displayed on the trailing edge.
+    ///   - attributes: The header's visual configuration. Choosing a
+    ///     themed `appearance` overrides all color values to those of
+    ///     the active theme.
+    ///   - popGestureAction: A closure to execute when the user
+    ///     performs a pop gesture.
+    ///   - usesInlineDisplayMode: Whether to use an inline
+    ///     navigation bar on iOS 26 and later. The default is `true`.
+    ///   - usesV26Attributes: Whether to adapt the attributes for
+    ///     iOS 26. The default is `true`.
     func header(
         leftItem: HeaderView.PeripheralButtonType? = nil,
         _ centerItem: HeaderView.CenterItemType? = nil,
@@ -299,22 +318,22 @@ public extension View {
 private extension HeaderView.CenterItemType {
     var navigationTitle: String? {
         switch self {
-        case .image: return nil
-        case let .text(titleTextAttributes, subtitle: _): return titleTextAttributes.string
+        case .image: nil
+        case let .text(titleTextAttributes, subtitle: _): titleTextAttributes.string
         }
     }
 
     var subtitleForegroundColor: Color? {
         switch self {
-        case .image: return nil
-        case let .text(_, subtitle: subtitleTextAttributes): return subtitleTextAttributes?.foregroundColor
+        case .image: nil
+        case let .text(_, subtitle: subtitleTextAttributes): subtitleTextAttributes?.foregroundColor
         }
     }
 
     var titleForegroundColor: Color? {
         switch self {
-        case .image: return nil
-        case let .text(titleTextAttributes, subtitle: _): return titleTextAttributes.foregroundColor
+        case .image: nil
+        case let .text(titleTextAttributes, subtitle: _): titleTextAttributes.foregroundColor
         }
     }
 }
@@ -322,8 +341,8 @@ private extension HeaderView.CenterItemType {
 private extension HeaderView.PeripheralButtonType {
     var foregroundColor: Color? {
         switch self {
-        case .image: return nil
-        case let .text(attributes): return attributes.text.foregroundColor
+        case .image: nil
+        case let .text(attributes): attributes.text.foregroundColor
         }
     }
 }

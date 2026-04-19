@@ -11,6 +11,7 @@ import Foundation
 /* Proprietary */
 import Translator
 
+/// The dependency key that provides a ``TranslationService`` instance.
 public enum TranslationServiceDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> TranslationService {
         .shared
@@ -18,6 +19,7 @@ public enum TranslationServiceDependency: DependencyKey {
 }
 
 public extension DependencyValues {
+    /// The shared ``TranslationService`` instance.
     var translationService: TranslationService {
         get { self[TranslationServiceDependency.self] }
         set { self[TranslationServiceDependency.self] = newValue }

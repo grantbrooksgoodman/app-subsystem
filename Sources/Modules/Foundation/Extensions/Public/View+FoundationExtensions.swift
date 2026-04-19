@@ -10,10 +10,12 @@ import Foundation
 import SwiftUI
 
 public extension View {
+    /// Wraps the view in an `AnyView` for type erasure.
     func eraseToAnyView() -> AnyView {
         AnyView(self)
     }
 
+    /// Conditionally applies a transform to the view.
     @ViewBuilder
     func `if`(
         _ condition: Bool,
@@ -26,6 +28,7 @@ public extension View {
         }
     }
 
+    /// Conditionally applies one of two transforms to the view.
     @ViewBuilder
     func `if`(
         _ condition: Bool,
@@ -39,10 +42,12 @@ public extension View {
         }
     }
 
+    /// Applies a transform when the optional value is non-`nil`,
+    /// passing the unwrapped value to the closure.
     @ViewBuilder
-    func ifLet<Wrapped, Content: View>(
+    func ifLet<Wrapped>(
         _ optional: Wrapped?,
-        _ transform: (Self, Wrapped) -> Content
+        _ transform: (Self, Wrapped) -> some View
     ) -> some View {
         if let value = optional {
             transform(self, value)
@@ -51,11 +56,13 @@ public extension View {
         }
     }
 
+    /// Applies one of two transforms depending on whether the
+    /// optional value is non-`nil`.
     @ViewBuilder
-    func ifLet<Wrapped, IfContent: View, ElseContent: View>(
+    func ifLet<Wrapped>(
         _ optional: Wrapped?,
-        _ ifTransform: (Self, Wrapped) -> IfContent,
-        else elseTransform: (Self) -> ElseContent
+        _ ifTransform: (Self, Wrapped) -> some View,
+        else elseTransform: (Self) -> some View
     ) -> some View {
         if let value = optional {
             ifTransform(self, value)
@@ -64,6 +71,8 @@ public extension View {
         }
     }
 
+    /// Performs an action when a notification with the given name is
+    /// posted.
     func onReceive(
         _ name: Notification.Name,
         center: NotificationCenter = .default,
@@ -76,6 +85,7 @@ public extension View {
         )
     }
 
+    /// Performs an action when the trait collection changes.
     func onTraitCollectionChange(perform action: @escaping () -> Void) -> some View {
         onReceive(.traitCollectionChangedNotification) { _ in
             action()

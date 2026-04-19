@@ -9,19 +9,18 @@
 import Foundation
 
 public extension Array {
-    /// Convenience method which eliminates the need to guard against out of bounds errors.
+    /// Convenience method eliminating the need to guard against out of bounds errors.
     func itemAt(_ index: Int) -> Element? {
         guard index > -1, count > index else { return nil }
         return self[index]
     }
 }
 
-public extension Array where Element == Exception {
+public extension [Exception] {
     // MARK: - Properties
 
-    /**
-     Returns a single `Exception` by appending each as an underlying `Exception` to the final item in the array.
-     */
+    /// Returns a single ``Exception`` by appending each as
+    /// an underlying ``Exception`` to the final item in the array.
     var compiledException: Exception? {
         guard !isEmpty else { return nil }
         var finalException = last!
@@ -31,9 +30,8 @@ public extension Array where Element == Exception {
     }
 
     // TODO: Audit this – consider removing/replacing.
-    /**
-     Returns an array of identifier strings for each `Exception` in the array.
-     */
+    /// An array of reference-code strings derived from each
+    /// exception and its underlying exceptions.
     var referenceCodes: [String] {
         var codes = [String]()
 
@@ -53,9 +51,10 @@ public extension Array where Element == Exception {
     }
 }
 
-public extension Array where Element == String {
+public extension [String] {
     // MARK: - Properties
 
+    /// The duplicate strings in the array, or `nil` if none exist.
     var duplicates: [String]? {
         let duplicates = Array(Set(filter { (string: String) in filter { $0 == string }.count > 1 }))
         return duplicates.isEmpty ? nil : duplicates
@@ -63,14 +62,19 @@ public extension Array where Element == String {
 
     // MARK: - Methods
 
+    /// Returns `true` if the array contains at least one string
+    /// from the given array.
     func containsAnyString(in array: [String]) -> Bool {
         !array.filter { contains($0) }.isEmpty
     }
 
+    /// Returns `true` if the array contains every string in the
+    /// given array.
     func containsAllStrings(in array: [String]) -> Bool {
         array.allSatisfy(contains)
     }
 
+    /// Returns the number of elements equal to the given string.
     func count(of query: String) -> Int {
         reduce(into: Int()) { partialResult, string in
             partialResult += string == query ? 1 : 0

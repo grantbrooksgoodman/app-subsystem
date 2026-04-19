@@ -18,25 +18,31 @@ import Foundation
 ///
 /// For example, use the wrapped value to read or replace the entire value:
 ///
-///     @LockIsolated var cache = [String: String]()
+/// ```swift
+/// @LockIsolated var cache = [String: String]()
 ///
-///     let snapshot = cache
-///     cache = [:]
+/// let snapshot = cache
+/// cache = [:]
+/// ```
 ///
 /// Use the projected value to perform an operation on part of the wrapped value,
 /// such as reading or writing a single dictionary entry:
 ///
-///     $cache["greeting"] = "Hello"
-///     let greeting = $cache["greeting"]
+/// ```swift
+/// $cache["greeting"] = "Hello"
+/// let greeting = $cache["greeting"]
+/// ```
 ///
 /// Use ``LockIsolatedProjection/withValue(_:)`` when an operation must read and
 /// modify the value as a single isolated step:
 ///
-///     $cache.withValue {
-///         if $0["greeting"] == nil {
-///             $0["greeting"] = "Hello"
-///         }
-///     }
+/// ```swift
+/// $cache.withValue {
+///    if $0["greeting"] == nil {
+///        $0["greeting"] = "Hello"
+///    }
+/// }
+/// ```
 ///
 /// ## Choosing an access pattern
 ///

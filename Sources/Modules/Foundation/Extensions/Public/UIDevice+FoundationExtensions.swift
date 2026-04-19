@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 
 public extension UIDevice {
+    /// A Boolean value indicating whether the app is running in the
+    /// Simulator.
     static var isSimulator: Bool {
         #if targetEnvironment(simulator)
         return true

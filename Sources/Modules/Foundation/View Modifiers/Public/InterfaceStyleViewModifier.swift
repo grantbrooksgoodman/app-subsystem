@@ -59,6 +59,14 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Overrides the user interface style for the entire app
+    /// while the view is visible.
+    ///
+    /// - Parameters:
+    ///   - interfaceStyle: The interface style to apply.
+    ///   - restoreOnDisappear: Whether to restore the current theme's
+    ///     interface style when the view disappears. The default is
+    ///     `true`.
     func interfaceStyle(
         _ interfaceStyle: UIUserInterfaceStyle,
         restoreOnDisappear: Bool = true

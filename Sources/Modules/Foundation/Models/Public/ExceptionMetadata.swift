@@ -8,20 +8,43 @@
 /* Native */
 import Foundation
 
+/// A convenience alias for ``Exception/Metadata``.
 public typealias ExceptionMetadata = Exception.Metadata
 
 public extension Exception {
+    /// Source-location information captured at the point where an
+    /// ``Exception`` is created.
+    ///
+    /// `Metadata` records the file, function, line, and sender so
+    /// that logged exceptions can be traced back to their origin. The
+    /// compiler literals `#fileID`, `#function`, and `#line` are
+    /// captured automatically – you only need to supply the `sender`:
+    ///
+    /// ```swift
+    /// Exception(
+    ///     "Something went wrong.",
+    ///     metadata: .init(sender: self)
+    /// )
+    /// ```
+    ///
+    /// ## Identifiers
+    ///
+    /// The ``id`` property produces a compact hex string derived from
+    /// the file name and line number, suitable for use in log output
+    /// and diagnostics.
+    ///
+    /// - SeeAlso: ``Exception``, ``MetadataProtocol``
     struct Metadata: MetadataProtocol, @unchecked Sendable {
         // MARK: - Properties
 
-        public let fileName: String
-        public let function: String
-        public let line: Int
-        public let sender: Any
+        let fileName: String
+        let function: String
+        let line: Int
+        let sender: Any
 
         // MARK: - Computed Properties
 
-        public var id: String {
+        var id: String {
             var hexCharacters = fileName
                 .compactMap(\.asciiValue)
                 .reduce(into: [String]()) { partialResult, asciiValue in
@@ -39,6 +62,17 @@ public extension Exception {
 
         // MARK: - Init
 
+        /// Creates metadata for the current source location.
+        ///
+        /// The `fileName`, `function`, and `line` parameters default
+        /// to their corresponding compiler literals. In most cases,
+        /// you only need to supply the `sender`.
+        ///
+        /// - Parameters:
+        ///   - sender: The object or type creating the exception.
+        ///   - fileName: The source file name. Defaults to `#fileID`.
+        ///   - function: The function name. Defaults to `#function`.
+        ///   - line: The line number. Defaults to `#line`.
         public init(
             sender: Any,
             fileName: String = #fileID,

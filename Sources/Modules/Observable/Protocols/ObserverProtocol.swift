@@ -67,7 +67,7 @@ public protocol Observer: Sendable {
 
     /// The view model that this observer dispatches actions to.
     ///
-    /// - Warning: The observer's identity is derived from this view model's
+    /// - Important: The observer's identity is derived from this view model's
     ///   object identity. Do not register multiple observer types that share
     ///   the same view model instance – the second registration will silently
     ///   be ignored because its identity collides with the first. Each view
@@ -81,13 +81,15 @@ public protocol Observer: Sendable {
     /// Use a `switch` statement to pattern-match the incoming observable
     /// against the values listed in ``observedValues``:
     ///
-    ///     func onChange(of observable: Observable<Any>) {
-    ///         switch observable {
+    /// ```swift
+    /// func onChange(of observable: Observable<Any>) {
+    ///     switch observable {
     ///         case Observables.isLoggedIn:
     ///             send(.refreshUI)
     ///         default: ()
-    ///         }
     ///     }
+    /// }
+    /// ```
     ///
     /// - Parameter observable: A type-erased snapshot of the observable that
     ///   changed. Use pattern matching – not identity checks – to determine

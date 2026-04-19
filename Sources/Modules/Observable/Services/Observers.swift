@@ -105,16 +105,16 @@ public extension Observer {
     // MARK: - Properties
 
     /// A stable identifier derived from the observer's ``viewModel`` instance.
-    var id: ObjectIdentifier { ObjectIdentifier(viewModel) }
+    var id: ObjectIdentifier { .init(viewModel) }
 
     // MARK: - Methods
 
     /// Re-links this observer type with its declared ``observedValues``.
     ///
     /// This method is called automatically when the observer is registered
-    /// or retracted.
+    /// or removed.
     ///
-    /// - Warning: Do not provide your own implementation of this method.
+    /// - Important: Do not provide your own implementation of this method.
     ///   The default implementation coordinates with the internal observer
     ///   registry; overriding it will silently break observer registration.
     func linkObservables() {

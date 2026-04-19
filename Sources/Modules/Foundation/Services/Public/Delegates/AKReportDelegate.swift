@@ -12,6 +12,45 @@ import MessageUI
 /* Proprietary */
 import AlertKit
 
+/// A service that composes and sends error reports, bug reports, and
+/// user feedback via e-mail.
+///
+/// `ReportDelegate` conforms to `AlertKit.ReportDelegate` and serves
+/// as the bridge between the subsystem's error-handling infrastructure
+/// and the device's mail composer. When the logger encounters a
+/// reportable exception – or when the user triggers a "Send Feedback" or
+/// "Report Bug" action – this delegate assembles an e-mail with
+/// diagnostic attachments and presents the mail composer.
+///
+/// ## Registration
+///
+/// Call ``registerWithDependencies()`` during app setup to install the
+/// delegate with AlertKit:
+///
+/// ```swift
+/// ReportDelegate.registerWithDependencies()
+/// ```
+///
+/// You can also access the delegate through the dependency system:
+///
+/// ```swift
+/// @Dependency(\.reportDelegate) var reportDelegate: ReportDelegate
+/// ```
+///
+/// ## Attachments
+///
+/// Each composed message may include:
+///
+/// - **Logger session record** – the full log output for the current
+///   session.
+/// - **Metadata** – a JSON file containing the build SKU, bundle
+///   version, device model, OS version, connection status, and (when
+///   applicable) error details.
+///
+/// - Note: All members of this type are isolated to the main actor.
+///   If the device is not configured for e-mail, the delegate logs
+///   the issue and presents an error alert instead of the mail
+///   composer.
 @MainActor
 public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
     // MARK: - Dependencies
@@ -52,6 +91,11 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
     // MARK: - Register with Dependencies
 
+    /// Registers the report delegate with AlertKit's configuration.
+    ///
+    /// Call this method once during app setup so that
+    /// AlertKit can present error-report prompts through this
+    /// delegate.
     public static func registerWithDependencies() {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         alertKitConfig.registerReportDelegate(ReportDelegate())
@@ -59,6 +103,13 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
     // MARK: - AlertKit.ReportDelegate Conformance
 
+    /// Composes and presents an error report for the given error.
+    ///
+    /// The report includes the error's description, code, and any
+    /// associated user info, along with the standard diagnostic
+    /// attachments.
+    ///
+    /// - Parameter error: The error to report.
     public func fileReport(_ error: any AlertKit.Errorable) {
         Task {
             await composeMessage(
@@ -72,6 +123,10 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
     // MARK: - Report Bug
 
+    /// Composes and presents a bug report.
+    ///
+    /// The message body includes a prompt asking the user to
+    /// describe the issue and the steps to reproduce it.
     public func reportBug() {
         Task {
             await composeMessage(
@@ -85,6 +140,10 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
     // MARK: - Send Feedback
 
+    /// Composes and presents a general feedback message.
+    ///
+    /// The message body includes a prompt inviting the user to
+    /// share general feedback.
     public func sendFeedback() {
         Task {
             await composeMessage(
@@ -270,6 +329,7 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
 /* MARK: Dependency */
 
+/// The dependency key that provides a ``ReportDelegate`` instance.
 public enum ReportDelegateDependency: DependencyKey {
     public static func resolve(_ dependencies: DependencyValues) -> ReportDelegate {
         @MainActorIsolated var reportDelegate = (dependencies.alertKitConfig.reportDelegate as? ReportDelegate) ?? .init()
@@ -278,6 +338,7 @@ public enum ReportDelegateDependency: DependencyKey {
 }
 
 public extension DependencyValues {
+    /// The shared ``ReportDelegate`` instance.
     var reportDelegate: ReportDelegate {
         get { self[ReportDelegateDependency.self] }
         set { self[ReportDelegateDependency.self] = newValue }

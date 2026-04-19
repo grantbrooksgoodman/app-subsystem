@@ -137,8 +137,11 @@ private struct ToastViewModifier: ViewModifier {
     }
 }
 
-public extension View {
-    func toast(_ toast: Binding<Toast?>, onTap: (() -> Void)? = nil) -> some View {
+extension View {
+    func toast(
+        _ toast: Binding<Toast?>,
+        onTap: (() -> Void)? = nil
+    ) -> some View {
         modifier(ToastViewModifier(toast, onTap: onTap))
     }
 }

@@ -11,6 +11,7 @@ import SwiftUI
 
 @MainActor
 public extension HeaderView.PeripheralButtonType {
+    /// Returns a back-arrow image button.
     static func backButton(
         foregroundColor: Color = .accent,
         isEnabled: Bool = true,
@@ -34,6 +35,7 @@ public extension HeaderView.PeripheralButtonType {
         )
     }
 
+    /// Returns a localized cancel text button.
     static func cancelButton(
         font: Font = .system(size: 17),
         foregroundColor: Color = .accent,
@@ -54,6 +56,7 @@ public extension HeaderView.PeripheralButtonType {
         )
     }
 
+    /// Returns a localized done text button.
     static func doneButton(
         font: Font = .system(
             size: 17,

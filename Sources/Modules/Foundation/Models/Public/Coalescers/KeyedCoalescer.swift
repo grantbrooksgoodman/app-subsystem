@@ -8,18 +8,46 @@
 /* Native */
 import Foundation
 
-/// A per-key async work coordinator that deduplicates concurrent callers.
+/// A per-key async work coordinator that deduplicates concurrent
+/// callers.
 ///
-/// `KeyedCoalescer` ensures there is at most one in-flight `operation` per `key`.
-/// If multiple callers invoke the coalescer with the same `key` while an operation
-/// is running, they will await the existing task and share its result. Calls for
-/// different keys proceed independently.
+/// `KeyedCoalescer` maintains at most one in-flight task *per key*.
+/// When multiple callers invoke the coalescer with the same key
+/// while an operation is already running, they piggyback on the
+/// existing task and receive the same result. Calls for different
+/// keys proceed fully independently, each with their own slot.
 ///
-/// The slot for `key` is cleared automatically when the in-flight task completes,
-/// independent of which caller awaits it or whether callers are cancelled.
+/// Because `KeyedCoalescer` is an actor, all slot management is
+/// concurrency-safe without external synchronization.
+///
+/// ```swift
+/// let coalescer = KeyedCoalescer<UserID, Profile>()
+///
+/// // Both calls for the same user share one network request.
+/// async let a = coalescer(userID) { await fetchProfile(userID) }
+/// async let b = coalescer(userID) { await fetchProfile(userID) }
+/// let (profileA, profileB) = await (a, b) // identical result
+///
+/// // A call for a different user runs independently.
+/// let other = await coalescer(otherID) { await fetchProfile(otherID) }
+/// ```
+///
+/// The slot for a given key is cleared automatically when its
+/// in-flight task completes, independent of which caller awaits it
+/// or whether callers are cancelled.
+
+/// - Warning: The `operation` closure is executed in an
+///   unstructured `Task`. If the calling task is cancelled, the
+///   coalescer's in-flight operation is *not* automatically
+///   cancelled – it runs to completion so that other coalesced
+///   callers still receive a result. Slots accumulate one entry per
+///   distinct key with an active operation; ensure the key space is
+///   bounded in practice to avoid unbounded dictionary growth.
 public actor KeyedCoalescer<Key: Hashable & Sendable, Output: Sendable> {
     // MARK: - Type Aliases
 
+    /// A sendable, asynchronous closure that produces the
+    /// coalescer's output value.
     public typealias Operation = @Sendable () async -> Output
 
     // MARK: - Properties
@@ -30,10 +58,28 @@ public actor KeyedCoalescer<Key: Hashable & Sendable, Output: Sendable> {
 
     // MARK: - Init
 
+    /// Creates a new, empty coalescer with no in-flight operations.
     public init() {}
 
     // MARK: - Call as Function
 
+    /// Submits an operation for the given key, coalescing with any
+    /// in-flight task for the same key.
+    ///
+    /// If no operation is currently running for `key`, the coalescer
+    /// starts `operation` immediately. If an operation *is* running,
+    /// the caller awaits the existing task and shares its result –
+    /// `operation` is never invoked.
+    ///
+    /// - Parameters:
+    ///   - key: The value that identifies the logical work lane.
+    ///     Callers with matching keys share an in-flight task;
+    ///     callers with different keys run independently.
+    ///   - operation: The asynchronous work to perform when no
+    ///     in-flight task exists for `key`.
+    ///
+    /// - Returns: The output of the in-flight task for `key`,
+    ///   whether it was started by this call or an earlier one.
     public func callAsFunction(
         _ key: Key,
         _ operation: @escaping Operation

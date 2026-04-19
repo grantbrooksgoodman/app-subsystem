@@ -16,8 +16,12 @@ import UIKit
 public extension NavigationBar {
     // MARK: - Types
 
+    /// The horizontal placement of a navigation bar item.
     enum ItemPlacement: CaseIterable, Sendable {
+        /// The leading edge of the navigation bar.
         case leading
+
+        /// The trailing edge of the navigation bar.
         case trailing
     }
 
@@ -28,7 +32,7 @@ public extension NavigationBar {
 
     // MARK: - Methods
 
-    // FIXME: Audit whether this needs explicit @MainActor annotation.
+    /// Removes all glass tint colors from navigation bar items.
     static func removeAllItemGlassTint() {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
@@ -49,6 +53,9 @@ public extension NavigationBar {
         knownTintedItems = [:]
     }
 
+    /// Applies a glass tint color to the navigation bar item at the
+    /// given placement. Has no effect when glass tinting is not
+    /// enabled.
     static func setItemGlassTint(
         _ color: UIColor,
         for placement: ItemPlacement,

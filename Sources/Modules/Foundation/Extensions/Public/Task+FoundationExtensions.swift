@@ -9,6 +9,8 @@
 import Foundation
 
 public extension Task where Failure == Error {
+    /// Runs an operation on a background-priority task, optionally
+    /// after a delay.
     @discardableResult
     static func background(
         delayedBy duration: Duration = .zero,
@@ -21,6 +23,7 @@ public extension Task where Failure == Error {
         }
     }
 
+    /// Runs an operation after the given delay.
     @discardableResult
     static func delayed(
         by duration: Duration,
@@ -61,8 +64,8 @@ public extension Task where Success == Void, Failure == Never {
     /// - Note: Debouncing is global to the `TaskRegistry` backing this extension. Any call site using the
     ///   same `key` will participate in the same debounce “lane”.
     @discardableResult
-    static func debounced<K: Hashable & Sendable>(
-        _ key: K,
+    static func debounced(
+        _ key: some Hashable & Sendable,
         delay duration: Duration,
         priority: TaskPriority? = nil,
         operation: @escaping @Sendable () async -> Void
@@ -136,9 +139,9 @@ private actor TaskRegistry {
 
     // MARK: - Methods
 
-    fileprivate func clearIfTokenMatches<K: Hashable & Sendable>(
+    fileprivate func clearIfTokenMatches(
         _ token: UUID,
-        for key: K
+        for key: some Hashable & Sendable
     ) {
         let key = AnyHashable(key)
         // Clear only if we are still the latest task registered for this key.
@@ -146,10 +149,10 @@ private actor TaskRegistry {
         tasks[key] = nil
     }
 
-    fileprivate func set<K: Hashable & Sendable>(
+    fileprivate func set(
         _ task: Task<Void, Never>,
         token: UUID,
-        for key: K
+        for key: some Hashable & Sendable
     ) {
         let key = AnyHashable(key)
         tasks[key]?.task.cancel()

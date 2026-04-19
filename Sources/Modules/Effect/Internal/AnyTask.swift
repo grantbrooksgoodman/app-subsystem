@@ -20,7 +20,7 @@ final class AnyTask {
     private let isCancelledBlock: () -> Bool
     private let onCancel: () -> Void
 
-    // MARK: - Init
+    // MARK: - Object Lifecycle
 
     init(
         _ task: Task<some Any, some Any>,
@@ -44,8 +44,6 @@ final class AnyTask {
             assertionFailureHandler: assertionFailure
         )
     }
-
-    // MARK: - Object Lifecycle
 
     deinit {
         guard !isCancelled else { return }

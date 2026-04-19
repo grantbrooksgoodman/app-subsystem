@@ -27,10 +27,12 @@ public typealias Nil = NSNull
 /// and the identity used to match it inside an observer's ``Observer/onChange(of:)``
 /// implementation:
 ///
-///     public enum Observables {
-///         static let isLoggedIn = Observable<Bool>(false)
-///         static let sessionDidExpire = Observable<Nil>()
-///     }
+/// ```swift
+/// public enum Observables {
+///     static let isLoggedIn = Observable<Bool>(false)
+///     static let sessionDidExpire = Observable<Nil>()
+/// }
+/// ```
 ///
 /// Read or write the current value through the ``value`` property. Setting a
 /// new value automatically notifies all registered observers on the main actor:
@@ -48,13 +50,15 @@ public typealias Nil = NSNull
 /// watch. Inside ``Observer/onChange(of:)``, use a `switch` statement to
 /// pattern-match the incoming observable against the ones you declared:
 ///
-///     func onChange(of observable: Observable<Any>) {
-///         switch observable {
+/// ```swift
+/// func onChange(of observable: Observable<Any>) {
+///     switch observable {
 ///         case Observables.isLoggedIn:
 ///             send(.refreshUI)
 ///         default: ()
-///         }
 ///     }
+/// }
+/// ```
 ///
 /// The pattern-matching operator (`~=`) compares the identity of the
 /// observable that originally changed against the candidate passed to your
@@ -73,7 +77,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     private let _value: LockIsolated<T>
 
     // Set only on notification objects.
-    // Real observables leave this nil — their identity is ObjectIdentifier(self).
+    // Real observables leave this nil – their identity is ObjectIdentifier(self).
     fileprivate let originID: ObjectIdentifier?
 
     // MARK: - Computed Properties
@@ -100,7 +104,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
         _value = LockIsolated(wrappedValue: initialValue)
     }
 
-    // Used internally to stamp notification objects with their originator's identity.
+    // Used internally to record the originator's identity on notification objects.
     fileprivate init(
         _ initialValue: T,
         originID: ObjectIdentifier

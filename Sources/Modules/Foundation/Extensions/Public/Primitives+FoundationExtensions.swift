@@ -14,6 +14,7 @@ import Translator
 // MARK: - Float
 
 public extension Float {
+    /// A formatted duration string in `H:MM:SS` or `M:SS` format.
     var durationString: String {
         if self < 60 {
             return String(format: "0:%.02d", Int(rounded(.up)))
@@ -36,6 +37,8 @@ public extension Float {
 // MARK: - Int
 
 public extension Int {
+    /// The integer with an English ordinal suffix, such as "1st"
+    /// or "3rd".
     var ordinalValueString: String {
         var suffix = "th"
 
@@ -49,7 +52,7 @@ public extension Int {
         default: ()
         }
 
-        if (self % 100) > 10 && (self % 100) < 20 {
+        if (self % 100) > 10, (self % 100) < 20 {
             suffix = "th"
         }
 
@@ -65,6 +68,8 @@ extension String: EncodedHashable {}
 public extension String {
     /* MARK: Properties */
 
+    /// The 1-based position of the character in the English
+    /// alphabet, or `nil` if not alphabetical.
     var alphabeticalPosition: Int? {
         guard count == 1 else { return nil }
 
@@ -77,6 +82,7 @@ public extension String {
         return index + 1
     }
 
+    /// The string with spaces inserted before uppercase letters.
     var camelCaseToHumanReadable: String {
         components.reduce(into: [String]()) { partialResult, component in
             if component.isLowercase {
@@ -87,15 +93,17 @@ public extension String {
         }.joined()
     }
 
+    /// An array of single-character strings.
     var components: [String] {
         map { String($0) }
     }
 
+    /// The string with all non-digit characters removed.
     var digits: String {
         components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
     }
 
-    /// e.g. "Spanish" for devices with Spanish language codes.
+    /// For example, "Spanish" for devices with Spanish language codes.
     var englishLanguageName: String? {
         guard !isEmpty,
               !lowercasedTrimmingWhitespaceAndNewlines.isEmpty,
@@ -107,31 +115,41 @@ public extension String {
         return components[0].trimmingBorderedWhitespace
     }
 
+    /// The string with its first character lowercased.
     var firstLowercase: String {
         prefix(1).lowercased() + dropFirst()
     }
 
+    /// The string with its first character uppercased.
     var firstUppercase: String {
         prefix(1).uppercased() + dropFirst()
     }
 
+    /// A Boolean value indicating whether the string is a single
+    /// alphabetical character.
     var isAlphabetical: Bool {
         "A" ... "Z" ~= self || "a" ... "z" ~= self
     }
 
+    /// A Boolean value indicating whether the string is empty or
+    /// contains only whitespace.
     var isBlank: Bool {
         lowercasedTrimmingWhitespaceAndNewlines.isEmpty
     }
 
+    /// A Boolean value indicating whether the string is entirely
+    /// lowercase.
     var isLowercase: Bool {
         self == lowercased()
     }
 
+    /// A Boolean value indicating whether the string is entirely
+    /// uppercase.
     var isUppercase: Bool {
         self == uppercased()
     }
 
-    /// e.g. "Español" for devices with English language codes.
+    /// For example, "Español" for devices with English language codes.
     var languageEndonym: String? {
         guard let languageName else { return nil }
         var components = languageName.components(separatedBy: " (")
@@ -140,7 +158,7 @@ public extension String {
         return components[0].trimmingBorderedWhitespace
     }
 
-    /// e.g. "Spanish" for devices with English language codes.
+    /// For example, "Spanish" for devices with English language codes.
     var languageExonym: String? {
         guard let languageName else { return nil }
         let components = languageName.components(separatedBy: " (")
@@ -148,7 +166,7 @@ public extension String {
         return components[0].trimmingBorderedWhitespace
     }
 
-    /// e.g. "Spanish (Español)" for devices with English language codes.
+    /// For example, "Spanish (Español)" for devices with English language codes.
     var languageName: String? {
         @Dependency(\.coreKit.utils) var coreUtilities: CoreKit.Utilities
 
@@ -160,14 +178,17 @@ public extension String {
         return name.trimmingBorderedWhitespace
     }
 
+    /// The string lowercased with whitespace and newlines removed.
     var lowercasedTrimmingWhitespaceAndNewlines: String {
         lowercased().trimmingWhitespace.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// The string with translation-related sentinel characters removed.
     var sanitized: String {
         removingOccurrences(of: ["⁂", "⌘", "※"])
     }
 
+    /// The string converted from camel case to snake case.
     var snakeCased: String {
         var characters = components
         func satisfiesConstraints(_ character: String) -> Bool {
@@ -181,10 +202,12 @@ public extension String {
         return characters.joined()
     }
 
+    /// The string with leading and trailing whitespace removed.
     var trimmingBorderedWhitespace: String {
         trimmingLeadingWhitespace.trimmingTrailingWhitespace
     }
 
+    /// The string with leading whitespace removed.
     var trimmingLeadingWhitespace: String {
         var string = self
         while string.hasPrefix(" ") || string.hasPrefix("\u{00A0}") {
@@ -193,6 +216,7 @@ public extension String {
         return string
     }
 
+    /// The string with trailing whitespace removed.
     var trimmingTrailingWhitespace: String {
         var string = self
         while string.hasSuffix(" ") || string.hasSuffix("\u{00A0}") {
@@ -201,13 +225,17 @@ public extension String {
         return string
     }
 
+    /// The string with all whitespace characters removed.
     var trimmingWhitespace: String {
         replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\u{00A0}", with: "")
     }
 
     /* MARK: Methods */
 
-    init<T>(_ type: T) {
+    /// Creates a cleaned type-name string from the given value,
+    /// stripping module prefixes, parenthesized suffixes, and
+    /// unbalanced wrapper characters.
+    init(_ type: some Any) {
         @Dependency(\.mainBundle) var mainBundle: Bundle
 
         var descriptor = String(describing: type)
@@ -259,9 +287,18 @@ public extension String {
         self.init(head + suffix)
     }
 
+    /// Returns an attributed string configured with the given
+    /// primary and secondary attributes.
     func attributed(_ config: AttributedStringConfig) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: self, attributes: config.primaryAttributes)
-        func applyAttributes(_ attributes: [NSAttributedString.Key: Any], stringRanges: [String]) {
+        let attributedString = NSMutableAttributedString(
+            string: self,
+            attributes: config.primaryAttributes
+        )
+
+        func applyAttributes(
+            _ attributes: [NSAttributedString.Key: Any],
+            stringRanges: [String]
+        ) {
             stringRanges.filter { self.contains($0) }.forEach { string in
                 attributedString.addAttributes(
                     attributes,
@@ -270,10 +307,18 @@ public extension String {
             }
         }
 
-        config.secondaryAttributes?.forEach { applyAttributes($0.attributes, stringRanges: $0.stringRanges) }
+        config.secondaryAttributes?.forEach {
+            applyAttributes(
+                $0.attributes,
+                stringRanges: $0.stringRanges
+            )
+        }
+
         return attributedString
     }
 
+    /// Returns the string with each UTF-8 byte shifted by the given
+    /// modifier, wrapping around the lowercase ASCII range.
     func ciphered(by modifier: Int) -> String {
         String(utf8.reduce(into: [Character]()) { partialResult, utf8Value in
             let shiftedValue = Int(utf8Value) + modifier
@@ -284,24 +329,34 @@ public extension String {
         })
     }
 
+    /// Returns `true` if the string contains any character from the
+    /// given string.
     func containsAnyCharacter(in string: String) -> Bool {
         !components.filter { string.components.contains($0) }.isEmpty
     }
 
+    /// Returns the string with the first `dropping` characters
+    /// removed.
     func dropPrefix(_ dropping: Int = 1) -> String {
         guard count > dropping else { return "" }
         return String(suffix(from: index(startIndex, offsetBy: dropping)))
     }
 
+    /// Returns the string with the last `dropping` characters
+    /// removed.
     func dropSuffix(_ dropping: Int = 1) -> String {
         guard count > dropping else { return "" }
         return String(prefix(count - dropping))
     }
 
+    /// Returns `true` if the string is equal to any string in the
+    /// given array.
     func isAnyString(in array: [String]) -> Bool {
         !array.filter { self == $0 }.isEmpty
     }
 
+    /// Returns the string with all occurrences of the given strings
+    /// removed.
     func removingOccurrences(of excludedStrings: [String]) -> String {
         var string = self
         excludedStrings.forEach { string = string.replacingOccurrences(of: $0, with: "") }

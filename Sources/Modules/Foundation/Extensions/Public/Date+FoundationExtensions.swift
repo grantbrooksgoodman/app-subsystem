@@ -11,6 +11,7 @@ import Foundation
 public extension Date {
     // MARK: - Types
 
+    /// The length of a localized weekday symbol string.
     enum WeekdaySymbolLength {
         case full
         case short
@@ -19,11 +20,15 @@ public extension Date {
 
     // MARK: - Properties
 
+    /// The date normalized to noon, suitable for day-level
+    /// comparisons.
     var comparator: Date {
         @Dependency(\.currentCalendar) var calendar: Calendar
         return calendar.date(bySettingHour: 12, minute: 00, second: 00, of: calendar.startOfDay(for: self))!
     }
 
+    /// A short display string: a time for today, "Yesterday",
+    /// a weekday name for the past week, or a short date otherwise.
     var formattedShortString: String {
         @Dependency(\.currentCalendar) var calendar: Calendar
         @Dependency(\.formattedShortStringDateFormatter) var dateFormatter: DateFormatter
@@ -48,6 +53,8 @@ public extension Date {
 
     // MARK: - Methods
 
+    /// Returns a localized string describing the time elapsed since
+    /// this date, such as "3 hours" or "2 days".
     func elapsedString(
         style: DateComponentsFormatter.UnitsStyle = .abbreviated,
         granularity: [Calendar.LocalizableComponent] = Calendar.LocalizableComponent.allCases
@@ -97,24 +104,26 @@ public extension Date {
         return nil
     }
 
+    /// Returns the number of seconds between this date and the
+    /// given date.
     func seconds(from date: Date) -> Int {
         @Dependency(\.currentCalendar) var calendar: Calendar
         return calendar.dateComponents([.second], from: date, to: self).second ?? 0
     }
 
+    /// Returns the localized weekday name for this date.
     func weekdayString(
         _ length: WeekdaySymbolLength = .full,
         standalone: Bool = false
     ) -> String {
         @Dependency(\.systemLocalizedCalendar) var calendar: Calendar
-        var symbols: [String]
-        switch length {
+        let symbols: [String] = switch length {
         case .full:
-            symbols = standalone ? calendar.standaloneWeekdaySymbols : calendar.weekdaySymbols
+            standalone ? calendar.standaloneWeekdaySymbols : calendar.weekdaySymbols
         case .short:
-            symbols = standalone ? calendar.shortStandaloneWeekdaySymbols : calendar.shortWeekdaySymbols
+            standalone ? calendar.shortStandaloneWeekdaySymbols : calendar.shortWeekdaySymbols
         case .veryShort:
-            symbols = standalone ? calendar.veryShortStandaloneWeekdaySymbols : calendar.veryShortWeekdaySymbols
+            standalone ? calendar.veryShortStandaloneWeekdaySymbols : calendar.veryShortWeekdaySymbols
         }
 
         let dayPosition = calendar.component(.weekday, from: self) - 1

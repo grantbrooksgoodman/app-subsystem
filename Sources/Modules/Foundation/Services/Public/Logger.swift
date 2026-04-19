@@ -14,14 +14,106 @@ import Foundation
 import AlertKit
 import Translator
 
+/// A centralized, thread-safe logging service that writes structured diagnostic
+/// output to the console and to an on-disk session record.
+///
+/// Use `Logger` to record messages and exceptions during development
+/// and in prerelease builds. Each log entry is tagged with a
+/// ``LoggerDomain``, a timestamp, and the caller's file, function,
+/// and line number, making it straightforward to trace issues back to
+/// their origin.
+///
+/// ## Logging Messages and Exceptions
+///
+/// Log a plain-text message by passing a string and the calling
+/// context:
+///
+/// ```swift
+/// Logger.log(
+///     "Sync completed successfully",
+///     domain: .networking,
+///     sender: self
+/// )
+/// ```
+///
+/// Log an exception directly to capture its error code, descriptor,
+/// and any attached user info:
+///
+/// ```swift
+/// Logger.log(
+///     exception,
+///     domain: .persistence
+/// )
+/// ```
+///
+/// Both overloads accept an optional ``AlertType`` to display an
+/// alert or toast alongside the log entry.
+///
+/// ## Domain Subscription
+///
+/// The logger only produces output for domains it is subscribed to.
+/// Subscribe or unsubscribe at runtime:
+///
+/// ```swift
+/// Logger.subscribe(to: .networking)
+/// Logger.unsubscribe(from: .translation)
+/// ```
+///
+/// To configure the initial set of subscribed domains at launch,
+/// provide a ``AppSubsystem/Delegates/LoggerDomainSubscriptionDelegate``
+/// conformance.
+///
+/// ## Filtering
+///
+/// Apply a ``Filter`` to narrow log output – for example, to see
+/// only exceptions or to restrict output to specific source files.
+/// Filters affect both console output and the session record.
+///
+/// ## Streaming
+///
+/// For operations that produce many related log entries in rapid
+/// succession, open a stream to group the output under a single
+/// header. Call ``openStream(message:domain:sender:fileName:function:line:)``
+/// to begin, ``logToStream(_:domain:line:)`` for each entry, and
+/// ``closeStream(message:domain:onLine:)`` to end the group.
+///
+/// ## Session Record
+///
+/// Every log entry is appended to an on-disk file for the current
+/// session, accessible via ``sessionRecordFilePath``. Domains listed
+/// in ``domainsExcludedFromSessionRecord`` are omitted from this
+/// file. The session record is stored in the temporary directory and
+/// is not persisted across launches.
+///
+/// - SeeAlso: ``LoggerDomain``, ``Exception``
 public enum Logger {
     // MARK: - Types
 
+    /// The kind of user-visible alert to present alongside a log
+    /// entry.
+    ///
+    /// When you pass an `AlertType` to one of the `log` methods, the
+    /// logger displays the corresponding alert after recording the
+    /// entry. Use ``errorAlert`` for reportable exceptions,
+    /// ``normalAlert`` for informational messages, or ``toast`` for
+    /// lightweight, non-blocking feedback.
     public enum AlertType: Sendable {
         /* MARK: Cases */
 
+        /// An error alert that offers to file a report when the
+        /// exception is reportable.
         case errorAlert
+
+        /// A standard informational alert.
         case normalAlert
+
+        /// A toast notification.
+        ///
+        /// - Parameters:
+        ///   - style: The visual style of the toast. Pass `nil` to
+        ///     infer the style from the log entry.
+        ///   - isPersistent: Whether the toast remains on screen
+        ///     until manually dismissed. The default is `true`.
         case toast(
             style: Toast.Style?,
             isPersistent: Bool = true
@@ -29,10 +121,18 @@ public enum Logger {
 
         /* MARK: Properties */
 
+        /// A toast notification with the default style and persistent
+        /// display.
         public static let toast: AlertType = .toast(style: nil)
 
         /* MARK: Computed Properties */
 
+        /// A toast notification that is only shown in prerelease
+        /// builds.
+        ///
+        /// Returns `nil` when the current build milestone is
+        /// ``Build/Milestone/generalRelease``, effectively silencing
+        /// the alert in production.
         public static var toastInPrerelease: AlertType? {
             @Dependency(\.build.milestone) var buildMilestone: Build.Milestone
             guard buildMilestone != .generalRelease else { return nil }
@@ -41,6 +141,17 @@ public enum Logger {
 
         /* MARK: Methods */
 
+        /// Returns a toast notification with the given style, or
+        /// `nil` in general-release builds.
+        ///
+        /// - Parameters:
+        ///   - style: The visual style of the toast. Pass `nil` to
+        ///     infer the style.
+        ///   - isPersistent: Whether the toast remains on screen
+        ///     until manually dismissed. The default is `true`.
+        ///
+        /// - Returns: An ``AlertType`` in prerelease builds, or `nil`
+        ///   in general-release builds.
         public static func toastInPrerelease(
             style: Toast.Style?,
             isPersistent: Bool = true
@@ -54,11 +165,23 @@ public enum Logger {
         }
     }
 
+    /// A rule that restricts which log entries are recorded.
+    ///
+    /// Apply a filter with ``setFilter(_:)`` to narrow the logger's
+    /// output. Only entries that satisfy the active filter are printed
+    /// to the console and written to the session record.
     public enum Filter: Equatable {
         /* MARK: Cases */
 
+        /// Restricts output to entries originating from the specified
+        /// source files.
         case byFileNames(_ fileNames: Set<String>)
+
+        /// Restricts output to exception entries only, ignoring
+        /// plain-text messages.
         case exceptionsOnly
+
+        /// Restricts output to reportable exception entries only.
         case reportableExceptionsOnly
 
         /* MARK: Properties */
@@ -74,34 +197,55 @@ public enum Logger {
     // MARK: - Properties
 
     private static let currentTimeLastCalled = LockIsolated<Date>(wrappedValue: .now)
-    private static let _domainsExcludedFromSessionRecord = LockIsolated<[LoggerDomain]>(wrappedValue: [])
-    private static let _filter = LockIsolated<Filter?>(wrappedValue: nil)
     private static let ioLock = NSRecursiveLock()
-    private static let _reportsErrorsAutomatically = LockIsolated<Bool>(wrappedValue: false)
     private static let sessionID = UUID()
     private static let streamOpen = LockIsolated<Bool>(wrappedValue: false)
-    private static let _subscribedDomains = LockIsolated<[LoggerDomain]>(wrappedValue: [])
     private static let utf8BOM = Data([0xEF, 0xBB, 0xBF])
+    private static let _domainsExcludedFromSessionRecord = LockIsolated<[LoggerDomain]>(wrappedValue: [])
+    private static let _filter = LockIsolated<Filter?>(wrappedValue: nil)
+    private static let _reportsErrorsAutomatically = LockIsolated<Bool>(wrappedValue: false)
+    private static let _subscribedDomains = LockIsolated<[LoggerDomain]>(wrappedValue: [])
 
     // MARK: - Computed Properties
 
+    /// The domains whose output is excluded from the on-disk session
+    /// record.
+    ///
+    /// Messages logged to these domains still appear in the console
+    /// but are not written to the session record file.
     public static var domainsExcludedFromSessionRecord: [LoggerDomain] {
         _domainsExcludedFromSessionRecord.wrappedValue
     }
 
+    /// The currently active filter, or `nil` if no filter is applied.
     public static var filter: Filter? {
         _filter.wrappedValue
     }
 
+    /// A Boolean value that indicates whether reportable exceptions
+    /// are filed automatically.
+    ///
+    /// When `true`, the logger forwards reportable exceptions to the
+    /// configured report delegate immediately after logging, without
+    /// requiring user interaction.
     public static var reportsErrorsAutomatically: Bool {
         _reportsErrorsAutomatically.wrappedValue
     }
 
+    /// The file URL of the on-disk session record for the current
+    /// launch.
+    ///
+    /// The session record is a UTF-8 text file stored in the
+    /// temporary directory. A new file is created for each launch and
+    /// is not persisted across sessions.
     public static var sessionRecordFilePath: URL {
         @Dependency(\.fileManager) var fileManager: FileManager
         return fileManager.temporaryDirectory.appending(path: "\(sessionID.uuidString).txt")
     }
 
+    /// The domains the logger is currently subscribed to.
+    ///
+    /// Only messages logged to a subscribed domain produce output.
     public static var subscribedDomains: [LoggerDomain] {
         _subscribedDomains.wrappedValue
     }
@@ -113,6 +257,13 @@ public enum Logger {
 
     // MARK: - Domain Subscription
 
+    /// Subscribes the logger to the given domain.
+    ///
+    /// After subscribing, messages logged to this domain appear in
+    /// the console and are written to the session record. Subscribing
+    /// to a domain that is already subscribed has no effect.
+    ///
+    /// - Parameter domain: The domain to subscribe to.
     public static func subscribe(to domain: LoggerDomain) {
         _subscribedDomains.projectedValue.withValue {
             $0.append(domain)
@@ -120,36 +271,81 @@ public enum Logger {
         }
     }
 
+    /// Subscribes the logger to each of the given domains.
+    ///
+    /// - Parameter domains: The domains to subscribe to.
     public static func subscribe(to domains: [LoggerDomain]) {
         domains.forEach { subscribe(to: $0) }
     }
 
+    /// Unsubscribes the logger from the given domain.
+    ///
+    /// After unsubscribing, messages logged to this domain are
+    /// silently ignored. Unsubscribing from a domain that is not
+    /// currently subscribed has no effect.
+    ///
+    /// - Parameter domain: The domain to unsubscribe from.
     public static func unsubscribe(from domain: LoggerDomain) {
         _subscribedDomains.projectedValue.withValue {
             $0 = $0.filter { $0 != domain }
         }
     }
 
+    /// Unsubscribes the logger from each of the given domains.
+    ///
+    /// - Parameter domains: The domains to unsubscribe from.
     public static func unsubscribe(from domains: [LoggerDomain]) {
         domains.forEach { unsubscribe(from: $0) }
     }
 
     // MARK: - Setters
 
+    /// Sets the domains whose output is excluded from the on-disk
+    /// session record.
+    ///
+    /// - Parameter domainsExcludedFromSessionRecord: The domains to
+    ///   exclude.
     public static func setDomainsExcludedFromSessionRecord(_ domainsExcludedFromSessionRecord: [LoggerDomain]) {
         _domainsExcludedFromSessionRecord.wrappedValue = domainsExcludedFromSessionRecord
     }
 
+    /// Sets the active log filter.
+    ///
+    /// Pass `nil` to remove any existing filter and allow all
+    /// entries through.
+    ///
+    /// - Parameter filter: The filter to apply, or `nil` to clear
+    ///   the current filter.
     public static func setFilter(_ filter: Filter?) {
         _filter.wrappedValue = filter
     }
 
+    /// Sets whether reportable exceptions are filed automatically.
+    ///
+    /// When enabled, the logger forwards reportable exceptions to
+    /// the configured report delegate immediately after logging,
+    /// without presenting a prompt to the user.
+    ///
+    /// - Parameter reportsErrorsAutomatically: A Boolean value that
+    ///   indicates whether automatic reporting is enabled.
     public static func setReportsErrorsAutomatically(_ reportsErrorsAutomatically: Bool) {
         _reportsErrorsAutomatically.wrappedValue = reportsErrorsAutomatically
     }
 
     // MARK: - Logging
 
+    /// Logs an `Error` value.
+    ///
+    /// The error is wrapped in an ``Exception`` using the provided
+    /// metadata before being recorded. The resulting log entry
+    /// includes the exception's descriptor and error code.
+    ///
+    /// - Parameters:
+    ///   - error: The error to log.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - alertType: An optional alert to present alongside the log
+    ///     entry. The default is `nil`.
+    ///   - metadata: The caller metadata for the log entry.
     public static func log(
         _ error: Error,
         domain: LoggerDomain = .general,
@@ -166,6 +362,18 @@ public enum Logger {
         )
     }
 
+    /// Logs an `NSError` value.
+    ///
+    /// The error is wrapped in an ``Exception`` using the provided
+    /// metadata before being recorded. The resulting log entry
+    /// includes the exception's descriptor and error code.
+    ///
+    /// - Parameters:
+    ///   - error: The error to log.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - alertType: An optional alert to present alongside the log
+    ///     entry. The default is `nil`.
+    ///   - metadata: The caller metadata for the log entry.
     public static func log(
         _ error: NSError,
         domain: LoggerDomain = .general,
@@ -182,6 +390,19 @@ public enum Logger {
         )
     }
 
+    /// Logs an exception.
+    ///
+    /// The log entry includes the exception's descriptor, error code,
+    /// user info (if any), source location, and a timestamp. When the
+    /// exception is reportable and ``reportsErrorsAutomatically`` is
+    /// enabled, the exception is also forwarded to the configured
+    /// report delegate.
+    ///
+    /// - Parameters:
+    ///   - exception: The exception to log.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - alertType: An optional alert to present alongside the log
+    ///     entry. The default is `nil`.
     public static func log(
         _ exception: Exception,
         domain: LoggerDomain = .general,
@@ -254,6 +475,26 @@ public enum Logger {
         )
     }
 
+    /// Logs a plain-text message.
+    ///
+    /// Use this overload for diagnostic messages that are not
+    /// associated with an exception. The log entry includes the
+    /// caller's file, function, and line number alongside the
+    /// message text.
+    ///
+    /// - Parameters:
+    ///   - text: The message to log.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - alertType: An optional alert to present alongside the log
+    ///     entry. The default is `nil`.
+    ///   - sender: The object or type that initiated the log call,
+    ///     used to identify the caller in the log header.
+    ///   - fileName: The source file. The default is the caller's
+    ///     file.
+    ///   - function: The calling function. The default is the
+    ///     caller's function.
+    ///   - line: The source line number. The default is the caller's
+    ///     line.
     public static func log(
         _ text: String,
         domain: LoggerDomain = .general,
@@ -315,6 +556,30 @@ public enum Logger {
 
     // MARK: - Streaming
 
+    /// Opens a log stream for grouping related entries under a
+    /// single header.
+    ///
+    /// While a stream is open, subsequent calls to
+    /// ``logToStream(_:domain:line:)`` append entries to the current
+    /// group without repeating the header. Call
+    /// ``closeStream(message:domain:onLine:)`` to finalize the
+    /// group.
+    ///
+    /// If a stream is already open and a `message` is provided, the
+    /// message is appended to the existing stream rather than
+    /// opening a new one.
+    ///
+    /// - Parameters:
+    ///   - message: An optional message to include in the stream
+    ///     header.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - sender: The object or type that opened the stream.
+    ///   - fileName: The source file. The default is the caller's
+    ///     file.
+    ///   - function: The calling function. The default is the
+    ///     caller's function.
+    ///   - line: The source line number. The default is the caller's
+    ///     line.
     public static func openStream(
         message: String? = nil,
         domain: LoggerDomain = .general,
@@ -373,6 +638,17 @@ public enum Logger {
         )
     }
 
+    /// Appends a message to the currently open log stream.
+    ///
+    /// Each entry is prefixed with the source line number and
+    /// elapsed time since the last log call. If no stream is
+    /// currently open, the message is logged as a standalone entry
+    /// instead.
+    ///
+    /// - Parameters:
+    ///   - message: The message to append.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - line: The source line number of the log call.
     public static func logToStream(
         _ message: String,
         domain: LoggerDomain = .general,
@@ -395,6 +671,22 @@ public enum Logger {
         )
     }
 
+    /// Closes the currently open log stream.
+    ///
+    /// An optional final message can be included in the closing
+    /// footer. After the stream is closed, subsequent log calls
+    /// produce standalone entries as usual.
+    ///
+    /// If no stream is currently open, this method has no effect
+    /// unless a `message` is provided, in which case the message is
+    /// logged as a standalone entry.
+    ///
+    /// - Parameters:
+    ///   - message: An optional message to include in the closing
+    ///     footer.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - onLine: The source line number to include alongside the
+    ///     closing message.
     public static func closeStream(
         message: String? = nil,
         domain: LoggerDomain = .general,

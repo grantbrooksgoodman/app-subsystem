@@ -118,6 +118,8 @@ extension UserDefaultsKey {
 
 // MARK: - Observable Registry
 
+/// A registry of app-wide ``Observable`` values used to
+/// drive reactive UI updates and cross-component communication.
 public enum Observables {
     public static let breadcrumbsDidCapture = Observable<Nil>()
 

@@ -12,7 +12,7 @@ import Foundation
 /// lifetime of a SwiftUI view.
 ///
 /// `ViewObserver` registers its observer when created and automatically
-/// retracts it when deallocated, ensuring that observers are never leaked or
+/// removes it when deallocated, ensuring that observers are never leaked or
 /// left dangling after a view disappears.
 ///
 /// Use `ViewObserver` as a `@StateObject` inside your view:

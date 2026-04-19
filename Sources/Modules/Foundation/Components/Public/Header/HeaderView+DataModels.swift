@@ -12,6 +12,10 @@ import SwiftUI
 public extension HeaderView {
     // MARK: - Attributes
 
+    /// The configuration properties for a ``HeaderView``.
+    ///
+    /// `Attributes` controls the header's visual appearance, sizing,
+    /// and divider visibility.
     struct Attributes {
         /* MARK: Properties */
 
@@ -22,6 +26,17 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        /// Creates header attributes with the given configuration.
+        ///
+        /// - Parameters:
+        ///   - appearance: The background appearance. The default uses
+        ///     the navigation bar background color.
+        ///   - restoreOnDisappear: Whether to restore the navigation
+        ///     bar appearance on disappear. The default is `true`.
+        ///   - showsDivider: Whether to show a bottom divider. The
+        ///     default is `true`.
+        ///   - sizeClass: The sizing behavior. The default is
+        ///     ``SizeClass/fullScreenCover``.
         @MainActor
         public init(
             appearance: Appearance = .custom(backgroundColor: .navigationBarBackground),
@@ -38,6 +53,7 @@ public extension HeaderView {
 
     // MARK: - Image Attributes
 
+    /// The display properties for an image in a ``HeaderView``.
     struct ImageAttributes {
         /* MARK: Properties */
 
@@ -48,6 +64,14 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        /// Creates image attributes with the given configuration.
+        ///
+        /// - Parameters:
+        ///   - foregroundColor: The foreground color. The default is
+        ///     the theme's accent color.
+        ///   - image: The image to display.
+        ///   - size: An explicit size, or `nil` to scale to fit.
+        ///   - weight: The font weight. The default is `.regular`.
         @MainActor
         public init(
             foregroundColor: Color = .accent,
@@ -64,6 +88,8 @@ public extension HeaderView {
 
     // MARK: - Image Button Attributes
 
+    /// The configuration for an image-based button in a
+    /// ``HeaderView``.
     struct ImageButtonAttributes {
         /* MARK: Properties */
 
@@ -73,6 +99,13 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        /// Creates image button attributes.
+        ///
+        /// - Parameters:
+        ///   - attributes: The image display properties.
+        ///   - isEnabled: Whether the button is enabled. The default
+        ///     is `true`.
+        ///   - action: The closure to execute on tap.
         public init(
             image attributes: ImageAttributes,
             isEnabled: Bool = true,
@@ -86,6 +119,7 @@ public extension HeaderView {
 
     // MARK: - Text Attributes
 
+    /// The display properties for a text label in a ``HeaderView``.
     struct TextAttributes {
         /* MARK: Properties */
 
@@ -95,6 +129,14 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        /// Creates text attributes with the given configuration.
+        ///
+        /// - Parameters:
+        ///   - string: The text to display.
+        ///   - font: The font. The default is a 17-point semibold
+        ///     system font.
+        ///   - foregroundColor: The text color. The default is the
+        ///     theme's title text color.
         @MainActor
         public init(
             _ string: String,
@@ -109,6 +151,7 @@ public extension HeaderView {
 
     // MARK: - Text Button Attributes
 
+    /// The configuration for a text-based button in a ``HeaderView``.
     struct TextButtonAttributes {
         /* MARK: Properties */
 
@@ -118,6 +161,13 @@ public extension HeaderView {
 
         /* MARK: Init */
 
+        /// Creates text button attributes.
+        ///
+        /// - Parameters:
+        ///   - attributes: The text display properties.
+        ///   - isEnabled: Whether the button is enabled. The default
+        ///     is `true`.
+        ///   - action: The closure to execute on tap.
         public init(
             text attributes: TextAttributes,
             isEnabled: Bool = true,

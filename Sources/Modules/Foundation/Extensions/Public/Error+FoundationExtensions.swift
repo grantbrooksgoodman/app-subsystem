@@ -9,6 +9,8 @@
 import Foundation
 
 public extension Error {
+    /// A deterministic identifier derived from the error's domain,
+    /// code, and underlying errors.
     var staticIdentifier: String {
         let nsError = self as NSError
         var underlyingIDs = ["[\(nsError.domain):\(nsError.code)]"]

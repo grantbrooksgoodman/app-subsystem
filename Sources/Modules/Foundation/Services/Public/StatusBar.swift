@@ -9,6 +9,24 @@
 import Foundation
 import UIKit
 
+/// A service for controlling the appearance and visibility of the
+/// status bar.
+///
+/// Use `StatusBar` to override the status bar style, restore it to
+/// the theme-appropriate default, or hide it entirely:
+///
+/// ```swift
+/// StatusBar.overrideStyle(.lightContent)
+///
+/// // Later, restore the style based on the active theme:
+/// StatusBar.restoreStyle()
+/// ```
+///
+/// The service manages a dedicated window whose root view controller
+/// owns the status bar appearance, ensuring that overrides apply
+/// regardless of the current view controller hierarchy.
+///
+/// - Note: All members of `StatusBar` are isolated to the main actor.
 @MainActor
 public enum StatusBar {
     // MARK: - Properties
@@ -25,18 +43,33 @@ public enum StatusBar {
 
     // MARK: - Override Style
 
+    /// Overrides the status bar style.
+    ///
+    /// The override remains in effect until ``restoreStyle()`` is
+    /// called or a new override is applied.
+    ///
+    /// - Parameter style: The status bar style to apply.
     public static func overrideStyle(_ style: UIStatusBarStyle) {
         statusBarViewController?.statusBarStyle = style
     }
 
     // MARK: - Restore Style
 
+    /// Restores the status bar style to the theme-appropriate
+    /// default.
+    ///
+    /// The style is set to `lightContent` when dark mode is active,
+    /// or `darkContent` otherwise.
     public static func restoreStyle() {
         statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent
     }
 
     // MARK: - Set Is Hidden
 
+    /// Shows or hides the status bar.
+    ///
+    /// - Parameter isHidden: Pass `true` to hide the status bar, or
+    ///   `false` to show it.
     public static func setIsHidden(_ isHidden: Bool) {
         statusBarViewController?.isStatusBarHidden = isHidden
     }

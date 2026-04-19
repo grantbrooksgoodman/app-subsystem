@@ -20,7 +20,7 @@ import Foundation
 ///         Observables.sessionDidExpire, // Observable<Nil>
 ///     ]
 ///
-/// You do not need to conform to this protocol directly – ``Observable``
+/// You do not need to conform to this protocol directly – ``Observable``
 /// already conforms.
 public protocol ObservableProtocol: Sendable {}
 

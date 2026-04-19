@@ -41,14 +41,24 @@ private extension UIDevice {
 }
 
 public extension UIWindow {
-    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+    /// Posts a device-shake notification when a shake motion ends.
+    override func motionEnded(
+        _ motion: UIEvent.EventSubtype,
+        with event: UIEvent?
+    ) {
         @Dependency(\.notificationCenter) var notificationCenter: NotificationCenter
         guard motion == .motionShake else { return }
-        notificationCenter.post(name: UIDevice.deviceDidShakeNotification, object: nil)
+        notificationCenter.post(
+            name: UIDevice.deviceDidShakeNotification,
+            object: nil
+        )
     }
 }
 
 public extension View {
+    /// Performs an action when the user shakes the device.
+    ///
+    /// - Parameter action: The closure to execute on shake.
     func onShake(perform action: @escaping () -> Void) -> some View {
         modifier(OnShakeViewModifier(action: action))
     }

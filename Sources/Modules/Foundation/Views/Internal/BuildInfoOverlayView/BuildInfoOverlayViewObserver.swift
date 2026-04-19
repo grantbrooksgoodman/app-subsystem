@@ -8,18 +8,18 @@
 /* Native */
 import Foundation
 
-final class BuildInfoOverlayViewObserver: Observer {
+final class BuildInfoOverlayViewObserver: Observer, @unchecked Sendable {
     // MARK: - Type Aliases
 
     typealias R = BuildInfoOverlayReducer
 
     // MARK: - Properties
 
-    let id = UUID()
     let observedValues: [any ObservableProtocol] = [
         Observables.breadcrumbsDidCapture,
         Observables.rootViewTapped,
     ]
+
     let viewModel: ViewModel<BuildInfoOverlayReducer>
 
     private var touchTimer: Timer?
@@ -32,22 +32,18 @@ final class BuildInfoOverlayViewObserver: Observer {
 
     // MARK: - Observer Conformance
 
-    func linkObservables() {
-        Observers.link(BuildInfoOverlayViewObserver.self, with: observedValues)
-    }
-
     func onChange(of observable: Observable<Any>) {
         Logger.log(
-            "\(observable.value is Nil ? "Triggered" : "Observed change of") .\(observable.key.rawValue).",
+            "\(observable.value is Nil ? "Triggered" : "Observed change of") \(observable).",
             domain: .observer,
             sender: self
         )
 
-        switch observable.key {
-        case .breadcrumbsDidCapture:
+        switch observable {
+        case Observables.breadcrumbsDidCapture:
             send(.breadcrumbsDidCapture)
 
-        case .rootViewTapped:
+        case Observables.rootViewTapped:
             touchTimer?.invalidate()
             touchTimer = nil
 
@@ -61,12 +57,6 @@ final class BuildInfoOverlayViewObserver: Observer {
             )
 
         default: ()
-        }
-    }
-
-    func send(_ action: BuildInfoOverlayReducer.Action) {
-        Task { @MainActor in
-            viewModel.send(action)
         }
     }
 

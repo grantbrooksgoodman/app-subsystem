@@ -10,57 +10,103 @@ import Foundation
 import SwiftUI
 import UIKit
 
+/// A configurable header bar for use in sheets and full-screen covers.
+///
+/// `HeaderView` provides a standard layout consisting of an optional
+/// left button, a center title or image, and an optional right button.
+/// Its appearance adapts to the current theme when using the
+/// ``Appearance/themed`` style:
+///
+/// ```swift
+/// HeaderView(
+///     leftItem: .text(.init("Cancel", font: .body) { dismiss() }),
+///     centerItem: .text(.init("New Message")),
+///     rightItem: .text(.init("Send") { send() }),
+///     attributes: .init(sizeClass: .sheet)
+/// )
+/// ```
+///
+/// ## Appearance
+///
+/// Use ``Appearance/themed`` to inherit the navigation bar colors from
+/// the active ``UITheme``, or ``Appearance/custom(backgroundColor:)``
+/// to specify a color directly.
+///
+/// ## Size Class
+///
+/// The ``SizeClass`` controls the minimum height of the header. Use
+/// ``SizeClass/sheet`` or ``SizeClass/fullScreenCover`` for standard
+/// presentation contexts, or ``SizeClass/custom(minHeight:)`` for a
+/// specific value.
 public struct HeaderView: View {
     // MARK: - Types
 
+    /// The visual appearance of the header's background.
     public enum Appearance: Equatable {
         /* MARK: Cases */
 
+        /// A custom background color.
         case custom(backgroundColor: UIColor)
+
+        /// The background color defined by the active theme.
         case themed
 
         /* MARK: Properties */
 
+        @MainActor
         var backgroundColor: UIColor {
             switch self {
-            case let .custom(backgroundColor: backgroundColor):
-                return backgroundColor
-
-            case .themed:
-                return .navigationBarBackground
+            case let .custom(
+                backgroundColor: backgroundColor
+            ): backgroundColor
+            case .themed: .navigationBarBackground
             }
         }
     }
 
+    /// The type of content displayed at the center of the header.
     public enum CenterItemType {
+        /// An image with the given attributes.
         case image(ImageAttributes)
-        case text(TextAttributes, subtitle: TextAttributes? = nil)
+
+        /// A title, with an optional subtitle beneath it.
+        case text(
+            TextAttributes,
+            subtitle: TextAttributes? = nil
+        )
     }
 
+    /// The type of button displayed on either side of the header.
     public enum PeripheralButtonType {
+        /// An image button.
         case image(ImageButtonAttributes)
+
+        /// A text button.
         case text(TextButtonAttributes)
     }
 
+    /// The sizing behavior of the header.
     public enum SizeClass {
         /* MARK: Cases */
 
+        /// A custom minimum height.
         case custom(minHeight: CGFloat)
+
+        /// The standard height for full-screen cover presentations.
         case fullScreenCover
+
+        /// The standard height for sheet presentations.
         case sheet
 
         /* MARK: Properties */
 
         var minHeight: CGFloat {
             switch self {
-            case let .custom(minHeight: minHeight):
-                return minHeight
-
-            case .fullScreenCover:
-                return Floats.fullScreenCoverSizeClassFrameMinHeight
-
-            case .sheet:
-                return Floats.sheetSizeClassFrameMinHeight
+            case let .custom(
+                minHeight: minHeight
+            ): minHeight
+            case .fullScreenCover: Floats.fullScreenCoverSizeClassFrameMinHeight
+            case .sheet: Floats.sheetSizeClassFrameMinHeight
             }
         }
     }

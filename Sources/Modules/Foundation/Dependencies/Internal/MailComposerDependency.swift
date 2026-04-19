@@ -10,7 +10,8 @@ import Foundation
 
 enum MailComposerDependency: DependencyKey {
     static func resolve(_: DependencyValues) -> MailComposer {
-        .shared
+        @MainActorIsolated var mailComposer = MailComposer.shared
+        return mailComposer
     }
 }
 

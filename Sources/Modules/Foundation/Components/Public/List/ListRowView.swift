@@ -12,6 +12,23 @@ import SwiftUI
 /* Proprietary */
 import ComponentKit
 
+/// A single row in a list, supporting button, navigation link, and
+/// toggle interactions.
+///
+/// `ListRowView` renders a theme-aware row with an optional leading
+/// image, a title label, and a trailing accessory determined by the
+/// row's ``Interaction`` type:
+///
+/// - ``Interaction/button(_:showsChevron:action:)`` renders a tappable
+///   row with an optional chevron.
+/// - ``Interaction/destination(id:_:)`` renders a `NavigationLink` that
+///   pushes a destination view.
+/// - ``Interaction/switch(_:isToggled:)`` renders an inline toggle.
+///
+/// Rows are typically used inside a ``GroupedListView``, but can also
+/// be used standalone with a ``Configuration``.
+///
+/// - SeeAlso: ``GroupedListView``, ``Configuration``, ``Interaction``
 public struct ListRowView: View {
     // MARK: - Constants Accessors
 
@@ -26,6 +43,10 @@ public struct ListRowView: View {
 
     // MARK: - Init
 
+    /// Creates a list row from the given configuration.
+    ///
+    /// - Parameter configuration: The row's display and interaction
+    ///   properties.
     public init(_ configuration: Configuration) {
         self.configuration = configuration
 

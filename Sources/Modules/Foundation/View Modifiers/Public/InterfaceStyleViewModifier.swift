@@ -47,7 +47,10 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 
     private func overrideStyle() {
         guard uiApplication.applicationState == .active else {
-            return core.gcd.after(.milliseconds(10)) { overrideStyle() }
+            Task.delayed(by: .milliseconds(100)) { @MainActor in
+                overrideStyle()
+            }
+            return
         }
 
         guard uiApplication.interfaceStyle != interfaceStyle else { return }
@@ -56,6 +59,14 @@ private struct InterfaceStyleViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Overrides the user interface style for the entire app
+    /// while the view is visible.
+    ///
+    /// - Parameters:
+    ///   - interfaceStyle: The interface style to apply.
+    ///   - restoreOnDisappear: Whether to restore the current theme's
+    ///     interface style when the view disappears. The default is
+    ///     `true`.
     func interfaceStyle(
         _ interfaceStyle: UIUserInterfaceStyle,
         restoreOnDisappear: Bool = true

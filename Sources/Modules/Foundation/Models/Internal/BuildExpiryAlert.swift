@@ -12,6 +12,7 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 final class BuildExpiryAlert {
     // MARK: - Dependencies
 
@@ -57,7 +58,6 @@ final class BuildExpiryAlert {
 
     // MARK: - Present / Dismiss
 
-    @MainActor
     func present() async {
         guard RootWindowStatus.shared.rootView != .forcedUpdateModalPage else { return }
         alertKitConfig.overrideTranslationTimeoutConfig(
@@ -121,13 +121,16 @@ final class BuildExpiryAlert {
                 }
             }
 
-            @MainActor
+            @Sendable
             func disableAction() {
-                guard uiApplication.isPresentingAlertController else {
-                    return core.gcd.after(.milliseconds(100)) { disableAction() }
-                }
+                Task { @MainActor in
+                    guard uiApplication.isPresentingAlertController else {
+                        try? await Task.sleep(for: .milliseconds(100))
+                        return disableAction()
+                    }
 
-                textInputAlert.disableAction(at: 1)
+                    textInputAlert.disableAction(at: 1)
+                }
             }
 
             disableAction()
@@ -186,24 +189,26 @@ final class BuildExpiryAlert {
 
         uiApplication.dismissAlertControllers()
         core.ui.present(alertController)
-        core.gcd.after(.seconds(5)) { fatalError("Evaluation period ended") }
+        Task.delayed(by: .seconds(5)) { fatalError("Evaluation period ended") }
     }
 
     private func setTimer() {
         guard uiApplication.isPresentingAlertController else {
-            return core.gcd.after(.milliseconds(100)) { self.setTimer() }
+            Task.delayed(by: .milliseconds(100)) { @MainActor in
+                setTimer()
+            }
+            return
         }
 
-        guard let exitTimer = exitTimer,
+        guard let exitTimer,
               exitTimer.isValid else {
-            self.exitTimer = .scheduledTimer(
+            return self.exitTimer = .scheduledTimer(
                 timeInterval: 1,
                 target: self,
                 selector: #selector(decrementSecond),
                 userInfo: nil,
                 repeats: true
             )
-            return
         }
     }
 }

@@ -15,13 +15,16 @@ import AlertKit
 extension CoreKit: AlertKit.PresentationDelegate {
     // MARK: - Properties
 
+    /// All alert controllers currently presented in the app.
     public var presentedAlertControllers: [UIAlertController] {
-        @Dependency(\.uiApplication.presentedViewControllers) var presentedViewControllers: [UIViewController]
-        return presentedViewControllers.compactMap { $0 as? UIAlertController }
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
+        return uiApplication.presentedViewControllers.compactMap { $0 as? UIAlertController }
     }
 
     // MARK: - Methods
 
+    /// Presents the given alert controller using the subsystem's UI
+    /// layer.
     public func present(_ alertController: UIAlertController) {
         ui.present(
             alertController,

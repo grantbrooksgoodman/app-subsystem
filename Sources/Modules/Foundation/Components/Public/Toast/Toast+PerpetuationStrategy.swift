@@ -9,8 +9,12 @@
 import Foundation
 
 public extension Toast {
-    enum PerpetuationStrategy: Equatable {
+    /// The strategy that controls how long a toast remains visible.
+    enum PerpetuationStrategy: Equatable, Sendable {
+        /// The toast auto-dismisses after the given duration.
         case ephemeral(Duration)
+
+        /// The toast remains on screen until the user dismisses it.
         case persistent
     }
 }

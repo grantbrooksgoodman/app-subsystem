@@ -12,11 +12,16 @@ import Foundation
 import Foundation
 import UIKit
 
+@MainActor
 public extension NavigationBar {
     // MARK: - Types
 
-    enum ItemPlacement: CaseIterable {
+    /// The horizontal placement of a navigation bar item.
+    enum ItemPlacement: CaseIterable, Sendable {
+        /// The leading edge of the navigation bar.
         case leading
+
+        /// The trailing edge of the navigation bar.
         case trailing
     }
 
@@ -27,28 +32,30 @@ public extension NavigationBar {
 
     // MARK: - Methods
 
+    /// Removes all glass tint colors from navigation bar items.
     static func removeAllItemGlassTint() {
-        Task { @MainActor in
-            @Dependency(\.uiApplication) var uiApplication: UIApplication
+        @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-            let extantGlassViews = knownTintedItems.reduce(into: [Int: UIColor]()) { partialResult, keyPair in
-                if !uiApplication.presentedViews.filter({ $0.tag == keyPair.key }).isEmpty {
-                    partialResult[keyPair.key] = keyPair.value
-                }
+        let extantGlassViews = knownTintedItems.reduce(into: [Int: UIColor]()) { partialResult, keyPair in
+            if !uiApplication.presentedViews.filter({ $0.tag == keyPair.key }).isEmpty {
+                partialResult[keyPair.key] = keyPair.value
             }
-
-            extantGlassViews.forEach { glassView in
-                uiApplication
-                    .presentedViews
-                    .filter { $0.tag == glassView.key }
-                    .forEach { $0.backgroundColor = nil }
-            }
-
-            isObservingTraitCollectionChanges = false
-            knownTintedItems = [:]
         }
+
+        extantGlassViews.forEach { glassView in
+            uiApplication
+                .presentedViews
+                .filter { $0.tag == glassView.key }
+                .forEach { $0.backgroundColor = nil }
+        }
+
+        isObservingTraitCollectionChanges = false
+        knownTintedItems = [:]
     }
 
+    /// Applies a glass tint color to the navigation bar item at the
+    /// given placement. Has no effect when glass tinting is not
+    /// enabled.
     static func setItemGlassTint(
         _ color: UIColor,
         for placement: ItemPlacement,
@@ -57,19 +64,20 @@ public extension NavigationBar {
         guard UIApplication.isGlassTintingEnabled else { return }
 
         guard delay > .zero else {
-            Task { @MainActor in
-                _setItemGlassTint(color, for: placement)
-            }
-
-            return
+            return _setItemGlassTint(
+                color,
+                for: placement
+            )
         }
 
         Task.delayed(by: delay) { @MainActor in
-            _setItemGlassTint(color, for: placement)
+            _setItemGlassTint(
+                color,
+                for: placement
+            )
         }
     }
 
-    @MainActor
     private static func startObservingTraitCollectionChanges() {
         @Dependency(\.notificationCenter) var notificationCenter: NotificationCenter
         @Dependency(\.uiApplication) var uiApplication: UIApplication
@@ -109,7 +117,6 @@ public extension NavigationBar {
         }
     }
 
-    @MainActor
     private static func _setItemGlassTint(_ color: UIColor, for placement: ItemPlacement) {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         @Dependency(\.uiApplication) var uiApplication: UIApplication

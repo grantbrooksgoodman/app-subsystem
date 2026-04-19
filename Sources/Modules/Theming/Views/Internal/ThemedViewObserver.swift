@@ -15,7 +15,6 @@ struct ThemedViewObserver: Observer {
 
     // MARK: - Properties
 
-    let id = UUID()
     let observedValues: [any ObservableProtocol] = [Observables.themedViewAppearanceChanged]
     let viewModel: ViewModel<ThemedReducer>
 
@@ -27,27 +26,18 @@ struct ThemedViewObserver: Observer {
 
     // MARK: - Observer Conformance
 
-    func linkObservables() {
-        Observers.link(ThemedViewObserver.self, with: observedValues)
-    }
-
     func onChange(of observable: Observable<Any>) {
         Logger.log(
-            "\(observable.value is Nil ? "Triggered" : "Observed change of") .\(observable.key.rawValue).",
+            "\(observable.value is Nil ? "Triggered" : "Observed change of") \(observable).",
             domain: .observer,
             sender: self
         )
 
-        switch observable.key {
-        case .themedViewAppearanceChanged:
+        switch observable {
+        case Observables.themedViewAppearanceChanged:
             send(.appearanceChanged)
-        default: ()
-        }
-    }
 
-    func send(_ action: ThemedReducer.Action) {
-        Task { @MainActor in
-            viewModel.send(action)
+        default: ()
         }
     }
 }

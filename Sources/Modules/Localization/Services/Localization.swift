@@ -9,23 +9,17 @@
 import Foundation
 
 enum Localization {
-    // MARK: - Types
-
-    private enum CacheKey: String, CaseIterable {
-        case localizedStrings
-    }
-
     // MARK: - Properties
 
-    @Cached(CacheKey.localizedStrings) private static var cachedLocalizedStrings: [String: [String: String]]?
+    private static let cachedLocalizedStrings = LockIsolated<[String: [String: String]]?>(wrappedValue: nil)
 
     // MARK: - Computed Properties
 
     private static var localizedStrings: [String: [String: String]] {
         @Dependency(\.mainBundle) var mainBundle: Bundle
-        if let cachedLocalizedStrings,
-           !cachedLocalizedStrings.isEmpty {
-            return cachedLocalizedStrings
+        if let cached = cachedLocalizedStrings.wrappedValue,
+           !cached.isEmpty {
+            return cached
         }
 
         guard let filePath = mainBundle.url(forResource: "LocalizedStrings", withExtension: "plist"),
@@ -34,7 +28,7 @@ enum Localization {
             return .init()
         }
 
-        cachedLocalizedStrings = dictionary
+        cachedLocalizedStrings.wrappedValue = dictionary
         return dictionary
     }
 
@@ -75,6 +69,6 @@ enum Localization {
     // MARK: - Clear Cache
 
     static func clearCache() {
-        cachedLocalizedStrings = nil
+        cachedLocalizedStrings.wrappedValue = nil
     }
 }

@@ -9,6 +9,25 @@
 import Foundation
 import UIKit
 
+/// A service for controlling the appearance and visibility of the
+/// status bar.
+///
+/// Use `StatusBar` to override the status bar style, restore it to
+/// the theme-appropriate default, or hide it entirely:
+///
+/// ```swift
+/// StatusBar.overrideStyle(.lightContent)
+///
+/// // Later, restore the style based on the active theme:
+/// StatusBar.restoreStyle()
+/// ```
+///
+/// The service manages a dedicated window whose root view controller
+/// owns the status bar appearance, ensuring that overrides apply
+/// regardless of the current view controller hierarchy.
+///
+/// - Note: All members of `StatusBar` are isolated to the main actor.
+@MainActor
 public enum StatusBar {
     // MARK: - Properties
 
@@ -17,29 +36,42 @@ public enum StatusBar {
         @Dependency(\.uiApplication.windows) var windows: [UIWindow]
 
         return (windows
-            .first(where: { $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW") }))?
-                    .rootViewController as? StatusBarViewController
+            .first(where: {
+                $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW")
+            }))?.rootViewController as? StatusBarViewController
     }
 
     // MARK: - Override Style
 
+    /// Overrides the status bar style.
+    ///
+    /// The override remains in effect until ``restoreStyle()`` is
+    /// called or a new override is applied.
+    ///
+    /// - Parameter style: The status bar style to apply.
     public static func overrideStyle(_ style: UIStatusBarStyle) {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.statusBarStyle = style }
+        statusBarViewController?.statusBarStyle = style
     }
 
     // MARK: - Restore Style
 
+    /// Restores the status bar style to the theme-appropriate
+    /// default.
+    ///
+    /// The style is set to `lightContent` when dark mode is active,
+    /// or `darkContent` otherwise.
     public static func restoreStyle() {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent }
+        statusBarViewController?.statusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent
     }
 
     // MARK: - Set Is Hidden
 
+    /// Shows or hides the status bar.
+    ///
+    /// - Parameter isHidden: Pass `true` to hide the status bar, or
+    ///   `false` to show it.
     public static func setIsHidden(_ isHidden: Bool) {
-        @Dependency(\.mainQueue) var mainQueue: DispatchQueue
-        mainQueue.async { statusBarViewController?.isStatusBarHidden = isHidden }
+        statusBarViewController?.isStatusBarHidden = isHidden
     }
 }
 
@@ -73,6 +105,7 @@ final class StatusBarViewController: UIViewController {
     }
 }
 
+@MainActor
 extension UIUserInterfaceStyle {
     var statusBarStyle: UIStatusBarStyle {
         let adaptiveStyle: UIStatusBarStyle = ThemeService.isDarkModeActive ? .lightContent : .darkContent

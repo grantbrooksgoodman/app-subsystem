@@ -9,8 +9,12 @@
 import Foundation
 
 public extension Toast {
-    enum AppearanceEdge: Equatable {
+    /// The screen edge from which a banner toast slides into view.
+    enum AppearanceEdge: Equatable, Sendable {
+        /// The banner appears from the bottom of the screen.
         case bottom
+
+        /// The banner appears from the top of the screen.
         case top
     }
 }

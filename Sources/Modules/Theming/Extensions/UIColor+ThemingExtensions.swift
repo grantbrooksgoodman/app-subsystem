@@ -9,6 +9,16 @@
 import Foundation
 import UIKit
 
+/// Convenience accessors for themed colors in UIKit.
+///
+/// These properties resolve against the active theme's palette:
+///
+/// ```swift
+/// label.textColor = .titleText
+/// view.backgroundColor = .background
+/// ```
+///
+@MainActor
 public extension UIColor {
     static var accent: UIColor { theme.color(for: .accent) }
     static var background: UIColor { theme.color(for: .background) }

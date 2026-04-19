@@ -8,70 +8,134 @@
 /* Native */
 import Foundation
 
-public enum Observers {
+enum Observers {
     // MARK: - Properties
 
-    private static var instances = [any Observer]()
+    private static let instances = LockIsolated<[any Observer]>(wrappedValue: [])
 
     // MARK: - Association
 
-    public static func link<O: Observer>(_ observerType: O.Type, with observables: [any ObservableProtocol]) {
-        let keys = observables.map(\.key.rawValue)
-        guard let observers = instances.filter({ Swift.type(of: $0) == observerType }) as? [O],
-              !observers.isEmpty else {
-            logClearedObservers(keys)
-            observables.forEach { $0.clearObservers() }
-            return
-        }
+    fileprivate static func link<O: Observer>(
+        _ observerType: O.Type,
+        with observables: [any ObservableProtocol]
+    ) {
+        instances.projectedValue.withValue { instances in
+            let registrables = observables.compactMap { $0 as? ObserverRegistrable }
 
-        logSetObservers(observers.map { $0.id.uuidString.components[0 ... 3].joined() }, observableKeys: keys)
-        observables.forEach { $0.setObservers(observers) }
+            guard let observers = instances.filter({
+                Swift.type(of: $0) == observerType
+            }) as? [O],
+                !observers.isEmpty else {
+                return registrables.forEach { $0.clearObservers(ofType: observerType) }
+            }
+
+            let anyObservers = observers.map { $0 as any Observer }
+            registrables.forEach { $0.setObservers(ofType: observerType, anyObservers) }
+        }
     }
 
     // MARK: - Registration
 
-    public static func register(observer: any Observer) {
-        guard !instances.contains(where: { $0.id == observer.id }) else { return }
-        instances.append(observer)
-        log("Registered", id: observer.id.uuidString.components[0 ... 3].joined())
+    static func register(observer: any Observer) {
+        var existingType: Any.Type?
+
+        let didAppend = instances.projectedValue.withValue { instances -> Bool in
+            if let existingInstance = instances.first(where: { $0.id == observer.id }) {
+                existingType = Swift.type(of: existingInstance)
+                return false
+            }
+
+            instances.append(observer)
+            return true
+        }
+
+        guard didAppend else {
+            assertionFailure(
+                """
+                [\(Swift.type(of: observer))] shares a view model instance with \
+                already-registered [\(existingType.map(String.init(describing:)) ?? "unknown")]. \
+                Each view model must have exactly one associated observer.
+                """
+            )
+            return
+        }
+
+        log(
+            "Registered",
+            id: observer.id
+        )
+
         observer.linkObservables()
     }
 
     // MARK: - Retraction
 
-    public static func retract(observer: any Observer) {
-        guard let observer = instances.first(where: { $0.id == observer.id }) else { return }
-        instances.removeAll(where: { $0.id == observer.id })
-        log("Retracted", id: observer.id.uuidString.components[0 ... 3].joined())
-        observer.linkObservables()
+    static func retract(observer: any Observer) {
+        let retractedObserver: (any Observer)? = instances.projectedValue.withValue { instances in
+            guard let instance = instances.first(where: { $0.id == observer.id }) else { return nil }
+            instances.removeAll(where: { $0.id == instance.id })
+            return instance
+        }
+
+        guard let retractedObserver else { return }
+
+        log(
+            "Retracted",
+            id: retractedObserver.id
+        )
+
+        retractedObserver.linkObservables()
     }
 
     // MARK: - Logging
 
-    private static func log(_ action: String, id: String) {
+    private static func log(
+        _ action: String,
+        id: ObjectIdentifier
+    ) {
         Logger.log(
             "\(action) observer with ID: \(id).",
             domain: .observer,
             sender: self
         )
     }
+}
 
-    private static func logClearedObservers(_ keys: [String]) {
-        Logger.log(
-            "Cleared all observers on \(keys).",
-            domain: .observer,
-            sender: self
+public extension Observer {
+    // MARK: - Properties
+
+    /// A stable identifier derived from the observer's ``viewModel`` instance.
+    var id: ObjectIdentifier { .init(viewModel) }
+
+    // MARK: - Methods
+
+    /// Re-links this observer type with its declared ``observedValues``.
+    ///
+    /// This method is called automatically when the observer is registered
+    /// or removed.
+    ///
+    /// - Important: Do not provide your own implementation of this method.
+    ///   The default implementation coordinates with the internal observer
+    ///   registry; overriding it will silently break observer registration.
+    func linkObservables() {
+        Observers.link(
+            Self.self,
+            with: observedValues
         )
     }
 
-    private static func logSetObservers(
-        _ observerIDs: [String],
-        observableKeys: [String]
-    ) {
-        Logger.log(
-            "Linking \(observerIDs) to \(observableKeys).",
-            domain: .observer,
-            sender: self
-        )
+    /// Dispatches an action to this observer's view model on the main actor.
+    ///
+    /// Use this inside ``onChange(of:)`` to forward an observable change to
+    /// your view's reducer:
+    ///
+    ///     case Observables.isLoggedIn:
+    ///         send(.refreshUI)
+    ///
+    /// - Parameter action: The reducer action to dispatch.
+    func send(_ action: R.Action) {
+        Task { @MainActor in
+            viewModel.send(action)
+        }
     }
 }

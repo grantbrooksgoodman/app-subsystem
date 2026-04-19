@@ -43,7 +43,9 @@ public extension CacheDomain {
     /* MARK: Methods */
 
     private static func clearAppIconImageCache() {
-        AppIconImageUtility.shared.clearCache()
+        Task { @MainActor in
+            AppIconImageUtility.shared.clearCache()
+        }
     }
 
     private static func clearEncodedHashCache() {
@@ -116,25 +118,17 @@ extension UserDefaultsKey {
 
 // MARK: - Observable Registry
 
+/// A registry of app-wide ``Observable`` values used to
+/// drive reactive UI updates and cross-component communication.
 public enum Observables {
-    public static let breadcrumbsDidCapture: Observable<Nil> = .init(key: .breadcrumbsDidCapture)
+    public static let breadcrumbsDidCapture = Observable<Nil>()
 
-    static let isBuildInfoOverlayHidden: Observable<Bool> = .init(.isBuildInfoOverlayHidden, true)
-    static let rootViewSheet: Observable<AnyView?> = .init(.rootViewSheet, nil)
-    static let rootViewTapped: Observable<Nil> = .init(key: .rootViewTapped)
-    static let rootViewToast: Observable<Toast?> = .init(.rootViewToast, nil)
-    static let rootViewToastAction: Observable<(() -> Void)?> = .init(.rootViewToastAction, nil)
-    static let themedViewAppearanceChanged: Observable<Nil> = .init(key: .themedViewAppearanceChanged)
-}
-
-extension ObservableKey {
-    static let breadcrumbsDidCapture: ObservableKey = .init("breadcrumbsDidCapture")
-    static let isBuildInfoOverlayHidden: ObservableKey = .init("isBuildInfoOverlayHidden")
-    static let rootViewSheet: ObservableKey = .init("rootViewSheet")
-    static let rootViewTapped: ObservableKey = .init("rootViewTapped")
-    static let rootViewToast: ObservableKey = .init("rootViewToast")
-    static let rootViewToastAction: ObservableKey = .init("rootViewToastAction")
-    static let themedViewAppearanceChanged: ObservableKey = .init("themedViewAppearanceChanged")
+    static let isBuildInfoOverlayHidden = Observable<Bool>(true)
+    static let rootViewSheet = Observable<AnyView?>(nil)
+    static let rootViewTapped = Observable<Nil>()
+    static let rootViewToast = Observable<Toast?>(nil)
+    static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(nil)
+    static let themedViewAppearanceChanged = Observable<Nil>()
 }
 
 // MARK: - Default Localized Strings

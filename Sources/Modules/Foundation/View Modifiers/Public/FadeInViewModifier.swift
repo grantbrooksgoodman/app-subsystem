@@ -30,7 +30,13 @@ private struct FadeInViewModifier: ViewModifier {
         content
             .opacity(opacity)
             .onAppear {
-                func animateOpacity() { withAnimation(.easeIn(duration: duration.timeInterval)) { opacity = 1 } }
+                @MainActor
+                func animateOpacity() {
+                    withAnimation(.easeIn(duration: duration.timeInterval)) {
+                        opacity = 1
+                    }
+                }
+
                 guard delay != .zero else { return animateOpacity() }
                 Task.delayed(by: delay) { @MainActor in
                     animateOpacity()
@@ -40,7 +46,20 @@ private struct FadeInViewModifier: ViewModifier {
 }
 
 public extension View {
-    func fadeIn(_ duration: Duration = .milliseconds(500), delay: Duration = .zero) -> some View {
-        modifier(FadeInViewModifier(duration, delay: delay))
+    /// Fades the view in with an ease-in animation.
+    ///
+    /// - Parameters:
+    ///   - duration: The animation duration. The default is 500
+    ///     milliseconds.
+    ///   - delay: The time to wait before starting the animation.
+    ///     The default is zero.
+    func fadeIn(
+        _ duration: Duration = .milliseconds(500),
+        delay: Duration = .zero
+    ) -> some View {
+        modifier(FadeInViewModifier(
+            duration,
+            delay: delay
+        ))
     }
 }

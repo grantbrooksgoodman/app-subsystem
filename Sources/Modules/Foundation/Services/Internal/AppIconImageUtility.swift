@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 final class AppIconImageUtility {
     // MARK: - Types
 
@@ -85,7 +86,9 @@ final class AppIconImageUtility {
         }
     }
 
-    private func getRemoteAppIconImage(completion: @escaping (Callback<UIImage, Exception>) -> Void) {
+    private func getRemoteAppIconImage(
+        completion: @escaping @Sendable (Callback<UIImage, Exception>) -> Void
+    ) {
         @Dependency(\.mainBundle) var mainBundle: Bundle
         @Dependency(\.urlSession) var urlSession: URLSession
 
@@ -114,8 +117,8 @@ final class AppIconImageUtility {
                 return completion(.failure(
                     error == nil ? .init(
                         "Failed to resolve standard resolution image.",
-                        metadata: .init(sender: self)
-                    ) : .init(error, metadata: .init(sender: self))
+                        metadata: .init(sender: Self.self)
+                    ) : .init(error, metadata: .init(sender: Self.self))
                 ))
             }
 
@@ -124,12 +127,14 @@ final class AppIconImageUtility {
                     return completion(.failure(
                         error == nil ? .init(
                             "Failed to resolve high resolution image.",
-                            metadata: .init(sender: self)
-                        ) : .init(error, metadata: .init(sender: self))
+                            metadata: .init(sender: Self.self)
+                        ) : .init(error, metadata: .init(sender: Self.self))
                     ))
                 }
 
-                self.cachedRemoteAppIconImage = image
+                Task { @MainActor in
+                    self.cachedRemoteAppIconImage = image
+                }
                 return completion(.success(image))
             }.resume()
         }.resume()

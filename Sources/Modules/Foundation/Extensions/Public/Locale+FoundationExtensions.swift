@@ -9,6 +9,8 @@
 import Foundation
 
 public extension Locale {
+    /// The two-letter language code of the device, falling back to
+    /// `"en"` when unavailable.
     static var systemLanguageCode: String {
         @Dependency(\.mainBundle) var mainBundle: Bundle
         @Dependency(\.currentLocale) var currentLocale: Locale

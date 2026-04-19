@@ -9,6 +9,31 @@
 import Foundation
 import SwiftUI
 
+/// A container view that automatically responds to theme changes.
+///
+/// Wrap your view's content in a `ThemedView` so that it updates when the
+/// active theme changes:
+///
+/// ```swift
+/// var body: some View {
+///     ThemedView {
+///         Text("Hello")
+///             .foregroundStyle(.titleText)
+///     }
+/// }
+/// ```
+///
+/// By default, themed views update their colors in place without
+/// rebuilding the view hierarchy. Set `redrawsOnAppearanceChange` to
+/// `true` when the view tree itself depends on theme values resolved at
+/// construction time.
+///
+/// ## Navigation Bar Appearance
+///
+/// Pass a `navigationBarAppearance` to apply a custom navigation bar
+/// style while this view is visible. If
+/// `restoresNavigationBarAppearanceOnDisappear` is also `true`, the
+/// previous appearance is restored when the view disappears.
 public struct ThemedView: View {
     // MARK: - Properties
 
@@ -19,6 +44,19 @@ public struct ThemedView: View {
 
     // MARK: - Init
 
+    /// Creates a themed view with the given options.
+    ///
+    /// - Parameters:
+    ///   - navigationBarAppearance: A custom navigation bar appearance to
+    ///     apply while this view is visible. Pass `nil` to leave the
+    ///     navigation bar unchanged. Defaults to `nil`.
+    ///   - redrawsOnAppearanceChange: A Boolean value that determines
+    ///     whether the entire view hierarchy is rebuilt on theme changes.
+    ///     Defaults to `false`.
+    ///   - restoresNavigationBarAppearanceOnDisappear: A Boolean value
+    ///     that determines whether the previous navigation bar appearance
+    ///     is restored when this view disappears. Defaults to `false`.
+    ///   - body: A closure that returns the themed content.
     public init(
         navigationBarAppearance: NavigationBarAppearance? = nil,
         redrawsOnAppearanceChange: Bool = false, // swiftlint:disable:next identifier_name
@@ -64,7 +102,8 @@ private struct Themed: View {
     // MARK: - View
 
     var body: some View {
-        viewModel.body()
+        viewModel
+            .body()
             .eraseToAnyView()
             .id(viewModel.viewID)
             .onFirstAppear {

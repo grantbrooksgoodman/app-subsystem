@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public protocol Cacheable {
+protocol Cacheable {
     // MARK: - Associated Types
 
     associatedtype CacheKey: RawRepresentable where CacheKey.RawValue: StringProtocol, CacheKey: CaseIterable

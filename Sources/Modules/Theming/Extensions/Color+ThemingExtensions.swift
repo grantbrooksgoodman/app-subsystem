@@ -9,6 +9,19 @@
 import Foundation
 import SwiftUI
 
+/// Convenience accessors for themed colors in SwiftUI.
+///
+/// These properties resolve against the active theme's palette and
+/// automatically reflect theme and appearance changes when used inside a
+/// ``ThemedView``:
+///
+/// ```swift
+/// Text("Hello")
+///     .foregroundStyle(.titleText)
+///     .background(.background)
+/// ```
+///
+@MainActor
 public extension Color {
     static var accent: Color { .init(uiColor: .accent) }
     static var background: Color { .init(uiColor: .background) }

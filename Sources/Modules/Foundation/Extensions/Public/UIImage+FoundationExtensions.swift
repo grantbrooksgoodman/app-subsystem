@@ -12,20 +12,25 @@ import SwiftUI
 public extension UIImage {
     // MARK: - Properties
 
+    /// The app icon image, preferring a remote version when
+    /// available.
+    @MainActor
     static var appIcon: UIImage? {
         get async {
             let utility = AppIconImageUtility.shared
-            return (await utility.remoteAppIconImage) ?? utility.localAppIconImage
+            return await (utility.remoteAppIconImage) ?? utility.localAppIconImage
         }
     }
 
     // MARK: - Methods
 
+    /// Downloads an image from the given URL string.
     static func downloadedFrom(_ link: String) async -> UIImage? {
         guard let url = URL(string: link) else { return nil }
         return await downloadedFrom(url)
     }
 
+    /// Downloads an image from the given URL.
     static func downloadedFrom(_ url: URL) async -> UIImage? {
         @Dependency(\.urlSession) var urlSession: URLSession
 
@@ -34,7 +39,12 @@ public extension UIImage {
         return image
     }
 
-    static func downloadedFrom(_ link: String, completion: @escaping (_ image: UIImage?) -> Void) {
+    /// Downloads an image from the given URL string, calling the
+    /// completion handler with the result.
+    static func downloadedFrom(
+        _ link: String,
+        completion: @escaping @Sendable (_ image: UIImage?) -> Void
+    ) {
         guard let url = URL(string: link) else {
             completion(nil)
             return
@@ -45,7 +55,12 @@ public extension UIImage {
         }
     }
 
-    static func downloadedFrom(_ url: URL, completion: @escaping (_ image: UIImage?) -> Void) {
+    /// Downloads an image from the given URL, calling the
+    /// completion handler with the result.
+    static func downloadedFrom(
+        _ url: URL,
+        completion: @escaping @Sendable (_ image: UIImage?) -> Void
+    ) {
         @Dependency(\.urlSession) var urlSession: URLSession
 
         urlSession.dataTask(with: url) { data, _, _ in
@@ -61,6 +76,8 @@ public extension UIImage {
 }
 
 public extension UIImage? {
+    /// The SwiftUI `Image` representation, or `nil` when the
+    /// optional is `nil`.
     var swiftUIImage: Image? {
         guard let self else { return nil }
         return .init(uiImage: self)

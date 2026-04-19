@@ -9,7 +9,7 @@
 import Foundation
 
 // swiftlint:disable line_length
-public enum SystemInformation {
+enum SystemInformation {
     // MARK: - Types
 
     private enum SystemInformationError: Error {
@@ -21,19 +21,19 @@ public enum SystemInformation {
 
     // MARK: - Properties
 
-    public static var activeCPUs: Int64 {
-        return (try? informationInteger(withLevels: CTL_HW, HW_AVAILCPU)) ?? .zero
+    static var activeCPUs: Int64 {
+        (try? informationInteger(withLevels: CTL_HW, HW_AVAILCPU)) ?? .zero
     }
 
-    public static var deviceName: String {
-        return (try? informationString(withLevels: CTL_KERN, KERN_HOSTNAME)) ?? "Unknown"
+    static var deviceName: String {
+        (try? informationString(withLevels: CTL_KERN, KERN_HOSTNAME)) ?? "Unknown"
     }
 
-    public static var kernelVersion: String {
-        return (try? informationString(withLevels: CTL_KERN, KERN_VERSION)) ?? "Unknown"
+    static var kernelVersion: String {
+        (try? informationString(withLevels: CTL_KERN, KERN_VERSION)) ?? "Unknown"
     }
 
-    public static var modelCode: String {
+    static var modelCode: String {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
         return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #else
@@ -41,7 +41,7 @@ public enum SystemInformation {
         #endif
     }
 
-    public static var modelName: String {
+    static var modelName: String {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
         return (try? informationString(withLevels: CTL_HW, HW_MACHINE)) ?? "Unknown"
         #else
@@ -49,20 +49,20 @@ public enum SystemInformation {
         #endif
     }
 
-    public static var osRelease: String {
-        return (try? informationString(withLevels: CTL_KERN, KERN_OSRELEASE)) ?? "Unknown"
+    static var osRelease: String {
+        (try? informationString(withLevels: CTL_KERN, KERN_OSRELEASE)) ?? "Unknown"
     }
 
-    public static var osRevision: Int64 {
-        return (try? informationInteger(withLevels: CTL_KERN, KERN_OSREV)) ?? .zero
+    static var osRevision: Int64 {
+        (try? informationInteger(withLevels: CTL_KERN, KERN_OSREV)) ?? .zero
     }
 
-    public static var osType: String {
-        return (try? informationString(withLevels: CTL_KERN, KERN_OSTYPE)) ?? "Unknown"
+    static var osType: String {
+        (try? informationString(withLevels: CTL_KERN, KERN_OSTYPE)) ?? "Unknown"
     }
 
-    public static var osVersion: String {
-        return (try? informationString(withLevels: CTL_KERN, KERN_OSVERSION)) ?? "Unknown"
+    static var osVersion: String {
+        (try? informationString(withLevels: CTL_KERN, KERN_OSVERSION)) ?? "Unknown"
     }
 
     // MARK: - Auxiliary
@@ -88,7 +88,7 @@ public enum SystemInformation {
     }
 
     private static func getInformation(withLevels: [Int32]) throws -> [Int8] {
-        return try withLevels.withUnsafeBufferPointer { levelsPointer throws -> [Int8] in
+        try withLevels.withUnsafeBufferPointer { levelsPointer throws -> [Int8] in
             var requiredSize = 0
 
             let preFlightResult = Darwin.sysctl(UnsafeMutablePointer<Int32>(mutating: levelsPointer.baseAddress), UInt32(withLevels.count), nil, &requiredSize, nil, 0)
@@ -112,19 +112,19 @@ public enum SystemInformation {
     }
 
     private static func informationInteger(withLevels: Int32...) throws -> Int64 {
-        return try integerFromSystemInformation(withLevels: withLevels)
+        try integerFromSystemInformation(withLevels: withLevels)
     }
 
     private static func informationInteger(withName: String) throws -> Int64 {
-        return try integerFromSystemInformation(withLevels: getInformation(fromLevelName: withName))
+        try integerFromSystemInformation(withLevels: getInformation(fromLevelName: withName))
     }
 
     private static func informationString(withLevels: Int32...) throws -> String {
-        return try stringFromSystemInformation(withLevels: withLevels)
+        try stringFromSystemInformation(withLevels: withLevels)
     }
 
     private static func informationString(withName: String) throws -> String {
-        return try stringFromSystemInformation(withLevels: getInformation(fromLevelName: withName))
+        try stringFromSystemInformation(withLevels: getInformation(fromLevelName: withName))
     }
 
     private static func integerFromSystemInformation(withLevels: [Int32]) throws -> Int64 {
@@ -141,7 +141,7 @@ public enum SystemInformation {
 
     private static func stringFromSystemInformation(withLevels: [Int32]) throws -> String {
         let optionalString = try getInformation(withLevels: withLevels).withUnsafeBufferPointer { dataPointer -> String? in
-            dataPointer.baseAddress.flatMap { String(validatingUTF8: $0) }
+            dataPointer.baseAddress.flatMap { String(validatingCString: $0) }
         }
 
         guard let returnedString = optionalString else {

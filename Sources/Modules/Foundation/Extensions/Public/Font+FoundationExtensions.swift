@@ -12,6 +12,7 @@ import SwiftUI
 public extension Font {
     // MARK: - Types
 
+    /// A style variant of the SF UI Text font family.
     enum SFUITextStyle: String {
         /* MARK: Cases */
 
@@ -34,12 +35,20 @@ public extension Font {
 
         /* MARK: Properties */
 
-        public var fontNameValue: String { rawValue.firstUppercase }
+        var fontNameValue: String { rawValue.firstUppercase }
     }
 
     // MARK: - Functions
 
-    static func sanFrancisco(_ style: SFUITextStyle = .regular, size: CGFloat) -> Font {
-        .custom("SFUIText-\(style.fontNameValue)", size: size)
+    /// Returns an SF UI Text font with the given style and point
+    /// size.
+    static func sanFrancisco(
+        _ style: SFUITextStyle = .regular,
+        size: CGFloat
+    ) -> Font {
+        .custom(
+            "SFUIText-\(style.fontNameValue)",
+            size: size
+        )
     }
 }

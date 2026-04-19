@@ -10,21 +10,52 @@ import Foundation
 import SwiftUI
 
 public extension ListRowView {
+    /// The complete set of properties that define a list row's content,
+    /// appearance, and behavior.
+    ///
+    /// A `Configuration` pairs an ``Interaction`` with display
+    /// properties such as title text, optional header and footer
+    /// strings, and a leading image:
+    ///
+    /// ```swift
+    /// ListRowView.Configuration(
+    ///     .button { print("tapped") },
+    ///     innerText: "Tap Me",
+    ///     imageView: { Image(systemName: "star") }
+    /// )
+    /// ```
     struct Configuration: Equatable {
         // MARK: - Properties
 
-        public let cornerRadius: CGFloat
-        public let footerText: String?
-        public let headerText: String?
-        public let imageView: (() -> (any View))?
-        public let innerText: String
-        public let innerTextColor: Color
-        public let interaction: Interaction
-        public let isEnabled: Bool
-        public let isInspectable: Bool
+        let cornerRadius: CGFloat
+        let footerText: String?
+        let headerText: String?
+        let imageView: (() -> (any View))?
+        let innerText: String
+        let innerTextColor: Color
+        let interaction: Interaction
+        let isEnabled: Bool
+        let isInspectable: Bool
 
         // MARK: - Init
 
+        /// Creates a list row configuration.
+        ///
+        /// - Parameters:
+        ///   - interaction: The row's interaction behavior.
+        ///   - headerText: Optional text displayed above the row.
+        ///   - innerText: The primary label text.
+        ///   - footerText: Optional text displayed below the row.
+        ///   - innerTextColor: The label text color. The default is
+        ///     the theme's title text color.
+        ///   - isEnabled: Whether the row is interactive. The default
+        ///     is `true`.
+        ///   - isInspectable: Whether the text supports inspection.
+        ///     The default is `false`.
+        ///   - cornerRadius: The corner radius for standalone rows.
+        ///   - imageView: An optional closure returning a leading
+        ///     image.
+        @MainActor
         public init(
             _ interaction: Interaction,
             headerText: String? = nil,
@@ -74,44 +105,68 @@ public extension ListRowView {
         }
     }
 
+    /// The interaction behavior of a ``ListRowView``.
+    ///
+    /// Each case determines how the row responds to user input and
+    /// what trailing accessory it displays:
+    ///
+    /// - ``button(_:showsChevron:action:)`` executes a closure on tap.
+    /// - ``destination(id:_:)`` pushes a view via `NavigationLink`.
+    /// - ``switch(_:isToggled:)`` displays an inline toggle bound to
+    ///   a `Binding<Bool>`.
     enum Interaction: Equatable {
         // MARK: - Cases
 
-        case button(_ id: UUID = UUID(), showsChevron: Bool = false, action: () -> Void)
-        case destination(id: UUID = UUID(), _ view: any View)
-        case `switch`(_ id: UUID = UUID(), isToggled: Binding<Bool>)
+        /// A tappable row that executes a closure.
+        case button(
+            _ id: UUID = UUID(),
+            showsChevron: Bool = false,
+            action: () -> Void
+        )
+
+        /// A navigation link that pushes the given view.
+        case destination(
+            id: UUID = UUID(),
+            _ view: any View
+        )
+
+        /// A row with an inline toggle.
+        case `switch`(
+            _ id: UUID = UUID(),
+            isToggled: Binding<Bool>
+        )
 
         // MARK: - Properties
 
-        public var buttonAction: (() -> Void)? {
+        var buttonAction: (() -> Void)? {
             switch self {
-            case let .button(_, showsChevron: _, action: action): return action
-            case .destination: return nil
-            case .switch: return nil
+            case let .button(_, showsChevron: _, action: action): action
+            case .destination: nil
+            case .switch: nil
             }
         }
 
-        public var buttonShowsChevron: Bool? {
+        var buttonShowsChevron: Bool? {
             switch self {
-            case let .button(_, showsChevron: showsChevron, action: _): return showsChevron
-            case .destination: return nil
-            case .switch: return nil
+            case let .button(_, showsChevron: showsChevron, action: _): showsChevron
+            case .destination: nil
+            case .switch: nil
             }
         }
 
-        public var destination: (any View)? {
+        var destination: (any View)? {
             switch self {
-            case .button: return nil
-            case let .destination(_, view): return view
-            case .switch: return nil
+            case .button: nil
+            case let .destination(_, view): view
+            case .switch: nil
             }
         }
 
-        public var isSwitchToggled: Binding<Bool>? {
+        var isSwitchToggled: Binding<Bool>? {
             switch self {
-            case .button: return nil
-            case .destination: return nil
-            case let .switch(_, isToggled: isToggled): return isToggled
+            case .button: nil
+            case .destination: nil
+            case let .switch(_, isToggled: isToggled): isToggled
             }
         }
 

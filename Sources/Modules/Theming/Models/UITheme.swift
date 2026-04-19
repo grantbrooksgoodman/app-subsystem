@@ -9,15 +9,74 @@
 import Foundation
 import UIKit
 
-public struct UITheme: CaseIterable, Equatable, EncodedHashable {
+/// A named collection of colors that defines the visual appearance of an
+/// app.
+///
+/// A theme maps semantic color slots (``ColoredItemType``) to concrete
+/// colors through an array of ``ColoredItem`` values. Each item pairs a
+/// slot with a ``ColorSet`` that can provide separate colors for light and
+/// dark appearances.
+///
+/// ## Defining a Theme
+///
+/// Create a theme by providing a name, a list of colored items, and an
+/// optional interface style:
+///
+/// ```swift
+/// let oceanTheme = UITheme(
+///     name: "Ocean",
+///     items: [
+///         .init(.accent, set: .init(.systemTeal)),
+///         .init(.background, set: .init(.white, variant: .init(hex: 0x0A1628))),
+///         .init(.titleText, set: .init(.black, variant: .white)),
+///     ],
+///     style: .unspecified
+/// )
+/// ```
+///
+/// Register custom themes by providing a ``UIThemeListDelegate`` to
+/// ``AppSubsystem/delegates``. All registered themes are available through
+/// ``allCases``.
+///
+/// ## Resolving Colors
+///
+/// Use ``color(for:)`` to resolve a ``ColoredItemType`` against the
+/// theme's palette. The method automatically returns the dark mode variant
+/// when appropriate:
+///
+///     let accentColor = ThemeService.currentTheme.color(for: .accent)
+///
+/// For convenience, themed colors are also available as static properties
+/// on `UIColor` and `Color`:
+///
+/// ```swift
+/// label.textColor = .titleText    // UIKit
+/// Text("Hello").foregroundStyle(.accent)  // SwiftUI
+/// ```
+///
+/// - Warning: ``color(for:)`` returns `UIColor.clear` if the requested
+///   item type is not present in the theme's palette. Ensure that every
+///   theme provides colors for all item types your app uses.
+public struct UITheme: CaseIterable, Equatable, EncodedHashable, Sendable {
     // MARK: - Properties
 
+    /// The display name of the theme.
     public let name: String
-    public let items: [ColoredItem]
+
+    /// The colored items that make up this theme's palette.
+    public let items: Set<ColoredItem>
+
+    /// The user interface style this theme applies.
+    ///
+    /// A value of `unspecified` follows the system appearance. Setting a
+    /// specific style forces the app into light or dark mode
+    /// regardless of the system setting.
     public let style: UIUserInterfaceStyle
 
     // MARK: - Computed Properties
 
+    /// All available themes, including both app-provided and subsystem
+    /// themes.
     public static var allCases: [UITheme] {
         (AppSubsystem.delegates.uiThemeList.uiThemes + UITheme.subsystemCases).unique
     }
@@ -36,20 +95,42 @@ public struct UITheme: CaseIterable, Equatable, EncodedHashable {
 
     // MARK: - Init
 
+    /// Creates a theme with the given name, colored items, and interface
+    /// style.
+    ///
+    /// - Parameters:
+    ///   - name: The display name of the theme.
+    ///   - items: The colored items that make up the palette. Each item
+    ///     type must appear at most once.
+    ///   - style: The user interface style to apply. Pass `unspecified` to
+    ///     follow the system appearance. Defaults to `unspecified`.
     public init(
         name: String,
-        items: [ColoredItem],
+        items: Set<ColoredItem>,
         style: UIUserInterfaceStyle = .unspecified
     ) {
         self.name = name
         self.items = items
         self.style = style
-        assert(!containsDuplicates(items: self.items), "Cannot instantiate UITheme with duplicate ColoredItems")
+        assert(
+            !containsDuplicates(items: items),
+            "Cannot instantiate UITheme with duplicate ColoredItems"
+        )
     }
 
     // MARK: - Color for Item
 
-    /// - Warning: Returns `UIColor.clear` if item is not themed.
+    /// Returns the color for the given item type, selecting the appropriate
+    /// appearance variant automatically.
+    ///
+    /// When dark mode is active, the variant color is returned if one was
+    /// provided; otherwise the primary color is used.
+    ///
+    /// - Parameter itemType: The semantic color slot to resolve.
+    ///
+    /// - Returns: The resolved color, or `UIColor.clear` if `itemType` is
+    ///   not present in this theme's palette.
+    @MainActor
     public func color(for itemType: ColoredItemType) -> UIColor {
         guard let item = items.first(where: { $0.type == itemType }) else { return .clear }
         return ThemeService.isDarkModeActive ? (item.set.variant ?? item.set.primary) : item.set.primary
@@ -57,7 +138,7 @@ public struct UITheme: CaseIterable, Equatable, EncodedHashable {
 
     // MARK: - Auxiliary
 
-    private func containsDuplicates(items: [ColoredItem]) -> Bool {
+    private func containsDuplicates(items: Set<ColoredItem>) -> Bool {
         let types = items.map(\.type)
         return types.unique.count != types.count
     }
@@ -70,9 +151,13 @@ public extension UITheme {
 
     // MARK: - Properties
 
-    static let `default`: UITheme = .init(name: "Default", items: defaultColoredItems)
+    /// The built-in theme used when no other theme has been applied.
+    static let `default`: UITheme = .init(
+        name: "Default",
+        items: defaultColoredItems
+    )
 
-    private static var defaultColoredItems: [Item] {
+    private static var defaultColoredItems: Set<Item> {
         let accent = Item(.accent, set: .init(.systemBlue))
         let background = Item(.background, set: .init(.white, variant: .black))
         let disabled = Item(.disabled, set: .init(.systemGray3))

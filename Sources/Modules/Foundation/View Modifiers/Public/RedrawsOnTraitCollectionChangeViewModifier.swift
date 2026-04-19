@@ -25,6 +25,9 @@ private struct RedrawsOnTraitCollectionChangeViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Forces the view to update whenever the trait collection
+    /// changes – for example, when switching between light and dark
+    /// mode.
     func redrawsOnTraitCollectionChange() -> some View {
         modifier(RedrawsOnTraitCollectionChangeViewModifier())
     }

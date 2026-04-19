@@ -77,13 +77,17 @@ struct ThemedReducer: Reducer {
         case .viewAppeared:
             state.previousNavigationBarAppearance = NavigationBar.currentAppearance
             guard let navigationBarAppearance = state.navigationBarAppearance else { return .none }
-            NavigationBar.setAppearance(navigationBarAppearance)
+            return .fireAndForget { @MainActor in
+                NavigationBar.setAppearance(navigationBarAppearance)
+            }
 
         case .viewDisappeared:
             guard state.restoresNavigationBarAppearanceOnDisappear,
                   state.navigationBarAppearance != nil,
                   let previousNavigationBarAppearance = state.previousNavigationBarAppearance else { return .none }
-            NavigationBar.setAppearance(previousNavigationBarAppearance)
+            return .fireAndForget { @MainActor in
+                NavigationBar.setAppearance(previousNavigationBarAppearance)
+            }
 
         case .appearanceChanged:
             if let navigationBarAppearance = state.navigationBarAppearance {

@@ -40,10 +40,20 @@ private struct StatusBarStyleViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Overrides the status bar style while the view is visible.
+    ///
+    /// - Parameters:
+    ///   - style: The status bar style to apply.
+    ///   - restoreOnDisappear: Whether to restore the
+    ///     theme-appropriate style when the view disappears. The
+    ///     default is `true`.
     func preferredStatusBarStyle(
         _ style: UIStatusBarStyle,
         restoreOnDisappear: Bool = true
     ) -> some View {
-        modifier(StatusBarStyleViewModifier(style: style, restoreOnDisappear: restoreOnDisappear))
+        modifier(StatusBarStyleViewModifier(
+            style: style,
+            restoreOnDisappear: restoreOnDisappear
+        ))
     }
 }

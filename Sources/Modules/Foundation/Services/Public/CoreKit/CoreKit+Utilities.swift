@@ -13,18 +13,11 @@ import UIKit
 import AlertKit
 
 public extension CoreKit {
+    /// General-purpose utilities for cache management, directory
+    /// cleanup, language configuration, and app diagnostics.
     struct Utilities: Sendable {
-        // MARK: - Types
-
-        public enum EnhancedTranslationStatusVerbosity {
-            case errorsOnly
-            case successAndErrors
-            case successOnly
-        }
-
         // MARK: - Dependencies
 
-        @Dependency(\.alertKitConfig) private var alertKitConfig: AlertKit.Config
         @Dependency(\.fileManager) private var fileManager: FileManager
         @Dependency(\.uiApplication) private var uiApplication: UIApplication
         @Dependency(\.uiControl) private var uiControl: UIControl
@@ -35,7 +28,7 @@ public extension CoreKit {
 
         // MARK: - Computed Properties
 
-        /// The current memory usage of the application in megabytes.
+        /// The current memory usage of the app in megabytes.
         public var appMemoryFootprint: Int? {
             getAppMemoryFootprint()
         }
@@ -51,21 +44,46 @@ public extension CoreKit {
 
         // MARK: - Methods
 
+        /// Clears the caches for the given domains.
+        ///
+        /// Pass specific domains to clear only a subset of caches,
+        /// or omit the parameter to clear all registered domains.
+        ///
+        /// - Parameter domains: The cache domains to clear. The
+        ///   default is all registered domains.
         public func clearCaches(_ domains: [CacheDomain] = CacheDomain.allCases) {
             domains.forEach { $0.clear() }
         }
 
+        /// Removes all files from the app's documents
+        /// directory.
+        ///
+        /// - Returns: An ``Exception`` if the operation fails, or
+        ///   `nil` on success.
         @discardableResult
         public func eraseDocumentsDirectory() -> Exception? {
             eraseDirectory(at: fileManager.documentsDirectoryURL)
         }
 
+        /// Removes all files from the app's temporary
+        /// directory.
+        ///
+        /// - Returns: An ``Exception`` if the operation fails, or
+        ///   `nil` on success.
         @discardableResult
         public func eraseTemporaryDirectory() -> Exception? {
             eraseDirectory(at: fileManager.temporaryDirectory)
         }
 
-        /// Returns to the Home screen before terminating the application.
+        /// Returns to the Home screen before terminating the
+        /// app.
+        ///
+        /// The app suspends immediately, then terminates
+        /// after the specified duration.
+        ///
+        /// - Parameter duration: The delay between suspending and
+        ///   terminating. The default is one second.
+        @MainActor
         public func exitGracefully(terminateAfter duration: Duration = .seconds(1)) {
             uiControl
                 .sendAction(
@@ -74,10 +92,24 @@ public extension CoreKit {
                     for: nil
                 )
 
-            GCD.shared.after(duration) { exit(0) }
+            Task.delayed(by: duration) { @MainActor in
+                exit(0)
+            }
         }
 
-        /// The mapping of supported language codes to language names, localized based on provided value.
+        /// Returns the mapping of supported language codes to language
+        /// names, localized for the given language code.
+        ///
+        /// Each entry maps a language code (for example, `"fr"`) to
+        /// a display name that includes the localized name and, when
+        /// different, the endonym in parentheses.
+        ///
+        /// - Parameter languageCode: The language code to localize
+        ///   the display names for.
+        ///
+        /// - Returns: The localized dictionary, or `nil` if no
+        ///   language-code dictionary has been stored in
+        ///   ``RuntimeStorage``.
         public func localizedLanguageCodeDictionary(for languageCode: String) -> [String: String]? {
             guard let languageCodeDictionary = RuntimeStorage.languageCodeDictionary else { return nil }
             let locale = Locale(languageCode: .init(languageCode))
@@ -101,16 +133,36 @@ public extension CoreKit {
             }
         }
 
+        /// Restores the active language code to the device's system
+        /// language.
         public func restoreDeviceLanguageCode() {
             setLanguageCode(Locale.systemLanguageCode)
         }
 
-        public func setLanguageCode(_ languageCode: String, override: Bool = false) {
-            alertKitConfig.overrideTargetLanguageCode(languageCode)
-            RuntimeStorage.store(languageCode, as: .languageCode)
+        /// Sets the active language code for translation and
+        /// localization.
+        ///
+        /// The new code is stored in ``RuntimeStorage`` and
+        /// propagated to the translation service.
+        ///
+        /// - Parameters:
+        ///   - languageCode: The language code to set (for example,
+        ///     `"fr"`).
+        ///   - override: Pass `true` to persist the code as an
+        ///     override that takes precedence over the stored
+        ///     language code. The default is `false`.
+        public func setLanguageCode(
+            _ languageCode: String,
+            override: Bool = false
+        ) {
+            Task { @MainActor in
+                @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
+                alertKitConfig.overrideTargetLanguageCode(languageCode)
+                RuntimeStorage.store(languageCode, as: .languageCode)
 
-            guard override else { return }
-            RuntimeStorage.store(languageCode, as: .overriddenLanguageCode)
+                guard override else { return }
+                RuntimeStorage.store(languageCode, as: .overriddenLanguageCode)
+            }
         }
 
         // MARK: - Computed Property Getters
@@ -157,7 +209,8 @@ public extension CoreKit {
 
 private enum UIControlDependency: DependencyKey {
     static func resolve(_: DependencyValues) -> UIControl {
-        .init()
+        @MainActorIsolated var uiControl = UIControl()
+        return uiControl
     }
 }
 

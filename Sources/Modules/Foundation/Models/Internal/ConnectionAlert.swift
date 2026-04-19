@@ -12,10 +12,10 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 enum ConnectionAlert {
     // MARK: - Present
 
-    @MainActor
     static func present() async {
         @Dependency(\.build) var build: Build
         @Dependency(\.uiApplication) var uiApplication: UIApplication
@@ -23,7 +23,12 @@ enum ConnectionAlert {
         var actions: [AKAction] = [.cancelAction(title: "OK")]
         if let settingsURL = URL(string: massageRedirectionKey("oddUdfstgb")),
            uiApplication.canOpenURL(settingsURL) {
-            let settingsAction: AKAction = .init(AppSubsystem.delegates.localizedStrings.settings) { uiApplication.open(settingsURL) }
+            let settingsAction: AKAction = .init(AppSubsystem.delegates.localizedStrings.settings) {
+                Task { @MainActor in
+                    uiApplication.open(settingsURL)
+                }
+            }
+
             actions.append(settingsAction)
         }
 

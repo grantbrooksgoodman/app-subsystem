@@ -35,6 +35,12 @@ private struct OnFirstAppearViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Performs an action only the first time the view appears.
+    ///
+    /// Subsequent appearances of the same view instance do not
+    /// trigger the action.
+    ///
+    /// - Parameter action: The closure to execute on first appear.
     func onFirstAppear(_ action: @escaping (() -> Void)) -> some View {
         modifier(OnFirstAppearViewModifier(action))
     }

@@ -9,7 +9,27 @@
 import Foundation
 import QuickLook
 
-public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+/// A convenience wrapper around `QLPreviewController` for previewing
+/// one or more files.
+///
+/// `QuickViewer` manages the data source and delegate requirements of
+/// QuickLook, letting you present a file preview with a single call:
+///
+/// ```swift
+/// @Dependency(\.quickViewer) var quickViewer: QuickViewer
+///
+/// quickViewer.preview(
+///     filesAtPaths: [documentPath],
+///     title: "Report"
+/// )
+/// ```
+///
+/// When multiple paths are provided, the user can swipe between
+/// previews. Use ``onDismiss(_:)`` to perform cleanup when the
+/// preview is closed.
+///
+/// - SeeAlso: ``QuickViewerDependency``
+public final class QuickViewer: NSObject, QLPreviewControllerDataSource, @preconcurrency QLPreviewControllerDelegate {
     // MARK: - Types
 
     private final class PreviewItem: NSObject, QLPreviewItem {
@@ -37,6 +57,22 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
 
     // MARK: - Preview
 
+    /// Presents a QuickLook preview for the files at the given paths.
+    ///
+    /// Empty paths are filtered out automatically. When multiple
+    /// valid paths are provided, the user can swipe between previews.
+    ///
+    /// - Parameters:
+    ///   - paths: The file paths to preview.
+    ///   - startingIndex: The index of the file to display first.
+    ///     The default is `0`.
+    ///   - title: An optional title displayed in the preview's
+    ///     navigation bar.
+    ///   - embedded: Pass `true` to wrap the preview controller in
+    ///     a `UINavigationController` before presenting.
+    ///
+    /// - Returns: An ``Exception`` if no valid paths are provided,
+    ///   or `nil` on success.
     @discardableResult
     public func preview(
         filesAtPaths paths: [String],
@@ -76,6 +112,12 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, QLPrevi
 
     // MARK: - On Dismiss
 
+    /// Registers a closure to execute when the preview is dismissed.
+    ///
+    /// The closure is called once and then cleared. Calling this
+    /// method again replaces any previously registered closure.
+    ///
+    /// - Parameter perform: The closure to execute on dismissal.
     public func onDismiss(_ perform: @escaping () -> Void) {
         _onDismiss = perform
     }

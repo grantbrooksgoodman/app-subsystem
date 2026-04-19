@@ -51,6 +51,13 @@ private struct NavigationBarAppearanceViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Applies a navigation bar appearance while the view is visible,
+    /// automatically reapplying it when the trait collection changes.
+    ///
+    /// - Parameters:
+    ///   - appearance: The navigation bar appearance to apply.
+    ///   - restoreOnDisappear: Whether to restore the previous
+    ///     appearance when the view disappears. The default is `true`.
     func navigationBarAppearance(
         _ appearance: NavigationBarAppearance,
         restoreOnDisappear: Bool = true

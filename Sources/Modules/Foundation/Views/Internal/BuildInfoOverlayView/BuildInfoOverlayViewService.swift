@@ -12,6 +12,7 @@ import UIKit
 /* Proprietary */
 import AlertKit
 
+@MainActor
 struct BuildInfoOverlayViewService {
     // MARK: - Dependencies
 
@@ -26,52 +27,58 @@ struct BuildInfoOverlayViewService {
     // MARK: - Build Info Button Tapped
 
     func buildInfoButtonTapped() {
-        Task { @MainActor in
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-            let viewBuildInformationAction: AKAction = .init("View Build Information") {
-                self.viewBuildInformationButtonTapped()
+        let viewBuildInformationAction: AKAction = .init("View Build Information") {
+            Task { @MainActor in
+                viewBuildInformationButtonTapped()
             }
-
-            let developerModeButtonTitle = "\(build.isDeveloperModeEnabled ? "Disable" : "Enable") Developer Mode"
-            let developerModeAction: AKAction = .init(
-                developerModeButtonTitle,
-                style: developerModeButtonTitle.hasPrefix("Enable") ? .default : .destructive
-            ) {
-                DevModeService.promptToToggle()
-            }
-
-            let alert = AKAlert(
-                title: RuntimeStorage.languageCode == "en" ? "Project \(build.codeName)" : "Project ⌘\(build.codeName)⌘",
-                message: buildInfoButtonMessage.string,
-                actions: [
-                    viewBuildInformationAction,
-                    developerModeAction,
-                    .cancelAction(title: AppSubsystem.delegates.localizedStrings.dismiss),
-                ]
-            )
-
-            if let messageAttributes = buildInfoButtonMessage.messageAttributes {
-                alert.setMessageAttributes(messageAttributes.alertKitMapping)
-            }
-
-            await alert.present(translating: [.message, .title])
         }
+
+        let developerModeButtonTitle = "\(build.isDeveloperModeEnabled ? "Disable" : "Enable") Developer Mode"
+        let developerModeAction: AKAction = .init(
+            developerModeButtonTitle,
+            style: developerModeButtonTitle.hasPrefix("Enable") ? .default : .destructive
+        ) {
+            DevModeService.promptToToggle()
+        }
+
+        let alert = AKAlert(
+            title: RuntimeStorage.languageCode == "en" ? "Project \(build.codeName)" : "Project ⌘\(build.codeName)⌘",
+            message: buildInfoButtonMessage.string,
+            actions: [
+                viewBuildInformationAction,
+                developerModeAction,
+                .cancelAction(title: AppSubsystem.delegates.localizedStrings.dismiss),
+            ]
+        )
+
+        if let messageAttributes = buildInfoButtonMessage.messageAttributes {
+            alert.setMessageAttributes(messageAttributes.alertKitMapping)
+        }
+
+        Task { await alert.present(translating: [.message, .title]) }
     }
 
     // MARK: - Send Feedback Button Tapped
 
     func sendFeedbackButtonTapped() {
-        Task { @MainActor in
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-            let reportBugAction: AKAction = .init("Report Bug") { reportDelegate.reportBug() }
+        let reportBugAction: AKAction = .init("Report Bug") {
+            Task { @MainActor in
+                reportDelegate.reportBug()
+            }
+        }
 
+        Task {
             await AKActionSheet(
                 title: "File a Report",
                 actions: [
                     .init(AppSubsystem.delegates.localizedStrings.sendFeedback) {
-                        reportDelegate.sendFeedback()
+                        Task { @MainActor in
+                            reportDelegate.sendFeedback()
+                        }
                     },
                     reportBugAction,
                 ],

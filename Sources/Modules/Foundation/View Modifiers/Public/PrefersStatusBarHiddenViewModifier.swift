@@ -41,6 +41,14 @@ private struct PrefersStatusBarHiddenViewModifier: ViewModifier {
 }
 
 public extension View {
+    /// Hides or shows the status bar while the view is visible.
+    ///
+    /// - Parameters:
+    ///   - isHidden: Pass `true` to hide the status bar. The
+    ///     default is `true`.
+    ///   - restoreOnDisappear: Whether to restore the previous
+    ///     visibility when the view disappears. The default is
+    ///     `true`.
     func prefersStatusBarHidden(
         _ isHidden: Bool = true,
         restoreOnDisappear: Bool = true

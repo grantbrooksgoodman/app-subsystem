@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-public protocol MetadataProtocol: Hashable {
+protocol MetadataProtocol: Hashable, Sendable {
     // MARK: - Properties
 
     var fileName: String { get }

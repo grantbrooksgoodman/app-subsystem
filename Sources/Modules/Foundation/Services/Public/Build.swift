@@ -9,32 +9,81 @@
 import Combine
 import Foundation
 
-public final class Build {
+/// The build configuration for the current app, including
+/// version information, milestone, expiry, and runtime diagnostics.
+///
+/// `Build` is created once during ``AppSubsystem`` initialization and
+/// is available through the dependency system:
+///
+/// ```swift
+/// @Dependency(\.build) var build: Build
+/// ```
+///
+/// It exposes both static metadata – such as the code name, milestone,
+/// and App Store build number – and dynamic properties that are
+/// derived at runtime, including the build SKU, bundle revision,
+/// expiry date, and network reachability status.
+///
+/// ## Milestones
+///
+/// Every build belongs to a ``Milestone`` that indicates its
+/// position in the release cycle. Certain subsystem behaviors –
+/// such as developer mode availability and timebomb enforcement –
+/// are gated on the current milestone.
+///
+/// ## Build Expiry
+///
+/// Prerelease builds include a 30-day timebomb that requires
+/// entry of an expiration override code after the evaluation period
+/// ends. The ``expiryDate``, ``isTimebombActive``, and
+/// ``expirationOverrideCode`` properties support this mechanism.
+/// General-release builds are exempt from expiry.
+///
+/// - SeeAlso: ``BuildDependency``
+public final class Build: @unchecked Sendable {
     // MARK: - Types
 
+    /// The release cycle stage of a build.
+    ///
+    /// Each milestone has a single-character ``shortString``
+    /// representation used in build SKUs and bundle version
+    /// identifiers.
     public enum Milestone: String {
         /* MARK: Cases */
 
-        case preAlpha = "pre-alpha" /* Typically builds 0-1500. */
-        case alpha /* Typically builds 1500-3000. */
-        case beta /* Typically builds 3000-6000. */
-        case releaseCandidate = "release candidate" /* Typically builds 6000 onwards. */
+        /// A very early development build.
+        /// Typically builds 0-1500.
+        case preAlpha = "pre-alpha"
+
+        /// An early development build with core features in
+        /// progress.
+        /// Typically builds 1,500 to 3,000.
+        case alpha
+
+        /// A feature-complete build undergoing testing.
+        /// Typically builds 3,000 to 6,000.
+        case beta
+
+        /// A build that is a candidate for general release.
+        /// Typically builds 6,000 onwards.
+        case releaseCandidate = "release candidate"
+
+        /// A production release distributed through the App Store.
         case generalRelease = "general"
 
         /* MARK: Properties */
 
+        /// A single-character abbreviation for this milestone.
+        ///
+        /// The abbreviation is appended to build numbers and SKUs
+        /// to indicate the milestone (for example, `"b"` for beta).
         public var shortString: String {
             switch self {
-            case .preAlpha:
-                return "p"
-            case .alpha:
-                return "a"
-            case .beta:
-                return "b"
-            case .releaseCandidate:
-                return "c"
-            case .generalRelease:
-                return "g"
+            case .preAlpha: "p"
+            case .alpha: "a"
+            case .beta: "b"
+            case .releaseCandidate: "c"
+            case .generalRelease: "g"
             }
         }
     }
@@ -48,28 +97,82 @@ public final class Build {
 
     // MARK: - Properties
 
+    /// The build number of the most recent App Store release.
+    ///
+    /// This value is used to compute the ``revisionBuildNumber`` and
+    /// ``bundleRevision``.
     public let appStoreBuildNumber: Int
+
+    /// The internal code name for the current release.
     public let codeName: String
+
+    /// The public-facing product name used in general-release builds.
     public let finalName: String
+
+    /// A Boolean value that indicates whether logging is enabled for
+    /// this build.
     public let loggingEnabled: Bool
+
+    /// The release cycle stage of this build.
     public let milestone: Milestone
 
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Computed Properties
 
+    /// The major version number extracted from the bundle version
+    /// string.
     public var appStoreReleaseVersion: Int { getAppStoreReleaseVersion() }
+
+    /// The build number read from the bundle's `CFBundleVersion`.
     public var buildNumber: Int { getBuildNumber() }
+
+    /// A unique SKU string that encodes the build date, a
+    /// three-letter code-name abbreviation, the build number, and
+    /// the milestone.
     public var buildSKU: String { getBuildSKU() }
+
+    /// The short bundle version string (for example, `"1.2.3"`).
     public var bundleVersion: String { getBundleVersion() }
+
+    /// An alphabetic revision identifier derived from the number of
+    /// builds since the last App Store release.
     public var bundleRevision: String { getBundleRevision() }
+
+    /// The six-digit code required to override build expiry.
+    ///
+    /// The code is derived deterministically from the code name.
     public var expirationOverrideCode: String { getExpirationOverrideCode() }
+
+    /// The date on which this build's evaluation period ends.
+    ///
+    /// The expiry date is 30 days after the build date.
     public var expiryDate: Date { getExpiryDate() }
+
+    /// A human-readable string describing the build's expiry status.
     public var expiryInfoString: String { getExpiryInfoString() }
+
+    /// A Boolean value that indicates whether developer mode is
+    /// enabled.
+    ///
+    /// Developer mode is always disabled in general-release builds.
     public var isDeveloperModeEnabled: Bool { getIsDeveloperModeEnabled() }
+
+    /// A Boolean value that indicates whether the device currently
+    /// has network connectivity.
     public var isOnline: Bool { getNetworkStatus() }
+
+    /// A Boolean value that indicates whether the build expiry
+    /// timebomb is active.
+    ///
+    /// The timebomb is always inactive in general-release builds.
     public var isTimebombActive: Bool { getIsTimebombActive() }
+
+    /// A deterministic, alphanumeric project identifier derived from
+    /// the code name and first compile date.
     public var projectID: String { getProjectID() }
+
+    /// The number of builds since the last App Store release.
     public var revisionBuildNumber: Int { getRevisionBuildNumber() }
 
     private var buildDateUnixDouble: TimeInterval { getBuildDateUnixDouble() }
@@ -78,7 +181,7 @@ public final class Build {
 
     // MARK: - Init
 
-    public init(
+    init(
         appStoreBuildNumber: Int,
         codeName: String,
         finalName: String,

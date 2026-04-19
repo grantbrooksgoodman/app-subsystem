@@ -11,7 +11,8 @@ import Foundation
 public extension Calendar {
     // MARK: - Types
 
-    /// An enumeration for the localizable components of a calendar date.
+    /// A calendar date component that can be localized into a
+    /// human-readable string.
     enum LocalizableComponent: CaseIterable {
         /* MARK: Cases */
 
@@ -25,6 +26,7 @@ public extension Calendar {
 
         /* MARK: Properties */
 
+        /// The equivalent `Calendar.Component`.
         var asComponent: Component {
             switch self {
             case .day: .day
@@ -37,6 +39,7 @@ public extension Calendar {
             }
         }
 
+        /// The equivalent `NSCalendar.Unit`.
         var asNSCalendarUnit: NSCalendar.Unit {
             switch self {
             case .day: .day
@@ -52,6 +55,8 @@ public extension Calendar {
 
     // MARK: - Methods
 
+    /// Returns a localized name for the given date component, such
+    /// as "hours" or "minutes".
     func localizedString(
         for component: LocalizableComponent,
         plural: Bool = false,

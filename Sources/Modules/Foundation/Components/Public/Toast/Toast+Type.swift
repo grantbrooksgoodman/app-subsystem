@@ -9,52 +9,90 @@
 import Foundation
 
 public extension Toast {
-    enum ToastType: Equatable {
+    /// The visual presentation type of a toast.
+    ///
+    /// A toast can appear as either a full-width ``banner`` or a
+    /// compact ``capsule``. Banners offer additional customization
+    /// through an appearance edge, a color palette, and a dismiss
+    /// button.
+    enum ToastType: Equatable, Sendable {
         // MARK: - Cases
 
+        /// A full-width banner that slides in from the specified edge.
+        ///
+        /// - Parameters:
+        ///   - style: The semantic style. The default is ``Style/none``.
+        ///   - appearanceEdge: The screen edge the banner appears from.
+        ///     The default is ``AppearanceEdge/top``.
+        ///   - colorPalette: An optional custom color palette.
+        ///   - showsDismissButton: Whether to show a dismiss button.
+        ///     Defaults to `true`.
         case banner(
             style: Toast.Style = .none,
             appearanceEdge: Toast.AppearanceEdge = .top,
             colorPalette: Toast.ColorPalette? = nil,
             showsDismissButton: Bool = true
         )
+
+        /// A compact, pill-shaped notification.
+        ///
+        /// - Parameter style: The semantic style. Defaults to
+        ///   ``Style/none``.
         case capsule(style: Toast.Style = .none)
 
         // MARK: - Properties
 
-        public var appearanceEdge: Toast.AppearanceEdge? {
+        var appearanceEdge: Toast.AppearanceEdge? {
             switch self {
-            case let .banner(style: _, appearanceEdge: appearanceEdge, colorPalette: _, showsDismissButton: _):
-                return appearanceEdge
-            default:
-                return nil
+            case let .banner(
+                style: _,
+                appearanceEdge: appearanceEdge,
+                colorPalette: _,
+                showsDismissButton: _
+            ): appearanceEdge
+
+            default: nil
             }
         }
 
-        public var colorPalette: Toast.ColorPalette? {
+        var colorPalette: Toast.ColorPalette? {
             switch self {
-            case let .banner(style: _, appearanceEdge: _, colorPalette: colorPalette, showsDismissButton: _):
-                return colorPalette
-            default:
-                return nil
+            case let .banner(
+                style: _,
+                appearanceEdge: _,
+                colorPalette: colorPalette,
+                showsDismissButton: _
+            ): colorPalette
+
+            default: nil
             }
         }
 
-        public var showsDismissButton: Bool? {
+        var showsDismissButton: Bool? {
             switch self {
-            case let .banner(style: _, appearanceEdge: _, colorPalette: _, showsDismissButton: showsDismissButton):
-                return showsDismissButton
-            default:
-                return nil
+            case let .banner(
+                style: _,
+                appearanceEdge: _,
+                colorPalette: _,
+                showsDismissButton: showsDismissButton
+            ): showsDismissButton
+
+            default: nil
             }
         }
 
-        public var style: Toast.Style {
+        var style: Toast.Style {
             switch self {
-            case let .banner(style: style, appearanceEdge: _, colorPalette: _, showsDismissButton: _):
-                return style
-            case let .capsule(style: style):
-                return style
+            case let .banner(
+                style: style,
+                appearanceEdge: _,
+                colorPalette: _,
+                showsDismissButton: _
+            ): style
+
+            case let .capsule(
+                style: style
+            ): style
             }
         }
     }

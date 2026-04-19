@@ -9,7 +9,50 @@
 import CryptoKit
 import Foundation
 
-public struct Exception: Equatable, Exceptionable, Swift.Error {
+/// A structured error type that captures a human-readable description,
+/// a deterministic error code, source-location metadata, and an
+/// optional chain of underlying exceptions.
+///
+/// Use `Exception` throughout your app as the standard error
+/// currency. Each exception records where it was created, what went
+/// wrong, and whether it should be reported to crash-reporting
+/// infrastructure:
+///
+/// ```swift
+/// guard let data else {
+///     throw Exception(
+///         "Failed to load configuration file.",
+///         metadata: .init(sender: self)
+///     )
+/// }
+/// ```
+///
+/// ## Error Codes
+///
+/// Every exception carries a ``code`` derived from a SHA-256 hash of
+/// its descriptor. This produces a short, deterministic identifier
+/// that remains stable across builds for any given descriptor string.
+/// You can also supply a static code through the `userInfo` dictionary
+/// when you need a fixed value.
+///
+/// ## User-Facing Descriptors
+///
+/// The ``userFacingDescriptor`` property returns a localized,
+/// end-user-appropriate message. On general-release builds, if no
+/// user-facing descriptor has been registered through the
+/// ``AppSubsystem/Delegates/ExceptionMetadataDelegate``, a generic
+/// "something went wrong" string is returned instead of the
+/// developer-facing descriptor.
+///
+/// ## Underlying Exceptions
+///
+/// Exceptions can form a chain through ``underlyingExceptions``.
+/// Reading this property recursively traverses the entire chain,
+/// returning a flat array of every exception in the hierarchy.
+///
+/// - SeeAlso: ``ExceptionMetadata``, ``Exceptionable``,
+///   ``Callback``, ``AppException``
+public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Sendable {
     // MARK: - Types
 
     enum UserInfo: String {
@@ -24,13 +67,28 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
 
     // MARK: - Properties
 
+    /// A short, deterministic error code derived from the descriptor.
     public let code: String
+
+    /// A Boolean value that indicates whether this exception should be
+    /// reported to crash-reporting or analytics infrastructure.
     public let isReportable: Bool
+
+    /// The source-location metadata captured at the point of creation.
     public let metadata: ExceptionMetadata
+
+    /// An optional dictionary of supplementary information attached to
+    /// the exception.
     public let userInfo: [String: Any]?
 
+    /// A developer-facing description of what went wrong.
     public internal(set) var descriptor: String
 
+    /// The full chain of underlying exceptions, recursively traversed.
+    ///
+    /// When read, this property walks the entire underlying exception
+    /// hierarchy and returns a flat array containing every exception
+    /// in the chain.
     public private(set) var underlyingExceptions: [Exception]? {
         get { traversedUnderlyingExceptions }
         set { _underlyingExceptions = newValue }
@@ -40,18 +98,30 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
 
     // MARK: - Computed Properties
 
+    /// A localized, end-user-appropriate description of the error.
+    ///
+    /// The value is resolved in the following order:
+    /// 1. A `"UserFacingDescriptor"` entry in ``userInfo``.
+    /// 2. A mapping provided by the
+    ///    ``AppSubsystem/Delegates/ExceptionMetadataDelegate``.
+    /// 3. On general-release builds, a generic localized string. On
+    ///    pre-release builds, the raw ``descriptor``.
     public var userFacingDescriptor: String {
         @Dependency(\.build) var build: Build
 
-        if let userFacingDescriptor = userInfo?[UserInfo.userFacingDescriptor.rawValue] as? String {
+        if let userFacingDescriptor = userInfo?[
+            UserInfo.userFacingDescriptor.rawValue
+        ] as? String ?? AppSubsystem
+            .delegates
+            .exceptionMetadata?
+            .userFacingDescriptor(for: descriptor) {
             return userFacingDescriptor
         }
 
-        guard let descriptor = AppSubsystem.delegates.exceptionMetadata?.userFacingDescriptor(for: descriptor) else {
-            return build.milestone == .generalRelease ? (AppSubsystem.delegates.localizedStrings.somethingWentWrong) : descriptor
-        }
-
-        return descriptor
+        return build.milestone == .generalRelease ? (AppSubsystem
+            .delegates
+            .localizedStrings
+            .somethingWentWrong) : descriptor
     }
 
     /// The recursively traversed value of all underlying `Exception`s for this instance.
@@ -64,6 +134,24 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
 
     // MARK: - Init
 
+    /// Creates an exception with the given descriptor.
+    ///
+    /// The error ``code`` is derived automatically from the descriptor
+    /// unless a `"StaticErrorCode"` key is present in `userInfo`.
+    /// When `isReportable` is `nil`, the value is resolved through
+    /// the ``AppSubsystem/Delegates/ExceptionMetadataDelegate``,
+    /// falling back to `true` if no delegate is registered.
+    ///
+    /// - Parameters:
+    ///   - descriptor: A developer-facing description. The default is
+    ///     `"An unknown error occurred."`.
+    ///   - isReportable: Whether the exception can be reported, or
+    ///     `nil` to resolve automatically.
+    ///   - userInfo: An optional dictionary of supplementary
+    ///     information.
+    ///   - underlyingExceptions: An optional array of exceptions that
+    ///     caused this one.
+    ///   - metadata: The source-location metadata for this exception.
     public init(
         _ descriptor: String = "An unknown error occurred.",
         isReportable: Bool? = nil,
@@ -82,6 +170,19 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
         self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil
     }
 
+    /// Creates an exception from a Swift `Error`.
+    ///
+    /// The error is bridged to `NSError` and its domain, code, and
+    /// user info are captured automatically.
+    ///
+    /// - Parameters:
+    ///   - error: The error to wrap.
+    ///   - isReportable: Whether the exception can be reported, or
+    ///     `nil` to resolve automatically.
+    ///   - userInfo: Additional supplementary information to merge.
+    ///   - underlyingExceptions: An optional array of exceptions that
+    ///     caused this one.
+    ///   - metadata: The source-location metadata for this exception.
     public init(
         _ error: Error,
         isReportable: Bool? = nil,
@@ -98,6 +199,21 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
         )
     }
 
+    /// Creates an exception from an `NSError`.
+    ///
+    /// The error's `domain`, `code`, `localizedDescription`, and
+    /// `userInfo` are captured into the exception's properties. The
+    /// `NSLocalizedDescription` key is filtered from the merged user
+    /// info to avoid redundancy with the ``descriptor``.
+    ///
+    /// - Parameters:
+    ///   - error: The `NSError` to wrap.
+    ///   - isReportable: Whether the exception can be reported, or
+    ///     `nil` to resolve automatically.
+    ///   - userInfo: Additional supplementary information to merge.
+    ///   - underlyingExceptions: An optional array of exceptions that
+    ///     caused this one.
+    ///   - metadata: The source-location metadata for this exception.
     public init(
         _ error: NSError,
         isReportable: Bool? = nil,
@@ -132,6 +248,15 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
 
     // MARK: - Append
 
+    /// Returns a new exception with the given entries merged into its
+    /// user info dictionary.
+    ///
+    /// Existing keys are overwritten by entries in the provided
+    /// dictionary.
+    ///
+    /// - Parameter userInfo: The entries to merge.
+    ///
+    /// - Returns: A new exception with the merged user info.
     public func appending(userInfo: [String: Any]) -> Exception {
         guard var currentUserInfo = self.userInfo,
               !currentUserInfo.isEmpty else {
@@ -154,6 +279,12 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
         )
     }
 
+    /// Returns a new exception with the given exception appended to
+    /// its underlying exception chain.
+    ///
+    /// - Parameter underlyingException: The exception to append.
+    ///
+    /// - Returns: A new exception with the extended chain.
     public func appending(underlyingException: Exception) -> Exception {
         guard var currentUnderlyingExceptions = _underlyingExceptions,
               !currentUnderlyingExceptions.isEmpty else {
@@ -178,10 +309,24 @@ public struct Exception: Equatable, Exceptionable, Swift.Error {
 
     // MARK: - AppException Equality Comparison
 
-    public func isEqual(to cataloggedException: AppException) -> Bool {
-        code == cataloggedException.errorCode
+    /// Returns a Boolean value indicating whether this exception's
+    /// error code matches a catalogued ``AppException``.
+    ///
+    /// - Parameter cataloggedException: The catalogued exception to
+    ///   compare against.
+    ///
+    /// - Returns: `true` if the codes match; otherwise, `false`.
+    public func isEqual(to cataloguedException: AppException) -> Bool {
+        code == cataloguedException.errorCode
     }
 
+    /// Returns a Boolean value indicating whether this exception's
+    /// error code matches any catalogued ``AppException``.
+    ///
+    /// - Parameter in: An array of ``AppException`` values to compare
+    ///   against.
+    ///
+    /// - Returns: `true` if a match is found; otherwise, `false`.
     public func isEqual(toAny in: [AppException]) -> Bool {
         !`in`.filter { $0.errorCode == code }.isEmpty
     }

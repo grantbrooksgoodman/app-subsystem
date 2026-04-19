@@ -13,17 +13,28 @@ import UIKit
 import AlertKit
 import Translator
 
+@MainActor
 public extension Toast {
     // MARK: - Types
 
+    /// Identifies which text components of a toast should be
+    /// translated before display.
+    ///
+    /// Pass one or more keys to ``show(_:translating:languagePair:onTap:)``
+    /// to request translation at runtime of the toast's title,
+    /// message, or both.
     enum TranslationOptionKey: CaseIterable {
+        /// The toast's body text.
         case message
+
+        /// The toast's title text. Ignored if the toast has no
+        /// title.
         case title
     }
 
     // MARK: - Properties
 
-    private(set) static var overrideColorPalette: Toast.ColorPalette?
+    internal private(set) static var overrideColorPalette: Toast.ColorPalette?
 
     private static var isHidden = true
     private static var keyboardHeight: CGFloat = 0
@@ -39,16 +50,41 @@ public extension Toast {
 
     // MARK: - Show / Hide
 
+    /// Presents a toast notification, optionally translating its
+    /// text components before display.
+    ///
+    /// When `keys` is empty, the toast is shown immediately with
+    /// its original strings. When one or more
+    /// ``TranslationOptionKey`` values are provided, the
+    /// corresponding text is translated using the configured
+    /// `AlertKit` translation delegate before presentation. If
+    /// translation fails, the original untranslated toast is shown
+    /// as a fallback and the error is logged.
+    ///
+    /// Presentation is automatically deferred while user interaction
+    /// is blocked or another toast is already visible.
+    ///
+    /// If a toast identical to the one currently on screen is
+    /// requested, the call is silently ignored.
+    ///
+    /// - Parameters:
+    ///   - toast: The toast to present.
+    ///   - keys: The text components to translate. Pass an empty
+    ///     array to skip translation. The default is `[]`.
+    ///   - languagePair: The language pair for translation. The
+    ///     default is ``LanguagePair/system``.
+    ///   - onTap: An optional closure executed when the user taps
+    ///     the toast.
     static func show(
         _ toast: Toast,
         translating keys: [TranslationOptionKey] = [],
         languagePair: LanguagePair = .system,
-        onTap: (() -> Void)? = nil
+        onTap: (@Sendable () -> Void)? = nil
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         guard let translationDelegate = alertKitConfig.translationDelegate,
               !keys.isEmpty else {
-            return Toast.show(
+            return Toast._show(
                 toast,
                 onTap: onTap
             )
@@ -95,61 +131,74 @@ public extension Toast {
         }
     }
 
+    /// Dismisses the currently visible toast, if any.
+    ///
+    /// Calling this method clears the observable toast state and
+    /// resets the overlay window. If the build-info overlay was
+    /// previously visible, it is restored after the toast is
+    /// dismissed.
+    ///
+    /// This method is safe to call when no toast is showing; it
+    /// returns immediately.
     static func hide() {
-        Task { @MainActor in
-            guard UIApplication.iOS27IsAvailable else {
-                Observables.rootViewToast.value = nil
-                Observables.rootViewToastAction.value = nil
-                return
-            }
-
-            @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
-
-            guard !isHidden,
-                  let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW") else { return }
-
+        guard UIApplication.iOS27IsAvailable else {
             Observables.rootViewToast.value = nil
             Observables.rootViewToastAction.value = nil
-
-            @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
-            if hidesBuildInfoOverlay == false {
-                BuildInfoOverlay.show()
-            }
-
-            rootOverlayWindow.frame = BuildInfoOverlay.isHidden ? .zero : RootOverlayView.fallbackFrame
-            rootOverlayWindow.isUserInteractionEnabled = !BuildInfoOverlay.isHidden
-
-            isHidden = true
+            return
         }
+
+        @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
+
+        guard !isHidden,
+              let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW") else { return }
+
+        Observables.rootViewToast.value = nil
+        Observables.rootViewToastAction.value = nil
+
+        @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
+        if hidesBuildInfoOverlay == false {
+            BuildInfoOverlay.show()
+        }
+
+        rootOverlayWindow.frame = BuildInfoOverlay.isHidden ? .zero : RootOverlayView.fallbackFrame
+        rootOverlayWindow.isUserInteractionEnabled = !BuildInfoOverlay.isHidden
+
+        isHidden = true
     }
 
     // MARK: - Override Default Color Palette
 
+    /// Overrides the default toast color palette for all
+    /// subsequently presented toasts.
+    ///
+    /// The override remains in effect until
+    /// ``restoreDefaultColorPalette()`` is called.
+    ///
+    /// - Parameter colorPalette: The color palette to apply.
     static func overrideDefaultColorPalette(_ colorPalette: Toast.ColorPalette) {
         Toast.overrideColorPalette = colorPalette
     }
 
+    /// Removes the current color palette override, restoring the
+    /// default appearance for subsequently presented toasts.
     static func restoreDefaultColorPalette() {
         Toast.overrideColorPalette = nil
     }
 
     // MARK: - Auxiliary
 
-    static func updateFrameForKeyboardAppearance(_ keyboardHeight: CGFloat) {
-        Task { @MainActor in
-            @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
+    internal static func updateFrameForKeyboardAppearance(_ keyboardHeight: CGFloat) {
+        @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
 
-            self.keyboardHeight = keyboardHeight
-            guard !isHidden,
-                  let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
-                  let overlayFrame = frame(Observables.rootViewToast.value?.type.appearanceEdge ?? .top) else { return }
+        self.keyboardHeight = keyboardHeight
+        guard !isHidden,
+              let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
+              let overlayFrame = frame(Observables.rootViewToast.value?.type.appearanceEdge ?? .top) else { return }
 
-            rootOverlayWindow.frame = overlayFrame
-            rootOverlayWindow.isUserInteractionEnabled = true
-        }
+        rootOverlayWindow.frame = overlayFrame
+        rootOverlayWindow.isUserInteractionEnabled = true
     }
 
-    @MainActor
     private static func frame(_ appearanceEdge: Toast.AppearanceEdge) -> CGRect? {
         @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
         guard let mainWindow else { return nil }
@@ -179,64 +228,61 @@ public extension Toast {
         return .init(origin: appearanceEdge == .bottom ? bottomEdgeOrigin : topEdgeOrigin, size: size)
     }
 
-    private static func show(
+    private static func _show(
         _ toast: Toast,
-        onTap: (() -> Void)? = nil
+        onTap: (@Sendable () -> Void)? = nil
     ) {
-        Task { @MainActor in
-            // Return early if same toast is already being shown.
-            guard !(Observables.rootViewToast.value == toast &&
-                (Observables.rootViewToastAction.value == nil) == (onTap == nil)) else { return }
+        // Return early if same toast is already being shown.
+        guard !(Observables.rootViewToast.value == toast &&
+            (Observables.rootViewToastAction.value == nil) == (onTap == nil)) else { return }
 
-            guard !UIApplication.isBlockingUserInteraction,
-                  !isShowingToast else {
-                Task.delayed(
-                    by: UIApplication.isBlockingUserInteraction ? .milliseconds(100) : .seconds(1)
-                ) {
-                    show(
-                        toast,
-                        onTap: onTap
-                    )
-                }
-                return
+        guard !UIApplication.isBlockingUserInteraction,
+              !isShowingToast else {
+            Task.delayed(
+                by: UIApplication.isBlockingUserInteraction ? .milliseconds(100) : .seconds(1)
+            ) { @MainActor in
+                show(
+                    toast,
+                    onTap: onTap
+                )
             }
-
-            guard UIApplication.iOS27IsAvailable else {
-                Observables.rootViewToast.value = toast
-                Observables.rootViewToastAction.value = onTap
-                return
-            }
-
-            @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
-
-            guard let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
-                  let overlayFrame = frame(toast.type.appearanceEdge ?? .top) else { return }
-
-            @MainActor
-            func setUpView() {
-                Observables.rootViewToast.value = toast
-                Observables.rootViewToastAction.value = onTap
-
-                rootOverlayWindow.frame = overlayFrame
-                rootOverlayWindow.isUserInteractionEnabled = true
-
-                isHidden = false
-            }
-
-            guard BuildInfoOverlay.isHidden else {
-                BuildInfoOverlay.hide(persistSetting: false)
-                Task.delayed(by: .seconds(0.5)) { @MainActor in
-                    setUpView()
-                }
-                return
-            }
-
-            setUpView()
+            return
         }
+
+        guard UIApplication.iOS27IsAvailable else {
+            Observables.rootViewToast.value = toast
+            Observables.rootViewToastAction.value = onTap
+            return
+        }
+
+        @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
+
+        guard let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
+              let overlayFrame = frame(toast.type.appearanceEdge ?? .top) else { return }
+
+        func setUpView() {
+            Observables.rootViewToast.value = toast
+            Observables.rootViewToastAction.value = onTap
+
+            rootOverlayWindow.frame = overlayFrame
+            rootOverlayWindow.isUserInteractionEnabled = true
+
+            isHidden = false
+        }
+
+        guard BuildInfoOverlay.isHidden else {
+            BuildInfoOverlay.hide(persistSetting: false)
+            Task.delayed(by: .milliseconds(500)) { @MainActor in
+                setUpView()
+            }
+            return
+        }
+
+        setUpView()
     }
 }
 
-private extension Array where Element == Translation {
+private extension [Translation] {
     /// - Returns: If a matching output is not found within the array, the provided input string.
     func firstOutput(matching inputString: String) -> String {
         (first(where: { $0.input.value == inputString })?.output ?? inputString).sanitized

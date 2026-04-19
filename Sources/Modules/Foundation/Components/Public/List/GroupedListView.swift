@@ -12,6 +12,29 @@ import SwiftUI
 /* Proprietary */
 import ComponentKit
 
+/// A view that renders a list of rows in a rounded, grouped style with
+/// optional header and footer text.
+///
+/// `GroupedListView` arranges an array of
+/// ``ListRowView/Configuration`` values into a visually cohesive group
+/// separated by dividers, similar to a Settings-style list:
+///
+/// ```swift
+/// GroupedListView(
+///     [
+///         .init(.button { showProfile() }, innerText: "Profile"),
+///         .init(.switch(isToggled: $notificationsOn), innerText: "Notifications"),
+///     ],
+///     headerText: "Account"
+/// )
+/// ```
+///
+/// When individual row configurations supply their own header or
+/// footer text, the view concatenates them automatically unless you
+/// provide explicit `headerText` or `footerText` values at
+/// initialization.
+///
+/// - SeeAlso: ``ListRowView``, ``ListRowView/Configuration``
 public struct GroupedListView: View {
     // MARK: - Constants Accessors
 
@@ -25,6 +48,17 @@ public struct GroupedListView: View {
 
     // MARK: - Init
 
+    /// Creates a grouped list from the given row configurations.
+    ///
+    /// - Parameters:
+    ///   - rows: The row configurations to display.
+    ///   - headerText: An optional header string displayed above the
+    ///     group. When `nil`, the view concatenates any header text
+    ///     from the individual row configurations.
+    ///   - footerText: An optional footer string displayed below the
+    ///     group. When `nil`, the view concatenates any footer text
+    ///     from the individual row configurations.
+    @MainActor
     public init(
         _ rows: [ListRowView.Configuration],
         headerText: String? = nil,
@@ -88,7 +122,7 @@ public struct GroupedListView: View {
     }
 }
 
-private extension Array where Element == ListRowView.Configuration {
+private extension [ListRowView.Configuration] {
     var concatenatedFooterText: String? {
         let countGreaterThanOne = count > 1
         let concatenated = reduce(into: [String]()) { partialResult, configuration in
@@ -113,6 +147,7 @@ private extension Array where Element == ListRowView.Configuration {
         return concatenated
     }
 
+    @MainActor
     var strippingMetadata: [ListRowView.Configuration] {
         reduce(into: [ListRowView.Configuration]()) { partialResult, configuration in
             partialResult.append(.init(

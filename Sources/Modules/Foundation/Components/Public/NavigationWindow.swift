@@ -12,6 +12,31 @@ import SwiftUI
 /* Proprietary */
 import ComponentKit
 
+/// A view that wraps its content in a `NavigationView` with configurable
+/// toolbar items, title, and display mode.
+///
+/// Use `NavigationWindow` as the outermost navigation container when
+/// you need declarative control over the toolbar's contents and
+/// appearance:
+///
+/// ```swift
+/// NavigationWindow(
+///     toolbarTitle: .init("Settings"),
+///     toolbarItems: [
+///         .init(placement: .topBarTrailing) {
+///             Button("Done") { dismiss() }
+///         },
+///     ]
+/// ) {
+///     SettingsContentView()
+/// }
+/// ```
+///
+/// The view applies the app's accent color to the navigation
+/// bar automatically.
+///
+/// - SeeAlso: ``Toolbar``, ``Toolbar/Item``,
+///   ``Toolbar/TitleConfiguration``
 public struct NavigationWindow: View {
     // MARK: - Properties
 
@@ -24,6 +49,19 @@ public struct NavigationWindow: View {
 
     // MARK: - Init
 
+    /// Creates a navigation window with the given configuration.
+    ///
+    /// - Parameters:
+    ///   - displayMode: The navigation bar title display mode. The
+    ///     default is `.automatic`.
+    ///   - isBackButtonHidden: A Boolean value that hides the back
+    ///     button. The default is `false`.
+    ///   - toolbarBackgroundColor: An optional background color for the
+    ///     navigation bar.
+    ///   - toolbarItems: An optional array of toolbar items to display.
+    ///   - toolbarTitle: An optional title configuration for the
+    ///     navigation bar.
+    ///   - content: The content to display inside the navigation view.
     public init(
         displayMode: NavigationBarItem.TitleDisplayMode = .automatic,
         isBackButtonHidden: Bool = false,
@@ -73,6 +111,11 @@ public struct NavigationWindow: View {
 }
 
 public extension NavigationWindow {
+    /// The toolbar content rendered inside a ``NavigationWindow``.
+    ///
+    /// `Toolbar` groups its items by placement – leading, principal,
+    /// and trailing – and renders each group in the appropriate
+    /// position on the navigation bar.
     struct Toolbar: ToolbarContent {
         // MARK: - Properties
 
@@ -130,14 +173,25 @@ public extension NavigationWindow {
 }
 
 public extension NavigationWindow.Toolbar {
+    /// A single item displayed in the navigation bar toolbar.
+    ///
+    /// Each item declares a ``Placement`` and a view-building closure.
+    /// The toolbar groups items by their placement and renders them in
+    /// the corresponding position.
     struct Item: Identifiable {
         // MARK: - Types
 
+        /// The position of a toolbar item within the navigation bar.
         public enum Placement {
             /* MARK: Cases */
 
+            /// Centered in the navigation bar.
             case principal
+
+            /// Positioned on the leading edge of the navigation bar.
             case topBarLeading
+
+            /// Positioned on the trailing edge of the navigation bar.
             case topBarTrailing
 
             /* MARK: Properties */
@@ -160,6 +214,12 @@ public extension NavigationWindow.Toolbar {
 
         // MARK: - Init
 
+        /// Creates a toolbar item with the given placement and content.
+        ///
+        /// - Parameters:
+        ///   - placement: The position of the item in the navigation
+        ///     bar.
+        ///   - content: A closure that returns the view to display.
         public init(
             placement: Placement,
             content: @escaping () -> any View
@@ -172,6 +232,7 @@ public extension NavigationWindow.Toolbar {
 }
 
 public extension NavigationWindow.Toolbar {
+    /// The text and color configuration for a navigation bar title.
     struct TitleConfiguration {
         // MARK: - Properties
 
@@ -180,6 +241,13 @@ public extension NavigationWindow.Toolbar {
 
         // MARK: - Init
 
+        /// Creates a title configuration with the given text and color.
+        ///
+        /// - Parameters:
+        ///   - text: The title string.
+        ///   - color: The title color. The default is the theme's
+        ///     navigation bar title color.
+        @MainActor
         public init(
             _ text: String,
             color: Color = .navigationBarTitle

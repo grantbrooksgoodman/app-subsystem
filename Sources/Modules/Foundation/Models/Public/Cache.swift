@@ -8,6 +8,42 @@
 /* Native */
 import Foundation
 
+/// A property wrapper that stores and retrieves values from an
+/// in-memory cache backed by `NSCache`.
+///
+/// Use `@Cached` to add transparent caching to a property. The wrapper
+/// is generic over two types: a `KeyType` that identifies the cached
+/// entry, and an `ObjectType` that describes the value being stored:
+///
+/// ```swift
+/// private enum CacheKey: String, CaseIterable {
+///     case profileImage
+///     case thumbnailImage
+/// }
+///
+/// @Cached(CacheKey.profileImage) var profileImage: UIImage?
+/// @Cached(CacheKey.thumbnailImage) var thumbnailImage: UIImage?
+/// ```
+///
+/// Reading the wrapped value returns `nil` when no entry exists for the
+/// key. Assigning `nil` removes the entry from the cache.
+///
+/// ## Memory Pressure
+///
+/// `@Cached` monitors the app's memory footprint and
+/// automatically disables new writes when memory usage reaches one
+/// third of the device's total RAM. Writes resume once the footprint
+/// drops below that threshold. Because the underlying store is
+/// `NSCache`, the system may also evict entries independently under
+/// memory pressure.
+///
+/// ## Diagnostics
+///
+/// Pass `logsAccess: true` at initialization to emit a log entry for
+/// every read, write, and removal. These entries are recorded in the
+/// ``Logger`` under the `.caches` domain.
+///
+/// - SeeAlso: ``Cacheable``, ``CacheDomain``
 @propertyWrapper
 public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawValue: StringProtocol, KeyType: CaseIterable {
     // MARK: - Types
@@ -25,6 +61,12 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 
     // MARK: - Init
 
+    /// Creates a cached property for the given key.
+    ///
+    /// - Parameters:
+    ///   - key: The cache key that identifies this entry.
+    ///   - logsAccess: A Boolean value that enables diagnostic logging
+    ///     for every cache access. The default is `false`.
     public init(
         _ key: KeyType,
         logsAccess: Bool = false
@@ -35,6 +77,10 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 
     // MARK: - WrappedValue
 
+    /// The cached value, or `nil` if no entry exists for the key.
+    ///
+    /// Assigning a non-nil value stores it in the cache, subject to
+    /// the memory pressure check. Assigning `nil` removes the entry.
     public var wrappedValue: ObjectType? {
         get {
             guard let value = value(forKey: key) as? ObjectType else { return nil }
@@ -67,35 +113,17 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 }
 
 private enum Cache {
-    fileprivate static let value: NSCache<NSString, AnyObject> = .init()
+    // MARK: - Properties
 
-    @LockIsolated fileprivate static var didReachMemoryCeiling = false {
-        didSet {
-            guard didReachMemoryCeiling != oldValue else { return }
-            @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
+    fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(wrappedValue: false)
 
-            switch didReachMemoryCeiling {
-            case true:
-                Logger.log(
-                    .init(
-                        "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
-                        userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                        metadata: .init(sender: AppSubsystem.self)
-                    ),
-                    domain: .caches
-                )
+    private static let _value = LockIsolated<NSCache<NSString, AnyObject>>(wrappedValue: .init())
 
-            case false:
-                Logger.log(
-                    .init(
-                        "Memory footprint sufficiently low; caching re-enabled.",
-                        userInfo: ["MemoryFootprintMB": appMemoryFootprint ?? 0],
-                        metadata: .init(sender: AppSubsystem.self)
-                    ),
-                    domain: .caches
-                )
-            }
-        }
+    // MARK: - Computed Properties
+
+    fileprivate static var value: NSCache<NSString, AnyObject> {
+        get { _value.wrappedValue }
+        set { _value.wrappedValue = newValue }
     }
 }
 
@@ -108,30 +136,61 @@ extension Cached: Cacheable {
 
     private var canCacheNewValue: Bool {
         @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
-        let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
         let currentMemoryUsage = appMemoryFootprint ?? 0
-        Cache.didReachMemoryCeiling = currentMemoryUsage >= memoryUsageCeiling
+        let memoryUsageCeiling = ((ProcessInfo.processInfo.physicalMemory / 1024) / 1024) / 3
+
+        let newValue = currentMemoryUsage >= memoryUsageCeiling
+        let oldValue = Cache.didReachMemoryCeiling.wrappedValue
+        Cache.didReachMemoryCeiling.wrappedValue = newValue
+
+        if newValue != oldValue {
+            switch newValue {
+            case true:
+                Logger.log(
+                    .init(
+                        "Memory ceiling reached; caching disabled until footprint is less than 1/3 of total RAM.",
+                        userInfo: ["MemoryFootprintMB": currentMemoryUsage],
+                        metadata: .init(sender: AppSubsystem.self)
+                    ),
+                    domain: .caches
+                )
+
+            case false:
+                Logger.log(
+                    .init(
+                        "Memory footprint sufficiently low; caching re-enabled.",
+                        userInfo: ["MemoryFootprintMB": currentMemoryUsage],
+                        metadata: .init(sender: AppSubsystem.self)
+                    ),
+                    domain: .caches
+                )
+            }
+        }
+
         return currentMemoryUsage < memoryUsageCeiling
     }
 
     // MARK: - Cacheable Conformance
 
-    public func clear() {
+    func clear() {
         CacheKey.allCases.forEach { removeObject(forKey: $0) }
     }
 
-    public func removeObject(forKey key: KeyType) {
+    func removeObject(forKey key: KeyType) {
         guard let keyString = key.rawValue as? NSString else { return }
         Cache.value.removeObject(forKey: keyString)
     }
 
-    public func set(_ value: Any, forKey key: KeyType) {
+    func set(
+        _ value: Any,
+        forKey key: KeyType
+    ) {
         guard let keyString = key.rawValue as? NSString,
               canCacheNewValue else { return }
         Cache.value.setObject(value as AnyObject, forKey: keyString)
     }
 
-    public func value(forKey key: KeyType) -> Any? {
+    func value(forKey key: KeyType) -> Any? {
         guard let keyString = key.rawValue as? NSString else { return nil }
         return Cache.value.object(forKey: keyString)
     }

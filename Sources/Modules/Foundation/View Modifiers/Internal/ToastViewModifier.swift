@@ -6,17 +6,13 @@
 //
 
 /* Native */
-import Foundation
+@preconcurrency import Foundation
 import SwiftUI
 
 private struct ToastViewModifier: ViewModifier {
     // MARK: - Constants Accessors
 
     private typealias Floats = FoundationConstants.CGFloats.ToastView
-
-    // MARK: - Dependencies
-
-    @Dependency(\.coreKit.gcd) private var coreGCD: CoreKit.GCD
 
     // MARK: - Properties
 
@@ -93,7 +89,9 @@ private struct ToastViewModifier: ViewModifier {
         withAnimation { toast = nil }
         // TODO: Audit this.
 //        if UIApplication.iOS27IsAvailable {
-        Task.delayed(by: .seconds(1)) { Toast.hide() }
+        Task.delayed(by: .seconds(1)) { @MainActor in
+            Toast.hide()
+        }
 //        }
 
         dismissWorkItem?.cancel()
@@ -110,7 +108,9 @@ private struct ToastViewModifier: ViewModifier {
         case let .ephemeral(duration):
             let dismissTask: DispatchWorkItem = .init { dismiss() }
             dismissWorkItem = dismissTask
-            coreGCD.after(duration) { dismissTask.perform() }
+            Task.delayed(by: duration) { @MainActor in
+                dismissTask.perform()
+            }
         default: ()
         }
     }
@@ -137,8 +137,11 @@ private struct ToastViewModifier: ViewModifier {
     }
 }
 
-public extension View {
-    func toast(_ toast: Binding<Toast?>, onTap: (() -> Void)? = nil) -> some View {
+extension View {
+    func toast(
+        _ toast: Binding<Toast?>,
+        onTap: (() -> Void)? = nil
+    ) -> some View {
         modifier(ToastViewModifier(toast, onTap: onTap))
     }
 }

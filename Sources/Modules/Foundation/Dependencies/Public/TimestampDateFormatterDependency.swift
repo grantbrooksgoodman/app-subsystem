@@ -8,6 +8,7 @@
 /* Native */
 import Foundation
 
+/// The dependency key that provides a ``DateFormatter`` instance.
 public enum TimestampDateFormatterDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> DateFormatter {
         let formatter = DateFormatter()
@@ -18,6 +19,7 @@ public enum TimestampDateFormatterDependency: DependencyKey {
 }
 
 public extension DependencyValues {
+    /// The shared ``DateFormatter`` instance.
     var timestampDateFormatter: DateFormatter {
         get { self[TimestampDateFormatterDependency.self] }
         set { self[TimestampDateFormatterDependency.self] = newValue }

@@ -14,6 +14,7 @@ import AlertKit
 public extension AlertKit.Action {
     // MARK: - Properties
 
+    /// A cancel action using the localized cancel string.
     static var cancelAction: AlertKit.Action {
         .init(
             AppSubsystem.delegates.localizedStrings.cancel,
@@ -23,6 +24,7 @@ public extension AlertKit.Action {
 
     // MARK: - Methods
 
+    /// Returns a cancel action with a custom title.
     static func cancelAction(title: String) -> AlertKit.Action {
         .init(
             title,

@@ -116,7 +116,7 @@ public final class Build: @unchecked Sendable {
     /// The release cycle stage of this build.
     public let milestone: Milestone
 
-    private var cancellables = Set<AnyCancellable>()
+    private let _cancellables = LockIsolated<Set<AnyCancellable>>(wrappedValue: [])
 
     // MARK: - Computed Properties
 
@@ -175,9 +175,22 @@ public final class Build: @unchecked Sendable {
     /// The number of builds since the last App Store release.
     public var revisionBuildNumber: Int { getRevisionBuildNumber() }
 
-    private var buildDateUnixDouble: TimeInterval { getBuildDateUnixDouble() }
-    private var firstCompileDate: Date { getFirstCompileDate() }
-    private var infoDictionary: [String: Any] { mainBundle.infoDictionary ?? [:] }
+    private var buildDateUnixDouble: TimeInterval {
+        getBuildDateUnixDouble()
+    }
+
+    private var cancellables: Set<AnyCancellable> {
+        get { _cancellables.wrappedValue }
+        set { _cancellables.wrappedValue = newValue }
+    }
+
+    private var firstCompileDate: Date {
+        getFirstCompileDate()
+    }
+
+    private var infoDictionary: [String: Any] {
+        mainBundle.infoDictionary ?? [:]
+    }
 
     // MARK: - Init
 

@@ -39,7 +39,14 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
     /// The shared resolver instance.
     public static let shared = NavigationCoordinatorResolver()
 
-    private var navigationCoordinator: AnyObject?
+    private let _navigationCoordinator = LockIsolated<AnyObject?>(wrappedValue: nil)
+
+    // MARK: - Computed Properties
+
+    private var navigationCoordinator: AnyObject? {
+        get { _navigationCoordinator.wrappedValue }
+        set { _navigationCoordinator.wrappedValue = newValue }
+    }
 
     // MARK: - Init
 
@@ -70,7 +77,9 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
     /// in a fatal error.
     ///
     /// - Parameter navigationCoordinator: The coordinator to store.
-    public func store(_ navigationCoordinator: NavigationCoordinator<some Navigating>) {
+    public func store(
+        _ navigationCoordinator: NavigationCoordinator<some Navigating>
+    ) {
         guard self.navigationCoordinator == nil else {
             fatalError("The NavigationCoordinator instance already exists")
         }
@@ -85,7 +94,9 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
     /// - Parameter navigationCoordinator: The coordinator to store.
     ///
     /// - Returns: The newly stored coordinator.
-    public func update<N: Navigating>(_ navigationCoordinator: NavigationCoordinator<N>) -> NavigationCoordinator<N> {
+    public func update<N: Navigating>(
+        _ navigationCoordinator: NavigationCoordinator<N>
+    ) -> NavigationCoordinator<N> {
         self.navigationCoordinator = navigationCoordinator
         guard let updatedNavigationCoordinator = self.navigationCoordinator as? NavigationCoordinator<N> else {
             fatalError("Failed to update the NavigationCoordinator instance")

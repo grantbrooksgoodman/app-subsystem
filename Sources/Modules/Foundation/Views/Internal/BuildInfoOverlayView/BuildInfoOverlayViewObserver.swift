@@ -22,7 +22,14 @@ final class BuildInfoOverlayViewObserver: Observer, @unchecked Sendable {
 
     let viewModel: ViewModel<BuildInfoOverlayReducer>
 
-    private var touchTimer: Timer?
+    private let _touchTimer = LockIsolated<Timer?>(wrappedValue: nil)
+
+    // MARK: - Computed Properties
+
+    private var touchTimer: Timer? {
+        get { _touchTimer.wrappedValue }
+        set { _touchTimer.wrappedValue = newValue }
+    }
 
     // MARK: - Init
 
@@ -67,8 +74,7 @@ final class BuildInfoOverlayViewObserver: Observer, @unchecked Sendable {
         guard let touchTimer,
               touchTimer.isValid else {
             touchTimer?.invalidate()
-            touchTimer = nil
-            return
+            return touchTimer = nil
         }
 
         send(.shouldUseTranslucentAppearanceChanged(false))

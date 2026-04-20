@@ -258,7 +258,6 @@ else
 //
 
 import AppSubsystem
-import SwiftUI
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -818,7 +817,7 @@ if (
 
 repository_url = "https://github.com/grantbrooksgoodman/app-subsystem"
 product_name = "AppSubsystem"
-package_branch = "swift-6"
+package_branch = "main"
 
 if repository_url in project_content:
     log_skipped("AppSubsystem package dependency (already added)")

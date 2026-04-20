@@ -56,10 +56,10 @@ import Translator
 ///    init() {
 ///        AppSubsystem.initialize(
 ///            appStoreBuildNumber: 0,
-///            buildMilestone: .alpha,
+///            buildMilestone: .preAlpha,
 ///            codeName: "Alpine",
 ///            finalName: "My App",
-///            languageCode: "en",
+///            languageCode: Locale.systemLanguageCode,
 ///            loggingEnabled: true
 ///        )
 ///    }

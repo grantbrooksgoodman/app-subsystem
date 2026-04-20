@@ -81,8 +81,16 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     /// the exception.
     public let userInfo: [String: Any]?
 
+    private let _descriptor = LockIsolated<String>(wrappedValue: "")
+    private let _underlyingExceptions = LockIsolated<[Exception]?>(wrappedValue: nil)
+
+    // MARK: - Computed Properties
+
     /// A developer-facing description of what went wrong.
-    public internal(set) var descriptor: String
+    public internal(set) var descriptor: String {
+        get { _descriptor.wrappedValue }
+        set { _descriptor.wrappedValue = newValue }
+    }
 
     /// The full chain of underlying exceptions, recursively traversed.
     ///
@@ -91,12 +99,8 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     /// in the chain.
     public private(set) var underlyingExceptions: [Exception]? {
         get { traversedUnderlyingExceptions }
-        set { _underlyingExceptions = newValue }
+        set { _underlyingExceptions.wrappedValue = newValue }
     }
-
-    private var _underlyingExceptions: [Exception]?
-
-    // MARK: - Computed Properties
 
     /// A localized, end-user-appropriate description of the error.
     ///
@@ -126,10 +130,16 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
 
     /// The recursively traversed value of all underlying `Exception`s for this instance.
     private var traversedUnderlyingExceptions: [Exception]? {
-        guard let underlyingExceptions = _underlyingExceptions else { return nil }
-        var allExceptions = underlyingExceptions
-        underlyingExceptions.forEach { allExceptions.append(contentsOf: $0.traversedUnderlyingExceptions ?? []) }
-        return allExceptions
+        _underlyingExceptions.projectedValue.withValue {
+            guard let underlyingExceptions = $0 else { return nil }
+            var allExceptions = underlyingExceptions
+            underlyingExceptions.forEach {
+                allExceptions.append(
+                    contentsOf: $0.traversedUnderlyingExceptions ?? []
+                )
+            }
+            return allExceptions
+        }
     }
 
     // MARK: - Init
@@ -162,11 +172,11 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
         let errorCode = (userInfo?[UserInfo.staticErrorCode.rawValue] as? String) ?? descriptor.errorCode
         code = errorCode
 
-        self.descriptor = descriptor
         self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(errorCode) ?? true
         self.metadata = metadata
         self.userInfo = userInfo?.isEmpty == false ? userInfo!.withCapitalizedKeys : nil
 
+        self.descriptor = descriptor
         self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil
     }
 
@@ -224,7 +234,6 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
         let errorCode = error.staticIdentifier.errorCode
         code = errorCode
 
-        descriptor = error.localizedDescription
         self.isReportable = isReportable ?? AppSubsystem.delegates.exceptionMetadata?.isReportable(errorCode) ?? true
         self.metadata = metadata
 
@@ -243,6 +252,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
         concatenatedUserInfo[UserInfo.staticErrorCode.rawValue] = errorCode
         self.userInfo = concatenatedUserInfo.isEmpty ? nil : concatenatedUserInfo.withCapitalizedKeys
 
+        descriptor = error.localizedDescription
         self.underlyingExceptions = underlyingExceptions?.isEmpty == false ? underlyingExceptions!.unique.filter { $0 != self } : nil
     }
 
@@ -286,25 +296,27 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     ///
     /// - Returns: A new exception with the extended chain.
     public func appending(underlyingException: Exception) -> Exception {
-        guard var currentUnderlyingExceptions = _underlyingExceptions,
-              !currentUnderlyingExceptions.isEmpty else {
+        _underlyingExceptions.projectedValue.withValue {
+            guard var currentUnderlyingExceptions = $0,
+                  !currentUnderlyingExceptions.isEmpty else {
+                return .init(
+                    descriptor,
+                    isReportable: isReportable,
+                    userInfo: userInfo,
+                    underlyingExceptions: [underlyingException],
+                    metadata: metadata
+                )
+            }
+
+            currentUnderlyingExceptions.append(underlyingException)
             return .init(
                 descriptor,
                 isReportable: isReportable,
                 userInfo: userInfo,
-                underlyingExceptions: [underlyingException],
+                underlyingExceptions: currentUnderlyingExceptions,
                 metadata: metadata
             )
         }
-
-        currentUnderlyingExceptions.append(underlyingException)
-        return .init(
-            descriptor,
-            isReportable: isReportable,
-            userInfo: userInfo,
-            underlyingExceptions: currentUnderlyingExceptions,
-            metadata: metadata
-        )
     }
 
     // MARK: - AppException Equality Comparison

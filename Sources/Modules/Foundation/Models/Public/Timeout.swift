@@ -28,11 +28,26 @@ import Foundation
 /// callback reference is released. The timeout is also cancelled
 /// automatically when the instance is deallocated, so retaining or
 /// releasing the `Timeout` controls its lifetime.
-public final class Timeout: @unchecked Sendable {
+///
+/// ## Thread Safety
+///
+/// All state transitions are protected by a single lock, making
+/// `Timeout` safe to use from any thread or concurrency context.
+/// The callback is invoked *outside* the lock to avoid holding it
+/// during arbitrary user code.
+public final class Timeout: Sendable {
+    // MARK: - Types
+
+    private enum State: Sendable {
+        case cancelled
+        case fired
+        case pending(@Sendable () -> Void)
+    }
+
     // MARK: - Properties
 
-    private var callback: (() -> Void)?
-    private var isValid = true
+    private let _state = LockIsolated<State>(wrappedValue: .cancelled)
+    private let _task = LockIsolated<Task<Void, Never>?>(wrappedValue: nil)
 
     // MARK: - Object Lifecycle
 
@@ -48,14 +63,22 @@ public final class Timeout: @unchecked Sendable {
     ///   - callback: The closure to execute when the timeout elapses.
     public init(
         after duration: Duration,
-        callback: @escaping () -> Void
+        callback: @escaping @Sendable () -> Void
     ) {
-        self.callback = callback
-        Task { [weak self] in
+        _state.wrappedValue = .pending(callback)
+
+        let state = _state
+        _task.wrappedValue = Task { [weak self] in
             try? await Task.sleep(for: duration)
-            guard let self,
-                  isValid else { return }
-            invoke()
+            guard self != nil else { return }
+
+            let action: (@Sendable () -> Void)? = state.projectedValue.withValue {
+                guard case let .pending(callback) = $0 else { return nil }
+                $0 = .fired
+                return callback
+            }
+
+            action?()
         }
     }
 
@@ -67,17 +90,19 @@ public final class Timeout: @unchecked Sendable {
 
     /// Cancels the timeout, preventing the callback from firing.
     ///
-    /// Calling this method releases the callback closure immediately.
-    /// It is safe to call `cancel()` multiple times.
+    /// This method atomically transitions the state and releases the
+    /// callback closure. The underlying task is also cooperatively
+    /// cancelled so it does not linger for the remaining duration.
+    ///
+    /// It is safe to call `cancel()` multiple times or from any
+    /// thread.
     public func cancel() {
-        callback = nil
-        isValid = false
-    }
+        _state.projectedValue.withValue {
+            guard case .pending = $0 else { return }
+            $0 = .cancelled
+        }
 
-    // MARK: - Invocation
-
-    private func invoke() {
-        callback?()
-        cancel()
+        _task.wrappedValue?.cancel()
+        _task.wrappedValue = nil
     }
 }

@@ -204,6 +204,7 @@ public extension TranslationService {
             }
         }
 
+        @Sendable
         func complete(timedOut: Bool) {
             guard canComplete else { return }
             if hudConfig != nil {

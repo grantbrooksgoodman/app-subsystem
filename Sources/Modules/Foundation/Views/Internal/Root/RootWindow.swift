@@ -9,7 +9,8 @@
 import Foundation
 import SwiftUI
 
-final class RootWindowStatus: ObservableObject, @unchecked Sendable {
+@MainActor
+final class RootWindowStatus: ObservableObject {
     // MARK: - Types
 
     enum RootView {

@@ -65,29 +65,32 @@ struct BuildInfoOverlayViewService {
     func sendFeedbackButtonTapped() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-        let reportBugAction: AKAction = .init("Report Bug") {
+        let reportBugAction: AKAction = .init(
+            AppSubsystem.delegates.localizedStrings.reportBug
+        ) {
             Task { @MainActor in
                 reportDelegate.reportBug()
             }
         }
 
+        let sendFeedbackAction: AKAction = .init(
+            AppSubsystem.delegates.localizedStrings.sendFeedback
+        ) {
+            Task { @MainActor in
+                reportDelegate.sendFeedback()
+            }
+        }
+
         Task {
             await AKActionSheet(
-                title: "File a Report",
+                title: "\(RuntimeStorage.languageCode == "en" ? "File" : "Make") a Report",
                 actions: [
-                    .init(AppSubsystem.delegates.localizedStrings.sendFeedback) {
-                        Task { @MainActor in
-                            reportDelegate.sendFeedback()
-                        }
-                    },
+                    sendFeedbackAction,
                     reportBugAction,
                 ],
                 cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel,
                 sourceItem: .custom(.string(AppSubsystem.delegates.localizedStrings.sendFeedback))
-            ).present(translating: [
-                .actions([reportBugAction]),
-                .title,
-            ])
+            ).present(translating: [.title])
         }
     }
 

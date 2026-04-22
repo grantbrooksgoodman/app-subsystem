@@ -13,7 +13,7 @@ var _build: Build!
 
 /// The dependency key that provides the current ``Build`` instance.
 ///
-/// - Important: Resolving this dependency before
+/// - Warning: Resolving this dependency before
 ///   ``AppSubsystem`` has been initialized is a fatal error.
 public enum BuildDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> Build {

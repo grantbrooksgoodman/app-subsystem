@@ -100,13 +100,18 @@ public enum ThemeService {
     ) {
         @Persistent(.pendingThemeID) var pendingThemeID: String?
 
-        guard checkStyle else { return currentTheme = theme }
-        guard currentTheme.style == theme.style else {
+        guard checkStyle else {
+            pendingThemeID = nil
+            return currentTheme = theme
+        }
+
+        if currentTheme.style != theme.style {
             Task { @MainActor in
                 await AKAlert(
                     message: "The new appearance will take effect the next time you restart the app."
                 ).present()
             }
+
             return pendingThemeID = theme.encodedHash
         }
 

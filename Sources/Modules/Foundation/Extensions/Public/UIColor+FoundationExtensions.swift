@@ -9,6 +9,13 @@
 import Foundation
 import SwiftUI
 
+@MainActor
+extension UIColor: @MainActor EncodedHashable {
+    public var hashFactors: [String] {
+        [stableID ?? ""]
+    }
+}
+
 public extension UIColor {
     /// Creates a color object using the specified RGB/hexadecimal code.
     ///
@@ -82,5 +89,52 @@ public extension UIColor? {
     var swiftUIColor: Color? {
         guard let self else { return nil }
         return .init(uiColor: self)
+    }
+}
+
+@MainActor
+private extension UIColor {
+    var stableID: String? {
+        // swiftlint:disable identifier_name
+        var _red: CGFloat = 0
+        var _green: CGFloat = 0
+        var _blue: CGFloat = 0
+        var _alpha: CGFloat = 0
+        // swiftlint:enable identifier_name
+
+        var populatedColorValues = false
+        UITraitCollection.canonicalColorIDTraits.performAsCurrent {
+            if getRed(
+                &_red,
+                green: &_green,
+                blue: &_blue,
+                alpha: &_alpha
+            ) { populatedColorValues = true }
+        }
+
+        guard populatedColorValues else { return nil }
+
+        let red = UInt8(clamping: Int(round(_red * 255)))
+        let green = UInt8(clamping: Int(round(_green * 255)))
+        let blue = UInt8(clamping: Int(round(_blue * 255)))
+        let alpha = UInt8(clamping: Int(round(_alpha * 255)))
+
+        return String(
+            format: "%02X%02X%02X%02X",
+            red,
+            green,
+            blue,
+            alpha
+        )
+    }
+}
+
+@MainActor
+private extension UITraitCollection {
+    static let canonicalColorIDTraits = UITraitCollection { traits in
+        traits.accessibilityContrast = .normal
+        traits.displayGamut = .SRGB
+        traits.userInterfaceLevel = .base
+        traits.userInterfaceStyle = .light
     }
 }

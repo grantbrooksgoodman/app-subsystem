@@ -57,7 +57,7 @@ import UIKit
 /// - Warning: ``color(for:)`` returns `UIColor.clear` if the requested
 ///   item type is not present in the theme's palette. Ensure that every
 ///   theme provides colors for all item types your app uses.
-public struct UITheme: CaseIterable, Equatable, EncodedHashable, Sendable {
+public struct UITheme: CaseIterable, Equatable, @MainActor EncodedHashable, Sendable {
     // MARK: - Properties
 
     /// The display name of the theme.
@@ -83,14 +83,15 @@ public struct UITheme: CaseIterable, Equatable, EncodedHashable, Sendable {
 
     // MARK: - EncodedHashable Conformance
 
+    @MainActor
     public var hashFactors: [String] {
         var factors = [String]()
         factors.append(name)
-        factors.append(contentsOf: items.map(\.set.primary).map { String($0.hash) })
-        factors.append(contentsOf: items.compactMap(\.set.variant).map { String($0.hash) })
+        factors.append(contentsOf: items.map(\.set.primary.encodedHash))
+        factors.append(contentsOf: items.compactMap(\.set.variant?.encodedHash))
         factors.append(contentsOf: items.map(\.type.rawValue))
         factors.append(.init(style.rawValue))
-        return factors
+        return factors.sorted()
     }
 
     // MARK: - Init

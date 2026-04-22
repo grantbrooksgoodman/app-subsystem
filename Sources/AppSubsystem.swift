@@ -120,8 +120,10 @@ public enum AppSubsystem {
     ///   - loggingEnabled: A Boolean value that determines whether the
     ///     logger produces output.
     ///
-    /// - Important: This method must be called on the main actor. Calling it
-    ///   more than once per application lifecycle results in a fatal error.
+    /// - Important: This method must be called on the main actor.
+    ///
+    /// - Warning: Calling this method more than once per application
+    ///   lifecycle results in a fatal error.
     @MainActor // swiftlint:disable:next function_parameter_count
     public static func initialize(
         appStoreBuildNumber: Int,
@@ -143,7 +145,6 @@ public enum AppSubsystem {
             )
         }
 
-        didInitialize = true
         _build = .init(
             appStoreBuildNumber: appStoreBuildNumber,
             codeName: codeName,
@@ -152,6 +153,7 @@ public enum AppSubsystem {
             milestone: buildMilestone
         )
 
+        didInitialize = true
         core.utils.setLanguageCode(languageCode)
 
         /* MARK: AlertKit & Translator Setup */
@@ -227,15 +229,19 @@ public enum AppSubsystem {
         @Persistent(.currentThemeID) var currentThemeID: String?
         @Persistent(.pendingThemeID) var pendingThemeID: String?
 
-        if let themeID = pendingThemeID,
-           let theme = UITheme.allCases.first(where: { $0.encodedHash == themeID }) {
-            ThemeService.setTheme(theme, checkStyle: false)
-            pendingThemeID = nil
-        } else if let currentThemeID,
-                  let theme = UITheme.allCases.first(where: { $0.encodedHash == currentThemeID }) {
-            ThemeService.setTheme(theme, checkStyle: false)
+        if let themeID = pendingThemeID ?? currentThemeID,
+           let theme = UITheme.allCases.first(where: {
+               $0.encodedHash == themeID
+           }) {
+            ThemeService.setTheme(
+                theme,
+                checkStyle: false
+            )
         } else {
-            ThemeService.setTheme(UITheme.default, checkStyle: false)
+            ThemeService.setTheme(
+                UITheme.default,
+                checkStyle: false
+            )
         }
     }
 }
@@ -299,10 +305,10 @@ public extension AppSubsystem {
         /// disables capture automatically in general-release
         /// builds.
         ///
-        /// Register a replacement before calling
-        /// ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``
-        /// if the subsystem should use your implementation during
-        /// setup.
+        /// - Important: Register a replacement before calling
+        ///   ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``.
+        ///   The subsystem reads this delegate's values during
+        ///   setup and does not re-read them afterward.
         ///
         /// - SeeAlso: ``BreadcrumbsCaptureDelegate``
         @LockIsolated public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared
@@ -339,7 +345,7 @@ public extension AppSubsystem {
         /// which subscribes to all built-in subsystem domains and
         /// excludes none from the session record.
         ///
-        /// - Important: Register a replacement *before* calling
+        /// - Important: Register a replacement before calling
         ///   ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``.
         ///   The subsystem reads this delegate's values during
         ///   setup and does not re-read them afterward.
@@ -354,6 +360,11 @@ public extension AppSubsystem {
         /// instance, which includes only the subsystem's built-in
         /// themes. Replace this delegate to register custom themes
         /// alongside the built-in set.
+        ///
+        /// - Important: Register a replacement before calling
+        ///   ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``.
+        ///   The subsystem reads this delegate's values during
+        ///   setup and does not re-read them afterward.
         ///
         /// - SeeAlso: ``UIThemeListDelegate``
         @LockIsolated public private(set) var uiThemeList: UIThemeListDelegate = DefaultUIThemeListDelegate()

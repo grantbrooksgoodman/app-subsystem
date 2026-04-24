@@ -171,7 +171,7 @@ The `Info.plist` must include all the keys shown below. Scene configuration valu
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>0.0.0</string>
     <key>CFBundleVersion</key>
     <string>0</string>
     <key>CFFirstCompileDate</key>
@@ -180,6 +180,8 @@ The `Info.plist` must include all the keys shown below. Scene configuration valu
     <string>$(TARGET_NAME)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Photo library access is requested to save images.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
@@ -460,7 +462,7 @@ For SwiftUI views that need to observe an `ObservableObject` dependency and upda
 
 #### Scope Propagation
 
-The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) wrapper captures the dependency scope that is active at initialization time. When the wrapped value is read, it merges the captured scope with the scope current at the point of access. This ensures that dependencies resolve correctly even when accessed inside an effect whose closure escapes the original scope.
+Each access to a [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property resolves the value from ``DependencyValues.current``, which is propagated through Swift's structured concurrency via `@TaskLocal`. Scopes set with ``DependencyScopes.withDependencies`` are visible to any `@Dependency` access within that task. Effects automatically capture and restore the active scope, so dependencies resolved inside an effect closure see the same values that were active when the effect was created.
 
 ### Reactive Observation
 

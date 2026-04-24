@@ -45,7 +45,7 @@ public extension CoreKit {
 
         static let shared = HUD()
 
-        static let isBlockingUserInteraction = LockIsolated<Bool>(wrappedValue: false)
+        static let isBlockingUserInteraction = LockIsolated<Bool>(false)
 
         // MARK: - Init
 

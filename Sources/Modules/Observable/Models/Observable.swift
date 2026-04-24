@@ -73,7 +73,7 @@ public typealias Nil = NSNull
 public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     // MARK: - Properties
 
-    private let observers = LockIsolated<[any Observer]>(wrappedValue: [])
+    private let observers = LockIsolated<[any Observer]>([])
     private let _value: LockIsolated<T>
 
     // Set only on notification objects.
@@ -101,7 +101,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     /// - Parameter initialValue: The initial value to store.
     public init(_ initialValue: T) {
         originID = nil
-        _value = LockIsolated(wrappedValue: initialValue)
+        _value = LockIsolated(initialValue)
     }
 
     // Used internally to record the originator's identity on notification objects.
@@ -110,7 +110,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
         originID: ObjectIdentifier
     ) {
         self.originID = originID
-        _value = LockIsolated(wrappedValue: initialValue)
+        _value = LockIsolated(initialValue)
     }
 
     deinit {

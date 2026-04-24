@@ -19,11 +19,25 @@ import Foundation
 /// @Dependency(\.userDefaults) var userDefaults: UserDefaults
 /// ```
 ///
-/// The wrapper captures the dependency scope that was active at the time
-/// it was initialized. When the wrapped value is read, it merges that
-/// captured scope with the scope that is current at the point of access.
-/// This ensures that dependencies behave correctly even when accessed
-/// inside an ``Effect`` whose closure escapes the original scope.
+/// The wrapper resolves its value from ``DependencyValues/current``
+/// each time you read ``wrappedValue``. Overrides applied by
+/// ``DependencyScopes/withDependencies(_:operation:)`` are visible
+/// to any `@Dependency` access within that scope.
+///
+/// ``Effect`` captures and restores the active scope before running
+/// its closure, so dependencies resolved inside an effect see the
+/// values that were active when the effect was created. To preserve
+/// overrides across an escaping boundary outside of ``Effect``, use
+/// ``DependencyScopes/withEscapedDependencies(_:)`` and restore
+/// the captured scope at the access site.
+///
+/// - Important: The wrapper resolves from the scope that is active at
+///   the point of access, not the scope that was active when the
+///   wrapper was initialized. Because ``DependencyValues/current`` is
+///   a `@TaskLocal` value, overrides are visible only for the duration
+///   of the ``DependencyScopes/withDependencies(_:operation:)``
+///   closure. Accessing the dependency after that closure returns
+///   resolves from the enclosing scope.
 ///
 /// For SwiftUI views that need to observe an `ObservableObject`
 /// dependency for state-driven updates, use ``ObservedDependency``
@@ -35,32 +49,26 @@ import Foundation
 public struct Dependency<Value>: @unchecked Sendable {
     // MARK: - Properties
 
-    private let initialValues: DependencyValues
     private let keyPath: KeyPath<DependencyValues, Value>
 
     // MARK: - Init
 
     /// Creates a dependency accessor for the given key path.
     ///
-    /// The initializer snapshots the current ``DependencyValues`` scope
-    /// so that the dependency resolves correctly regardless of when the
-    /// wrapped value is later accessed.
-    ///
     /// - Parameter keyPath: A key path to the desired property on
     ///   ``DependencyValues``.
     public init(_ keyPath: KeyPath<DependencyValues, Value>) {
-        initialValues = DependencyValues.current
         self.keyPath = keyPath
     }
 
     // MARK: - Wrapped Value
 
-    /// The resolved dependency value.
+    /// The current value of the dependency.
     ///
-    /// Each access merges the scope captured at initialization with the
-    /// scope that is current at the point of access, then reads the
-    /// value at the stored key path.
+    /// Reading this property resolves the value from the
+    /// ``DependencyValues`` scope that is active at the point of
+    /// access.
     public var wrappedValue: Value {
-        initialValues.merging(DependencyValues.current)[keyPath: keyPath]
+        DependencyValues.current[keyPath: keyPath]
     }
 }

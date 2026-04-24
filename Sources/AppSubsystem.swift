@@ -94,7 +94,7 @@ public enum AppSubsystem {
     /// subsystem's behavior.
     public static let delegates = Delegates.shared
 
-    private static let _didInitialize = LockIsolated<Bool>(wrappedValue: false)
+    private static let _didInitialize = LockIsolated<Bool>(false)
 
     /* MARK: Computed Properties */
 
@@ -371,11 +371,11 @@ public extension AppSubsystem {
 
         fileprivate static let shared = Delegates()
 
-        private let _buildInfoOverlayDotIndicatorColor = LockIsolated<BuildInfoOverlayDotIndicatorColorDelegate?>(wrappedValue: nil)
-        private let _devModeAppActions = LockIsolated<DevModeAppActionDelegate?>(wrappedValue: nil)
-        private let _exceptionMetadata = LockIsolated<ExceptionMetadataDelegate?>(wrappedValue: nil)
-        private let _forcedUpdateModal = LockIsolated<ForcedUpdateModalDelegate?>(wrappedValue: nil)
-        private let _permanentUserDefaultsKeys = LockIsolated<PermanentUserDefaultsKeyDelegate?>(wrappedValue: nil)
+        private let _buildInfoOverlayDotIndicatorColor = LockIsolated<BuildInfoOverlayDotIndicatorColorDelegate?>(nil)
+        private let _devModeAppActions = LockIsolated<DevModeAppActionDelegate?>(nil)
+        private let _exceptionMetadata = LockIsolated<ExceptionMetadataDelegate?>(nil)
+        private let _forcedUpdateModal = LockIsolated<ForcedUpdateModalDelegate?>(nil)
+        private let _permanentUserDefaultsKeys = LockIsolated<PermanentUserDefaultsKeyDelegate?>(nil)
 
         /* MARK: Computed Properties */
 

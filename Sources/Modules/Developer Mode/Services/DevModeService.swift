@@ -79,7 +79,9 @@ public enum DevModeService {
 
     // MARK: - Properties
 
-    private static let appActions = LockIsolated<[DevModeAction]>(wrappedValue: AppSubsystem.delegates.devModeAppActions?.appActions ?? [])
+    private static let appActions = LockIsolated<[DevModeAction]>(
+        AppSubsystem.delegates.devModeAppActions?.appActions ?? []
+    )
 
     // MARK: - Computed Properties
 

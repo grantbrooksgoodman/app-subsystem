@@ -22,7 +22,7 @@ final class BuildInfoOverlayViewObserver: Observer, @unchecked Sendable {
 
     let viewModel: ViewModel<BuildInfoOverlayReducer>
 
-    private let _touchTimer = LockIsolated<Timer?>(wrappedValue: nil)
+    private let _touchTimer = LockIsolated<Timer?>(nil)
 
     // MARK: - Computed Properties
 

@@ -134,7 +134,7 @@ public actor SingleSlotCoalescer<Output: Sendable> {
                     userInfo: ["TaskID": currentTask.id],
                     metadata: .init(sender: self)
                 ),
-                domain: .task
+                domain: .concurrency
             )
 
             return await currentTask.task.value
@@ -152,7 +152,7 @@ public actor SingleSlotCoalescer<Output: Sendable> {
                     userInfo: ["TaskID": currentTask.id],
                     metadata: .init(sender: self)
                 ),
-                domain: .task
+                domain: .concurrency
             )
 
             currentTask.task.cancel()

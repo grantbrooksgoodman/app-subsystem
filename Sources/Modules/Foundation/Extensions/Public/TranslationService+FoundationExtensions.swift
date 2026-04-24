@@ -186,8 +186,8 @@ public extension TranslationService {
         @Dependency(\.translationService) var translator: TranslationService
 
         let didComplete = LockIsolated(wrappedValue: false)
-        let exception = LockIsolated<Exception?>(wrappedValue: nil)
-        let translations = LockIsolated<[Translation]>(wrappedValue: [])
+        let exception = LockIsolated<Exception?>(nil)
+        let translations = LockIsolated<[Translation]>([])
 
         if let hudConfig {
             Task.delayed(by: hudConfig.appearsAfter) { @MainActor in

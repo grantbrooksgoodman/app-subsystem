@@ -39,7 +39,7 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
     /// The shared resolver instance.
     public static let shared = NavigationCoordinatorResolver()
 
-    private let _navigationCoordinator = LockIsolated<AnyObject?>(wrappedValue: nil)
+    private let _navigationCoordinator = LockIsolated<AnyObject?>(nil)
 
     // MARK: - Computed Properties
 

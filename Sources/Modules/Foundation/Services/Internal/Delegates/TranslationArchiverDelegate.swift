@@ -14,8 +14,8 @@ import Translator
 final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unchecked Sendable {
     // MARK: - Properties
 
-    private let archive = LockIsolated<Set<Translation>>(wrappedValue: [])
-    private let translationsForInputValueEncodedHashes = LockIsolated<[String: Translation]>(wrappedValue: [:])
+    private let archive = LockIsolated<Set<Translation>>([])
+    private let translationsForInputValueEncodedHashes = LockIsolated<[String: Translation]>([:])
 
     @Persistent(.translationArchive) private var persistedArchive: Set<Translation>?
 

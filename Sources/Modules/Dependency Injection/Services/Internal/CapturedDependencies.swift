@@ -18,7 +18,7 @@ import Foundation
 /// point of capture and restoring them on demand.
 ///
 /// You obtain a `CapturedDependencies` value from
-/// ``DependencyScopes/withEscapedDependencies(_:)-7p3yy``:
+/// ``DependencyScopes/withEscapedDependencies(_:)``:
 ///
 /// ```swift
 /// DependencyScopes.withEscapedDependencies { captured in
@@ -32,7 +32,7 @@ import Foundation
 /// ```
 ///
 /// - SeeAlso: ``DependencyScopes``, ``DependencyValues``
-public struct CapturedDependencies: Sendable {
+struct CapturedDependencies: Sendable {
     // MARK: - Properties
 
     let dependencies = DependencyValues.current
@@ -46,7 +46,9 @@ public struct CapturedDependencies: Sendable {
     ///   dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    public func withValue<T>(_ operation: () async throws -> T) async rethrows -> T {
+    func withValue<T>(
+        _ operation: () async throws -> T
+    ) async rethrows -> T {
         try await DependencyScopes.withDependencies { dependencyValues in
             dependencyValues = dependencies
         } operation: {
@@ -61,7 +63,9 @@ public struct CapturedDependencies: Sendable {
     ///   dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    public func withValue<T>(_ operation: () throws -> T) rethrows -> T {
+    func withValue<T>(
+        _ operation: () throws -> T
+    ) rethrows -> T {
         try DependencyScopes.withDependencies { dependencyValues in
             dependencyValues = dependencies
         } operation: {

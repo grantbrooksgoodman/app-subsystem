@@ -95,7 +95,7 @@ public actor KeyedCoalescer<Key: Hashable & Sendable, Output: Sendable> {
                     ],
                     metadata: .init(sender: self)
                 ),
-                domain: .task
+                domain: .concurrency
             )
 
             return await existingTask.task.value

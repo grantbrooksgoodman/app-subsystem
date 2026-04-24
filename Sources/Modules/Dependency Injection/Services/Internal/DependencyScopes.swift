@@ -16,7 +16,7 @@ import Foundation
 ///
 /// ## Overriding Dependencies
 ///
-/// Call ``withDependencies(_:operation:)-1ymu`` to replace one or more
+/// Call ``withDependencies(_:operation:)`` to replace one or more
 /// dependencies for the duration of an operation. This is especially
 /// useful in tests, where you can substitute a mock without changing
 /// production code:
@@ -34,7 +34,7 @@ import Foundation
 /// Swift's `@TaskLocal` values do not propagate into escaping closures.
 /// When you need to preserve the current scope across an escaping
 /// boundary – such as an ``Effect`` – use
-/// ``withEscapedDependencies(_:)-7p3yy``. The closure receives a
+/// ``withEscapedDependencies(_:)``. The closure receives a
 /// ``CapturedDependencies`` value that can restore the scope later:
 ///
 /// ```swift
@@ -48,7 +48,7 @@ import Foundation
 /// ```
 ///
 /// - SeeAlso: ``DependencyValues``, ``CapturedDependencies``
-public enum DependencyScopes {
+enum DependencyScopes {
     // MARK: - Methods
 
     /// Overrides dependencies for the duration of an asynchronous
@@ -66,7 +66,7 @@ public enum DependencyScopes {
     ///     dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    public static func withDependencies<T>(
+    static func withDependencies<T>(
         _ modifier: (inout DependencyValues) -> Void,
         operation: () async throws -> T
     ) async rethrows -> T {
@@ -87,7 +87,7 @@ public enum DependencyScopes {
     ///     dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    public static func withDependencies<T>(
+    static func withDependencies<T>(
         _ modifier: (inout DependencyValues) -> Void,
         operation: () throws -> T
     ) rethrows -> T {
@@ -101,26 +101,13 @@ public enum DependencyScopes {
     /// Captures the current dependency scope for use in escaping
     /// closures.
     ///
-    /// Because `@TaskLocal` values do not propagate across escaping
-    /// closure boundaries, this method snapshots the current scope into
-    /// a ``CapturedDependencies`` value that you can restore later.
-    ///
     /// - Parameter operation: A closure that receives the captured
     ///   dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    public static func withEscapedDependencies<T>(_ operation: (CapturedDependencies) async throws -> T) async rethrows -> T {
-        try await operation(CapturedDependencies())
-    }
-
-    /// Captures the current dependency scope for use in escaping
-    /// closures.
-    ///
-    /// - Parameter operation: A closure that receives the captured
-    ///   dependencies.
-    ///
-    /// - Returns: The value returned by `operation`.
-    public static func withEscapedDependencies<T>(_ operation: (CapturedDependencies) throws -> T) rethrows -> T {
+    static func withEscapedDependencies<T>(
+        _ operation: (CapturedDependencies) throws -> T
+    ) rethrows -> T {
         try operation(CapturedDependencies())
     }
 }

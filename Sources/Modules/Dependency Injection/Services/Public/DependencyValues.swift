@@ -39,7 +39,7 @@ import Foundation
 ///
 /// The ``current`` value is stored as a `@TaskLocal`, which means each
 /// structured-concurrency task inherits the dependency values of its
-/// parent. Use ``DependencyScopes/withDependencies(_:operation:)-1ymu``
+/// parent. Use ``DependencyScopes/withDependencies(_:operation:)``
 /// to override individual dependencies for the duration of a closure.
 ///
 /// ## Resolution and Caching
@@ -58,8 +58,9 @@ public struct DependencyValues: @unchecked Sendable {
     ///
     /// This value is propagated automatically through Swift's structured
     /// concurrency via `@TaskLocal`. Override it for a specific scope
-    /// using ``DependencyScopes/withDependencies(_:operation:)-1ymu``.
-    @TaskLocal static var current = Self()
+    /// using ``DependencyScopes/withDependencies(_:operation:)``.
+    @TaskLocal
+    static var current = Self()
 
     private var resolverCache = ResolverCache()
     private var storage = [ObjectIdentifier: Any]()

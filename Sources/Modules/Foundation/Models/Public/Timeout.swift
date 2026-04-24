@@ -46,8 +46,8 @@ public final class Timeout: Sendable {
 
     // MARK: - Properties
 
-    private let _state = LockIsolated<State>(wrappedValue: .cancelled)
-    private let _task = LockIsolated<Task<Void, Never>?>(wrappedValue: nil)
+    private let _state = LockIsolated<State>(.cancelled)
+    private let _task = LockIsolated<Task<Void, Never>?>(nil)
 
     // MARK: - Object Lifecycle
 

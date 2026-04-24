@@ -318,7 +318,7 @@ else
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>0.0.0</string>
     <key>CFBundleVersion</key>
     <string>0</string>
     <key>CFFirstCompileDate</key>
@@ -327,6 +327,8 @@ else
     <string>$(TARGET_NAME)</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Photo library access is requested to save images.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>

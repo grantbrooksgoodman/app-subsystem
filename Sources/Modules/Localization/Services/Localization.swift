@@ -11,7 +11,7 @@ import Foundation
 enum Localization {
     // MARK: - Properties
 
-    private static let cachedLocalizedStrings = LockIsolated<[String: [String: String]]?>(wrappedValue: nil)
+    private static let cachedLocalizedStrings = LockIsolated<[String: [String: String]]?>(nil)
 
     // MARK: - Computed Properties
 

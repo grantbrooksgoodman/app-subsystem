@@ -109,6 +109,10 @@ public final class LockIsolated<Value>: Sendable {
         isolatedValue = _LockIsolated(wrappedValue())
     }
 
+    public convenience init(_ wrappedValue: @autoclosure () -> Value) {
+        self.init(wrappedValue: wrappedValue())
+    }
+
     // MARK: - Projected Value
 
     public var projectedValue: LockIsolatedProjection<Value> { .init(isolatedValue) }
@@ -194,7 +198,7 @@ private final class _LockIsolated<Value>: @unchecked Sendable {
 
     // MARK: - Dynamic Member Lookup
 
-    private subscript<Subject>(
+    fileprivate subscript<Subject>(
         dynamicMember keyPath: KeyPath<Value, Subject>
     ) -> Subject {
         lock.sync { _value[keyPath: keyPath] }

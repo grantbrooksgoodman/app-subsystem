@@ -25,6 +25,7 @@ enum ConnectionAlert {
            uiApplication.canOpenURL(settingsURL) {
             let settingsAction: AKAction = .init(AppSubsystem.delegates.localizedStrings.settings) {
                 Task { @MainActor in
+                    @Dependency(\.uiApplication) var uiApplication: UIApplication
                     uiApplication.open(settingsURL)
                 }
             }

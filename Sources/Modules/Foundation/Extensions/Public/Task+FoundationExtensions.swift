@@ -86,7 +86,7 @@ public extension Task where Success == Void, Failure == Never {
                         ],
                         metadata: .init(sender: self)
                     ),
-                    domain: .task
+                    domain: .concurrency
                 )
 
                 return

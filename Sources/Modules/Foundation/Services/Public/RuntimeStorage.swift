@@ -42,7 +42,7 @@ import Foundation
 public enum RuntimeStorage {
     // MARK: - Properties
 
-    private static let storedItems = LockIsolated<[String: Any]>(wrappedValue: [:])
+    private static let storedItems = LockIsolated<[String: Any]>([:])
 
     // MARK: - Removal
 

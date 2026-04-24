@@ -115,9 +115,9 @@ public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawVal
 private enum Cache {
     // MARK: - Properties
 
-    fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(wrappedValue: false)
+    fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(false)
 
-    private static let _value = LockIsolated<NSCache<NSString, AnyObject>>(wrappedValue: .init())
+    private static let _value = LockIsolated<NSCache<NSString, AnyObject>>(.init())
 
     // MARK: - Computed Properties
 

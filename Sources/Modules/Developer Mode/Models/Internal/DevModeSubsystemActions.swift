@@ -167,6 +167,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
                     @Sendable
                     func presentLanguageCodeTextInputAlert() async {
+                        @Dependency(\.coreKit) var core: CoreKit
                         let input = await AKTextInputAlert(
                             title: "Override Language Code",
                             message: "Enter the two-letter code of the language to apply:",
@@ -180,8 +181,13 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         guard let input else { return }
                         guard let languageCodes = RuntimeStorage.languageCodeDictionary,
                               languageCodes.keys.contains(input.lowercasedTrimmingWhitespaceAndNewlines) else {
-                            let tryAgainAction: AKAction = .init("Try Again", style: .preferred) {
-                                Task { await presentLanguageCodeTextInputAlert() }
+                            let tryAgainAction: AKAction = .init(
+                                "Try Again",
+                                style: .preferred
+                            ) {
+                                Task {
+                                    await presentLanguageCodeTextInputAlert()
+                                }
                             }
 
                             return await AKAlert(
@@ -281,6 +287,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     @Sendable
                     func startCapture(_ savesToPhotos: Bool) {
                         Task { @MainActor in
+                            @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
                             AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
                             if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
                                 Logger.log(exception, with: .errorAlert)

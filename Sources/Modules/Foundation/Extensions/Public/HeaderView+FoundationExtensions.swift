@@ -45,7 +45,7 @@ public extension HeaderView.PeripheralButtonType {
         .text(
             .init(
                 text: .init(
-                    AppSubsystem.delegates.localizedStrings.cancel,
+                    Localized(SubsystemStringKey.cancel).wrappedValue,
                     font: font,
                     foregroundColor: foregroundColor
                 ),
@@ -69,7 +69,7 @@ public extension HeaderView.PeripheralButtonType {
         .text(
             .init(
                 text: .init(
-                    AppSubsystem.delegates.localizedStrings.done,
+                    Localized(SubsystemStringKey.done).wrappedValue,
                     font: font,
                     foregroundColor: foregroundColor
                 ),

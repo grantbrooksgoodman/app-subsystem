@@ -206,8 +206,8 @@ private struct HeaderViewModifier: ViewModifier {
         for type: HeaderView.PeripheralButtonType,
         isLeadingItem: Bool
     ) -> some View {
-        let cancelString = AppSubsystem.delegates.localizedStrings.cancel
-        let doneString = AppSubsystem.delegates.localizedStrings.done
+        let cancelString = Localized(SubsystemStringKey.cancel).wrappedValue
+        let doneString = Localized(SubsystemStringKey.done).wrappedValue
 
         return Group {
             switch type {

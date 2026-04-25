@@ -77,7 +77,7 @@ public extension Exception {
             "Internet connection is offline.",
             isReportable: false,
             userInfo: [
-                UserInfo.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.internetConnectionOffline,
+                UserInfo.userFacingDescriptor.rawValue: Localized(SubsystemStringKey.internetConnectionOffline).wrappedValue,
             ],
             metadata: metadata
         )
@@ -90,7 +90,7 @@ public extension Exception {
             "The operation timed out. Please try again later.",
             isReportable: false,
             userInfo: [
-                UserInfo.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.timedOut,
+                UserInfo.userFacingDescriptor.rawValue: Localized(SubsystemStringKey.timedOut).wrappedValue,
             ],
             metadata: metadata
         )

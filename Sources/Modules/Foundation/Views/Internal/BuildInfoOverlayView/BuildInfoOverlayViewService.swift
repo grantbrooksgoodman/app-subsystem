@@ -49,7 +49,7 @@ struct BuildInfoOverlayViewService {
             actions: [
                 viewBuildInformationAction,
                 developerModeAction,
-                .cancelAction(title: AppSubsystem.delegates.localizedStrings.dismiss),
+                .cancelAction(title: Localized(SubsystemStringKey.dismiss).wrappedValue),
             ]
         )
 
@@ -66,7 +66,7 @@ struct BuildInfoOverlayViewService {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
         let reportBugAction: AKAction = .init(
-            AppSubsystem.delegates.localizedStrings.reportBug
+            Localized(SubsystemStringKey.reportBug).wrappedValue
         ) {
             Task { @MainActor in
                 reportDelegate.reportBug()
@@ -74,7 +74,7 @@ struct BuildInfoOverlayViewService {
         }
 
         let sendFeedbackAction: AKAction = .init(
-            AppSubsystem.delegates.localizedStrings.sendFeedback
+            Localized(SubsystemStringKey.sendFeedback).wrappedValue
         ) {
             Task { @MainActor in
                 reportDelegate.sendFeedback()
@@ -88,8 +88,8 @@ struct BuildInfoOverlayViewService {
                     sendFeedbackAction,
                     reportBugAction,
                 ],
-                cancelButtonTitle: AppSubsystem.delegates.localizedStrings.cancel,
-                sourceItem: .custom(.string(AppSubsystem.delegates.localizedStrings.sendFeedback))
+                cancelButtonTitle: Localized(SubsystemStringKey.cancel).wrappedValue,
+                sourceItem: .custom(.string(Localized(SubsystemStringKey.sendFeedback).wrappedValue))
             ).present(translating: [.title])
         }
     }

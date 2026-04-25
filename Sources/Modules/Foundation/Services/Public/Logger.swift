@@ -847,7 +847,7 @@ public enum Logger {
 
                 let errorAlert = AKErrorAlert(
                     exception.hydrated,
-                    dismissButtonTitle: AppSubsystem.delegates.localizedStrings.dismiss
+                    dismissButtonTitle: Localized(SubsystemStringKey.dismiss).wrappedValue
                 )
 
                 var translationOptionKeys: [AKErrorAlert.TranslationOptionKey] = shouldTranslate ? [.errorDescription] : []
@@ -878,9 +878,10 @@ public enum Logger {
 
                 if let exception,
                    exception.isReportable {
-                    let strings = AppSubsystem.delegates.localizedStrings
                     title = userFacingDescriptor
-                    message = Logger._reportsErrorsAutomatically.wrappedValue ? strings.errorReported : strings.tapToReport
+                    message = Logger._reportsErrorsAutomatically.wrappedValue
+                        ? Localized(SubsystemStringKey.errorReported).wrappedValue
+                        : Localized(SubsystemStringKey.tapToReport).wrappedValue
                 }
 
                 var reportAction: (@Sendable () -> Void)? {

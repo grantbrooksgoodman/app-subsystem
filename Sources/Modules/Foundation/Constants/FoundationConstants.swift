@@ -130,24 +130,3 @@ public enum Observables {
     static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(nil)
     static let themedViewAppearanceChanged = Observable<Nil>()
 }
-
-// MARK: - Default Localized Strings
-
-extension AppSubsystem.Delegates.DefaultLocalizedStringsDelegate {
-    static let cancelString = "Cancel"
-    static let dismissString = "Dismiss"
-    static let doneString = "Done"
-    static let errorReportedString = "This error has been reported."
-    static let internetConnectionOfflineString = "Internet connection is offline."
-    static let noEmailString = "It appears that your device is not able to send e-mail.\n\nPlease verify that your e-mail client is set up and try again."
-    static let noInternetMessageString = "The internet connection appears to be offline.\n\nPlease connect to the internet and try again."
-    static let reportBugString = "Report Bug"
-    static let reportSentString = "Report sent"
-    static let sendFeedbackString = "Send Feedback"
-    static let settingsString = "Settings..."
-    static let somethingWentWrongString = "Something went wrong, please try again later."
-    static let tapToReportString = "Tap to report this error."
-    static let timedOutString = "The operation timed out. Please try again later."
-    static let tryAgainString = "Try Again"
-    static let yesterdayString = "Yesterday"
-}

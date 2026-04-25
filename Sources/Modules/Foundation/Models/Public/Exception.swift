@@ -122,10 +122,9 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
             return userFacingDescriptor
         }
 
-        return build.milestone == .generalRelease ? (AppSubsystem
-            .delegates
-            .localizedStrings
-            .somethingWentWrong) : descriptor
+        return build.milestone == .generalRelease
+            ? Localized(SubsystemStringKey.somethingWentWrong).wrappedValue
+            : descriptor
     }
 
     /// The recursively traversed value of all underlying `Exception`s for this instance.

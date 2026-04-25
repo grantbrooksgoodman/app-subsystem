@@ -15,10 +15,8 @@ import Foundation
 /// at access time for a given key and language:
 ///
 /// ```swift
-/// @Localized(key: StringKey.greeting, languageCode: "es")
-/// var hello: String
-///
-/// // greeting == "Hola" (assuming the property list maps "greeting" → "Hola" for "es")
+/// @Localized(.hello, languageCode: "es")
+/// var greeting: String    // greeting == "Hola"
 /// ```
 ///
 /// The lookup is backed by an internal cache, so repeated accesses do not
@@ -61,10 +59,11 @@ public struct Localized<T: LocalizedStringKeyRepresentable>: Equatable {
     ///
     /// - Parameters:
     ///   - key: The localization key to look up.
-    ///   - languageCode: The language code to resolve the string for.
+    ///   - languageCode: The language to resolve the string for.
+    ///     Defaults to ``RuntimeStorage/languageCode``.
     public init(
-        key: T,
-        languageCode: String
+        _ key: T,
+        languageCode: String = RuntimeStorage.languageCode
     ) {
         self.key = key
         self.languageCode = languageCode

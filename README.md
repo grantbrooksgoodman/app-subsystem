@@ -585,7 +585,8 @@ enum StringKey: String, LocalizedStringKeyRepresentable {
 Use [`@Localized`](Sources/Modules/Localization/Models/Localized.swift) to declare a string property whose value is looked up automatically:
 
 ```swift
-@Localized(key: .hello, languageCode: "es") var greeting: String    // greeting == "Hola"
+@Localized(.hello, languageCode: "es") 
+var greeting: String    // greeting == "Hola"
 ```
 
 The lookup is backed by an internal cache, so repeated accesses do not re-read the property list from disk.
@@ -778,7 +779,6 @@ Default behavior can be replaced or extended by registering delegates on `AppSub
 |---|---|---|
 | `breadcrumbsCapture` | Screenshot capture for debugging. | Built-in [`Breadcrumbs`](Sources/Modules/Foundation/Services/Internal/Breadcrumbs.swift) implementation. |
 | `cacheDomainList` | Application-specific cache domains. | Empty domain list. |
-| `localizedStrings` | System UI strings (Cancel, Done, and similar labels). | English strings. |
 | `loggerDomainSubscription` | Logger domain filtering and session-record exclusions. | Subscribes to all domains. |
 | `uiThemeList` | Available themes for the theme picker. | Single default theme. |
 

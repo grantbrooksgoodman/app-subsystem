@@ -23,7 +23,7 @@ enum ConnectionAlert {
         var actions: [AKAction] = [.cancelAction(title: "OK")]
         if let settingsURL = URL(string: massageRedirectionKey("oddUdfstgb")),
            uiApplication.canOpenURL(settingsURL) {
-            let settingsAction: AKAction = .init(AppSubsystem.delegates.localizedStrings.settings) {
+            let settingsAction: AKAction = .init(Localized(SubsystemStringKey.settings).wrappedValue) {
                 Task { @MainActor in
                     @Dependency(\.uiApplication) var uiApplication: UIApplication
                     uiApplication.open(settingsURL)
@@ -34,7 +34,7 @@ enum ConnectionAlert {
         }
 
         await AKAlert(
-            message: AppSubsystem.delegates.localizedStrings.noInternetMessage,
+            message: Localized(SubsystemStringKey.noInternetMessage).wrappedValue,
             actions: actions
         ).present(translating: [])
     }

@@ -17,7 +17,7 @@ public extension AlertKit.Action {
     /// A cancel action using the localized cancel string.
     static var cancelAction: AlertKit.Action {
         .init(
-            AppSubsystem.delegates.localizedStrings.cancel,
+            Localized(SubsystemStringKey.cancel).wrappedValue,
             style: .cancel
         ) {}
     }

@@ -200,14 +200,14 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
             let exception: Exception = .init(
                 "Device is not configured for e-mail.",
                 isReportable: false,
-                userInfo: [Exception.UserInfo.userFacingDescriptor.rawValue: AppSubsystem.delegates.localizedStrings.noEmail],
+                userInfo: [Exception.UserInfo.userFacingDescriptor.rawValue: Localized(SubsystemStringKey.noEmail).wrappedValue],
                 metadata: .init(sender: self)
             )
 
             Logger.log(exception)
             await AKErrorAlert(
                 exception,
-                dismissButtonTitle: AppSubsystem.delegates.localizedStrings.dismiss
+                dismissButtonTitle: Localized(SubsystemStringKey.dismiss).wrappedValue
             ).present(translating: [])
             return
         }
@@ -258,7 +258,7 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
             case .sent:
                 Toast.show(.init(
                     .capsule(style: .success),
-                    message: AppSubsystem.delegates.localizedStrings.reportSent,
+                    message: Localized(SubsystemStringKey.reportSent).wrappedValue,
                     perpetuation: .ephemeral(.seconds(3))
                 ))
 

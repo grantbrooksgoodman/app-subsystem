@@ -39,7 +39,7 @@ public extension Date {
         if calendar.isDateInToday(self) {
             return DateFormatter.localizedString(from: self, dateStyle: .none, timeStyle: .short)
         } else if calendar.isDateInYesterday(self) {
-            return AppSubsystem.delegates.localizedStrings.yesterday
+            return Localized(SubsystemStringKey.yesterday).wrappedValue
         } else if calendar.isDate(
             self,
             equalTo: currentDate,

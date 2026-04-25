@@ -51,7 +51,7 @@ struct BuildInfoOverlayReducer: Reducer {
                 RootWindowStatus.shared.rootView == .expiryPage
         }
 
-        var sendFeedbackButtonText: String { AppSubsystem.delegates.localizedStrings.sendFeedback } // swiftlint:disable:next identifier_name
+        var sendFeedbackButtonText: String { Localized(SubsystemStringKey.sendFeedback).wrappedValue } // swiftlint:disable:next identifier_name
 
         @MainActor
         fileprivate var _statsLabelText: String {

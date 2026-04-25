@@ -30,8 +30,8 @@ struct FailurePageReducer: Reducer {
 
         var didReportBug = false
         var exception: Exception
-        var reportBugButtonText = AppSubsystem.delegates.localizedStrings.reportBug
-        var retryButtonText = AppSubsystem.delegates.localizedStrings.tryAgain
+        var reportBugButtonText = Localized(SubsystemStringKey.reportBug).wrappedValue
+        var retryButtonText = Localized(SubsystemStringKey.tryAgain).wrappedValue
         var retryHandler: (() -> Void)?
 
         /* MARK: Init */

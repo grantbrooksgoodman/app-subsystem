@@ -262,8 +262,7 @@ public extension AppSubsystem {
     ///
     /// Delegates fall into two categories:
     ///
-    /// - **Defaulted.** Properties such as ``localizedStrings``
-    ///   and ``uiThemeList`` are populated with working
+    /// - **Defaulted.** Properties such as ``uiThemeList`` are populated with working
     ///   implementations automatically. Replace them only when you
     ///   need to customize the default behavior.
     ///
@@ -324,18 +323,6 @@ public extension AppSubsystem {
         ///
         /// - SeeAlso: ``CacheDomainListDelegate``
         @LockIsolated public private(set) var cacheDomainList: CacheDomainListDelegate = DefaultCacheDomainListDelegate()
-
-        /// The delegate that provides localized strings for the
-        /// subsystem's built-in UI components.
-        ///
-        /// The default value is a
-        /// ``DefaultLocalizedStringsDelegate`` instance, which
-        /// returns English strings. Replace this delegate to
-        /// supply translations that match the user's current
-        /// language.
-        ///
-        /// - SeeAlso: ``LocalizedStringsDelegate``
-        @LockIsolated public private(set) var localizedStrings: LocalizedStringsDelegate = DefaultLocalizedStringsDelegate()
 
         /// The delegate that specifies which logger domains are
         /// active at launch.
@@ -479,8 +466,6 @@ public extension AppSubsystem {
         ///     exception metadata.
         ///   - forcedUpdateModalDelegate: A delegate that drives
         ///     forced-update presentation.
-        ///   - localizedStringsDelegate: A delegate that provides
-        ///     localized UI strings.
         ///   - loggerDomainSubscriptionDelegate: A delegate that
         ///     specifies subscribed logger domains.
         ///   - permanentUserDefaultsKeyDelegate: A delegate that
@@ -498,7 +483,6 @@ public extension AppSubsystem {
             devModeAppActionDelegate: DevModeAppActionDelegate? = nil,
             exceptionMetadataDelegate: ExceptionMetadataDelegate? = nil,
             forcedUpdateModalDelegate: ForcedUpdateModalDelegate? = nil,
-            localizedStringsDelegate: LocalizedStringsDelegate? = nil,
             loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate? = nil,
             permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate? = nil,
             uiThemeListDelegate: UIThemeListDelegate? = nil
@@ -509,7 +493,6 @@ public extension AppSubsystem {
                 devModeAppActionDelegate != nil ||
                 exceptionMetadataDelegate != nil ||
                 forcedUpdateModalDelegate != nil ||
-                localizedStringsDelegate != nil ||
                 loggerDomainSubscriptionDelegate != nil ||
                 permanentUserDefaultsKeyDelegate != nil ||
                 uiThemeListDelegate != nil else {
@@ -523,7 +506,6 @@ public extension AppSubsystem {
             if let devModeAppActionDelegate { devModeAppActions = devModeAppActionDelegate }
             if let exceptionMetadataDelegate { exceptionMetadata = exceptionMetadataDelegate }
             if let forcedUpdateModalDelegate { forcedUpdateModal = forcedUpdateModalDelegate }
-            if let localizedStringsDelegate { localizedStrings = localizedStringsDelegate }
             if let loggerDomainSubscriptionDelegate { loggerDomainSubscription = loggerDomainSubscriptionDelegate }
             if let permanentUserDefaultsKeyDelegate { permanentUserDefaultsKeys = permanentUserDefaultsKeyDelegate }
             if let uiThemeListDelegate { uiThemeList = uiThemeListDelegate }
@@ -588,16 +570,6 @@ public extension AppSubsystem {
         /// - SeeAlso: ``ForcedUpdateModalDelegate``
         public func registerForcedUpdateModalDelegate(_ forcedUpdateModalDelegate: ForcedUpdateModalDelegate) {
             register(forcedUpdateModalDelegate: forcedUpdateModalDelegate)
-        }
-
-        /// Registers the specified localized strings delegate.
-        ///
-        /// - Parameter localizedStringsDelegate: The delegate to
-        ///   register.
-        ///
-        /// - SeeAlso: ``LocalizedStringsDelegate``
-        public func registerLocalizedStringsDelegate(_ localizedStringsDelegate: LocalizedStringsDelegate) {
-            register(localizedStringsDelegate: localizedStringsDelegate)
         }
 
         /// Registers the specified logger domain subscription delegate.

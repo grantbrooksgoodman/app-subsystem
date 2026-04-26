@@ -28,7 +28,7 @@ import Foundation
 ///
 /// Every build belongs to a ``Milestone`` that indicates its
 /// position in the release cycle. Certain subsystem behaviors –
-/// such as developer mode availability and timebomb enforcement –
+/// such as Developer Mode availability and timebomb enforcement –
 /// are gated on the current milestone.
 ///
 /// ## Build Expiry
@@ -152,7 +152,7 @@ public final class Build: @unchecked Sendable {
     /// A human-readable string describing the build's expiry status.
     public var expiryInfoString: String { getExpiryInfoString() }
 
-    /// A Boolean value that indicates whether developer mode is
+    /// A Boolean value that indicates whether Developer Mode is
     /// enabled.
     ///
     /// Developer mode is always disabled in general-release builds.

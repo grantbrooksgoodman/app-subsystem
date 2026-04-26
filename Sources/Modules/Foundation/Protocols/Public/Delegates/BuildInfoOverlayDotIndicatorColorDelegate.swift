@@ -11,10 +11,10 @@ import SwiftUI
 
 // swiftlint:disable type_name
 public extension AppSubsystem.Delegates {
-    /// A type that provides the color for the developer mode indicator
+    /// A type that provides the color for the Developer Mode indicator
     /// dot in the build info overlay.
     ///
-    /// When developer mode is enabled, the build info overlay displays
+    /// When Developer Mode is enabled, the build info overlay displays
     /// a small colored dot to signal that the mode is active. By
     /// default, this dot is orange. Conform to this protocol to
     /// supply a custom color that better suits your app's
@@ -35,7 +35,7 @@ public extension AppSubsystem.Delegates {
     ///   breadcrumbs capture occurs, then restores to the color
     ///   returned by this delegate.
     protocol BuildInfoOverlayDotIndicatorColorDelegate {
-        /// The color to use for the developer mode indicator dot.
+        /// The color to use for the Developer Mode indicator dot.
         var developerModeIndicatorDotColor: Color { get }
     }
 }

@@ -130,18 +130,6 @@ done
 
 
 # ===================================================================
-# MARK: - Resolve Script Directory
-# ===================================================================
-#
-# The canonical LocalizedStrings.plist is located alongside this
-# script. Resolve the script's directory now, before any potential
-# directory change, so that a relative BASH_SOURCE path is evaluated
-# against the original working directory.
-
-script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-
-# ===================================================================
 # MARK: - Resolve Target
 # ===================================================================
 
@@ -328,7 +316,7 @@ else
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Photo library access is requested to save images.</string>
+    <string>Photo library access is requested to save images for Breadcrumbs capture.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
@@ -389,23 +377,180 @@ SWIFT
 fi
 
 # -- LocalizedStrings.plist -----------------------------------------
+#
+# The app's localized strings property list is separate from the
+# framework's own. Generate a starter file with a single key so
+# that adopting apps have a working example out of the box.
 
 localized_strings_path="$target_source_directory/LocalizedStrings.plist"
 
 if [[ -f "$localized_strings_path" ]]; then
     log_skipped "$localized_strings_path (already exists)"
 else
-    # Resolve the path to the canonical copy shipped with the
-    # AppSubsystem repository, located alongside this script.
-    canonical_strings_plist="$script_directory/LocalizedStrings.plist"
-
-    if [[ -f "$canonical_strings_plist" ]]; then
-        cp "$canonical_strings_plist" "$localized_strings_path"
-        log_created "$localized_strings_path"
-    else
-        log_warning "Could not locate Resources/LocalizedStrings.plist"
-        log_detail  "Copy it manually from the AppSubsystem repository."
-    fi
+    cat > "$localized_strings_path" << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>hello_world</key>
+    <dict>
+        <key>af</key>
+        <string>Hallo, wêreld!</string>
+        <key>ar</key>
+        <string>مرحبا بالعالم!</string>
+        <key>az</key>
+        <string>Salam, dünya!</string>
+        <key>be</key>
+        <string>Прывітанне, свет!</string>
+        <key>bg</key>
+        <string>Здравей, свят!</string>
+        <key>bn</key>
+        <string>হ্যালো, বিশ্ব!</string>
+        <key>bs</key>
+        <string>Zdravo, svijete!</string>
+        <key>ca</key>
+        <string>Hola, món!</string>
+        <key>cs</key>
+        <string>Ahoj, světe!</string>
+        <key>cy</key>
+        <string>Helô, byd!</string>
+        <key>da</key>
+        <string>Hej, verden!</string>
+        <key>de</key>
+        <string>Hallo, Welt!</string>
+        <key>el</key>
+        <string>Γεια σου, κόσμε!</string>
+        <key>en</key>
+        <string>Hello, world!</string>
+        <key>eo</key>
+        <string>Saluton, mondo!</string>
+        <key>es</key>
+        <string>¡Hola, mundo!</string>
+        <key>et</key>
+        <string>Tere, maailm!</string>
+        <key>eu</key>
+        <string>Kaixo, mundua!</string>
+        <key>fa</key>
+        <string>سلام، دنیا!</string>
+        <key>fi</key>
+        <string>Hei, maailma!</string>
+        <key>fr</key>
+        <string>Bonjour le monde!</string>
+        <key>ga</key>
+        <string>Dia duit, domhan!</string>
+        <key>gd</key>
+        <string>Halò, a shaoghail!</string>
+        <key>gl</key>
+        <string>Ola, mundo!</string>
+        <key>gu</key>
+        <string>હેલો દુનિયા!</string>
+        <key>he</key>
+        <string>שלום, עולם!</string>
+        <key>hi</key>
+        <string>हैलो वर्ल्ड!</string>
+        <key>hr</key>
+        <string>Pozdrav, svijete!</string>
+        <key>ht</key>
+        <string>Bonjou, lemonn!</string>
+        <key>hu</key>
+        <string>Helló, világ!</string>
+        <key>hy</key>
+        <string>Բարև, աշխարհ։</string>
+        <key>id</key>
+        <string>Halo, dunia!</string>
+        <key>is</key>
+        <string>Halló, heimur!</string>
+        <key>it</key>
+        <string>Ciao, mondo!</string>
+        <key>ja</key>
+        <string>こんにちは世界！</string>
+        <key>ka</key>
+        <string>Გამარჯობა, სამყარო!</string>
+        <key>kk</key>
+        <string>Сәлем, әлем!</string>
+        <key>kn</key>
+        <string>ನಮಸ್ಕಾರ ಜಗತ್ತೇ!</string>
+        <key>ko</key>
+        <string>안녕하세요, 세상아!</string>
+        <key>ky</key>
+        <string>Салам дүйнө!</string>
+        <key>lt</key>
+        <string>Sveikas, pasauli!</string>
+        <key>mg</key>
+        <string>Salama, tontolo!</string>
+        <key>mi</key>
+        <string>Kia ora, te ao!</string>
+        <key>mk</key>
+        <string>Здраво, свету!</string>
+        <key>ml</key>
+        <string>ഹലോ വേൾഡ്!</string>
+        <key>mn</key>
+        <string>Сайн уу, дэлхий!</string>
+        <key>mt</key>
+        <string>Bongu, dinja!</string>
+        <key>ne</key>
+        <string>नमस्ते, संसार!</string>
+        <key>nl</key>
+        <string>Hallo, wereld!</string>
+        <key>no</key>
+        <string>Hei, verden!</string>
+        <key>pa</key>
+        <string>ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਦੁਨਿਆ!</string>
+        <key>pl</key>
+        <string>Witaj, świecie!</string>
+        <key>pt</key>
+        <string>Olá, mundo!</string>
+        <key>ro</key>
+        <string>Salut, lume!</string>
+        <key>ru</key>
+        <string>Привет, мир!</string>
+        <key>si</key>
+        <string>හෙලෝ වර්ල්ඩ්!</string>
+        <key>sk</key>
+        <string>Ahoj, svet!</string>
+        <key>sl</key>
+        <string>Pozdravljen, svet!</string>
+        <key>sq</key>
+        <string>Përshëndetje, botë!</string>
+        <key>sr</key>
+        <string>Здраво, свете!</string>
+        <key>su</key>
+        <string>Halo, dunya!</string>
+        <key>sv</key>
+        <string>Hej världen!</string>
+        <key>sw</key>
+        <string>Habari, dunia!</string>
+        <key>ta</key>
+        <string>வணக்கம், உலகம்!</string>
+        <key>te</key>
+        <string>నమస్కారం, ప్రపంచమా!</string>
+        <key>tg</key>
+        <string>Салом Ҷаҳон!</string>
+        <key>th</key>
+        <string>สวัสดีชาวโลก!</string>
+        <key>tl</key>
+        <string>Kumusta, mundo!</string>
+        <key>tr</key>
+        <string>Selam, dünya!</string>
+        <key>tt</key>
+        <string>Сәлам, дөнья!</string>
+        <key>uk</key>
+        <string>Привіт, світе!</string>
+        <key>ur</key>
+        <string>ہیلو، دنیا!</string>
+        <key>uz</key>
+        <string>Salom, dunyo!</string>
+        <key>vi</key>
+        <string>Xin chào thế giới!</string>
+        <key>yi</key>
+        <string>העלא, וועלט!</string>
+        <key>zh</key>
+        <string>你好世界！</string>
+    </dict>
+</dict>
+</plist>
+PLIST
+    log_created "$localized_strings_path"
 fi
 
 echo ""

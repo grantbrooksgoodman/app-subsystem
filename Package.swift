@@ -32,6 +32,9 @@ let package = Package(
                 .product(name: "Translator", package: "translator", moduleAliases: nil),
             ],
             path: "Sources",
+            resources: [
+                .process("Resources"),
+            ],
             swiftSettings: [.swiftLanguageMode(.v6)],
             plugins: [ /* .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint") */ ]
         ),

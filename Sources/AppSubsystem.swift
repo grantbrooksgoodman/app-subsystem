@@ -42,7 +42,7 @@ import Translator
 ///
 /// - **Navigation.** A coordinator-based navigation system manages stack, sheet, and modal presentation through a single published state value. SwiftUI views bind directly to the coordinator and respond to navigation changes automatically.
 ///
-/// - **Developer tools.** Pre-release builds include a build-info overlay, breadcrumb capture, logging, and a developer mode action menu – all of which are disabled or hidden in general-release builds automatically.
+/// - **Developer tools.** Pre-release builds include a build-info overlay, breadcrumb capture, logging, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically.
 ///
 /// ## Bootstrapping
 ///
@@ -76,9 +76,9 @@ import Translator
 ///
 /// Default behavior can be replaced or extended by registering delegates on
 /// ``delegates`` before or after initialization. Delegates with sensible
-/// defaults (localized strings, theme list, logger subscriptions) are
+/// defaults (theme list, cache domains, logger subscriptions) are
 /// provided out of the box; optional delegates (exception metadata, forced
-/// update modals, developer mode actions) can be registered as needed:
+/// update modals, Developer Mode actions) can be registered as needed:
 ///
 /// ```swift
 /// AppSubsystem.delegates.register(
@@ -367,7 +367,7 @@ public extension AppSubsystem {
         /* MARK: Computed Properties */
 
         /// The delegate that provides a custom color for the
-        /// developer mode indicator dot in the build info overlay.
+        /// Developer Mode indicator dot in the build info overlay.
         ///
         /// When this property is `nil`, the indicator dot uses the
         /// default color.

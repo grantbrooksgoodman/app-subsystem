@@ -46,7 +46,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Navigation.** A coordinator-based navigation system manages stack, sheet, and modal presentation through a single published state value. SwiftUI views bind directly to the coordinator and respond to navigation changes automatically.
 
-- **Developer tools.** Pre-release builds include a build-info overlay, breadcrumb capture, logging, and a developer mode action menu – all of which are disabled or hidden in general-release builds automatically.
+- **Developer tools.** Pre-release builds include a build-info overlay, breadcrumb capture, logging, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically.
 
 ---
 
@@ -181,7 +181,7 @@ The `Info.plist` must include all the keys shown below. Scene configuration valu
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Photo library access is requested to save images.</string>
+    <string>Photo library access is requested to save images for Breadcrumbs capture.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
@@ -218,24 +218,7 @@ The `Info.plist` must include all the keys shown below. Scene configuration valu
 
 > **Important:** Verify that `Info.plist` does **not** appear in the target's **Copy Bundle Resources** build phase. Xcode sometimes adds it automatically. If it does appear there, remove it – the property list is read by the build system directly and should not be copied into the app bundle as a resource. The bootstrap script handles this removal automatically.
 
-#### 5. Add `LocalizedStrings.plist`
-
-The localization system reads translated strings from a `LocalizedStrings.plist` file in the app bundle. This file maps string keys to dictionaries of language-code/translation pairs.
-
-A canonical copy is provided in the AppSubsystem repository at [`Resources/LocalizedStrings.plist`](Resources/LocalizedStrings.plist). Copy it into the target's resource directory and verify it appears in the target's **Copy Bundle Resources** build phase. The minimal directory structure is shown below.
-
-```
-MyApp/
-├── AppDelegate.swift
-├── ContentView.swift
-├── SceneDelegate.swift
-├── Info.plist
-└── LocalizedStrings.plist
-```
-
-> The `LocalizedStrings.plist` file ships with translations for all supported languages. Custom keys can be added following the same structure – each key maps to a dictionary of language codes and their corresponding translations.
-
-#### 6. Add a Run Script Build Phase
+#### 5. Add a Run Script Build Phase
 
 In the target's **Build Phases**, add a **Run Script** phase. Uncheck *Based on dependency analysis*:
 
@@ -267,7 +250,7 @@ fi
 
 This script automatically increments the build number and records the build date during each build. On the first build, it also records the initial compile date.
 
-#### 7. Adjust Build Settings
+#### 6. Adjust Build Settings
 
 Set the following in the target's **Build Settings**:
 
@@ -279,7 +262,7 @@ Set the following in the target's **Build Settings**:
 
 `ENABLE_USER_SCRIPT_SANDBOXING` allows the run-script phase to modify the property list. `GENERATE_INFOPLIST_FILE` tells Xcode to use the custom `Info.plist` rather than generating one. `INFOPLIST_FILE` specifies the property list path for the build system – adjust the value if `Info.plist` is in a different location.
 
-#### 8. (Optional) Suppress System Log Output
+#### 7. (Optional) Suppress System Log Output
 
 Open the scheme editor (**Product → Scheme → Edit Scheme…**), select the **Run** action, and navigate to the **Arguments** tab. Under **Environment Variables**, add:
 
@@ -289,7 +272,7 @@ Open the scheme editor (**Product → Scheme → Edit Scheme…**), select the *
 
 This suppresses the default system logging that appears in the Xcode console at launch, keeping the console output focused on app-level messages from the AppSubsystem logger.
 
-#### 9. Run
+#### 8. Run
 
 Build and run. After completing these steps, AppSubsystem is fully active – theming, logging, localization, developer tools, and all supporting infrastructure.
 
@@ -572,24 +555,93 @@ By default, themed views update colors in place without rebuilding the view hier
 
 Multi-language support is provided through property-list-based string tables and an integrated translation pipeline.
 
-#### Static Localization
+#### Localization Sources
 
-The [`Localization`](Sources/Modules/Localization/Services/Localization.swift) service reads from `LocalizedStrings.plist` and resolves strings by key and language code. Define string keys by conforming an enum to [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift):
+AppSubsystem maintains its own localized strings property list for framework-provided UI strings such as alert titles and button labels. Apps may provide a separate property list for app-specific strings. The two never need to share keys.
+
+The [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift) enum identifies which property list to read from:
+
+| Source | Property List | Bundle |
+|---|---|---|
+| `.app()` | `LocalizedStrings` (configurable) | Main bundle |
+| `.custom(plistName:bundle:)` | Configurable | Configurable |
+| `.subsystem` | `LocalizedStrings` | AppSubsystem module bundle |
+
+#### Defining String Keys
+
+Define string keys by conforming an enum to [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift):
 
 ```swift
 enum StringKey: String, LocalizedStringKeyRepresentable {
-    case hello
+    case helloWorld
+
+    var referent: String { rawValue.snakeCased }
 }
 ```
 
-Use [`@Localized`](Sources/Modules/Localization/Models/Localized.swift) to declare a string property whose value is looked up automatically:
+#### Resolving Strings
+
+Use [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) to declare a string property whose value is resolved from a given source by key and language code:
 
 ```swift
-@Localized(.hello, languageCode: "es") 
-var greeting: String    // greeting == "Hola"
+@Localized(key: .helloWorld, source: .app())
+var greeting: String
+```
+
+Define a constrained extension on `Localized` to provide a default source for your key type:
+
+```swift
+extension Localized where T == StringKey {
+    init(
+        _ key: StringKey,
+        languageCode: String = RuntimeStorage.languageCode,
+        source: LocalizationSource = .app()
+    ) {
+        self.init(
+            key: key,
+            languageCode: languageCode,
+            source: source
+        )
+    }
+}
+```
+
+With this extension in place:
+
+```swift
+@Localized(.helloWorld) var greeting: String
 ```
 
 The lookup is backed by an internal cache, so repeated accesses do not re-read the property list from disk.
+
+#### Accessing Subsystem Strings
+
+AppSubsystem's property list includes localized strings for framework-provided UI elements such as "Cancel" and "Done." Apps can resolve these strings by declaring an available subsystem key in their own [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift)-conforming enum and passing `.subsystem` as the source. For the full list of available keys, see [`SubsystemStringKey.swift`](Sources/Modules/Localization/Models/Internal/SubsystemStringKey.swift).
+
+The following example resolves the `cancel` key from the subsystem's property list and defaults all other keys to the app's:
+
+```swift
+extension Localized where T == StringKey {
+    init(
+        _ key: StringKey,
+        languageCode: String = RuntimeStorage.languageCode,
+        source: LocalizationSource = .app()
+    ) {
+        var source = source
+        if key == .cancel {
+            source = .subsystem
+        }
+
+        self.init(
+            key: key,
+            languageCode: languageCode,
+            source: source
+        )
+    }
+}
+```
+
+> **Note:** Most apps do not need to reference the subsystem's strings.
 
 #### Dynamic Translation
 
@@ -716,7 +768,7 @@ Pre-release builds (any milestone before `generalRelease`) automatically include
 
 #### Build-Info Overlay
 
-A persistent banner displays the build number, version, and milestone. It can be toggled through developer mode and is managed automatically by the subsystem.
+A persistent banner displays the build number, version, and milestone. It can be toggled through Developer Mode and is managed automatically by the subsystem.
 
 #### Breadcrumb Capture
 
@@ -761,7 +813,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
 | **Observable** | The [`Observable`](Sources/Modules/Observable/Models/Observable.swift) value type, [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) lifecycle wrapper, and the [`Observers`](Sources/Modules/Observable/Services/Observers.swift) registry for reactive cross-feature communication. |
 | **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
-| **Localization** | Property-list-based string resolution, the [`@Localized`](Sources/Modules/Localization/Models/Localized.swift) property wrapper, and [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol. |
+| **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, and the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol. |
 | **Navigation** | The [`Navigating`](Sources/Modules/Navigation/Protocols/NavigatingProtocol.swift) and [`NavigatorState`](Sources/Modules/Navigation/Protocols/NavigatorStateProtocol.swift) protocols, [`NavigationCoordinator`](Sources/Modules/Navigation/Services/NavigationCoordinator.swift), and the [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) / [`@ObservedNavigator`](Sources/Modules/Navigation/Models/ObservedNavigator.swift) property wrappers for coordinated presentation. |
 | **Developer Mode** | [`DevModeService`](Sources/Modules/Developer%20Mode/Services/DevModeService.swift), [`DevModeAction`](Sources/Modules/Developer%20Mode/Models/Public/DevModeAction.swift), and the [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) for pre-release debugging tools. |
 
@@ -787,7 +839,7 @@ Default behavior can be replaced or extended by registering delegates on `AppSub
 | Delegate | Purpose |
 |---|---|
 | `buildInfoOverlayDotIndicatorColor` | Custom color for the build-info overlay indicator dot. |
-| `devModeAppActions` | Additional actions in the developer mode menu. |
+| `devModeAppActions` | Additional actions in the Developer Mode menu. |
 | `exceptionMetadata` | Controls which errors are reportable and provides user-facing descriptions. |
 | `forcedUpdateModal` | Drives a forced-update flow with a redirect URL and publisher. |
 | `permanentUserDefaultsKeys` | Keys that are protected from cache clearing. |

@@ -34,12 +34,6 @@ struct RootOverlayViewObserver: Observer {
     // MARK: - Observer Conformance
 
     func onChange(of observable: Observable<Any>) {
-        Logger.log(
-            "\(observable.value is Nil ? "Triggered" : "Observed change of") \(observable).",
-            domain: .observer,
-            sender: self
-        )
-
         switch observable {
         case Observables.isBuildInfoOverlayHidden:
             send(.isBuildInfoOverlayHiddenChanged(

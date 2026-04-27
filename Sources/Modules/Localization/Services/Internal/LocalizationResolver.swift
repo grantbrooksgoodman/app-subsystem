@@ -1,5 +1,5 @@
 //
-//  Localization.swift
+//  LocalizationResolver.swift
 //
 //  Created by Grant Brooks Goodman.
 //  Copyright © NEOTechnica Corporation. All rights reserved.
@@ -8,7 +8,10 @@
 /* Native */
 import Foundation
 
-enum Localization {
+/* Proprietary */
+import Translator
+
+enum LocalizedStringResolver {
     // MARK: - Properties
 
     private static let cachedLocalizedStrings = LockIsolated<[LocalizationSource: [String: [String: String]]]?>(nil)
@@ -28,11 +31,16 @@ enum Localization {
             as: .languageCodeDictionary
         )
 
-        if RuntimeStorage.languageCodeDictionary?[RuntimeStorage.languageCode] == nil || supportedLanguages.isEmpty {
-            Logger.log(.init(
-                "Unsupported language code; reverting to English.",
-                metadata: .init(sender: self)
-            ))
+        if RuntimeStorage.languageCodeDictionary?[RuntimeStorage.languageCode] == nil ||
+            supportedLanguages.isEmpty {
+            Logger.log(
+                .init(
+                    "Unsupported language code; reverting to English.",
+                    userInfo: ["LanguageCode": RuntimeStorage.languageCode],
+                    metadata: .init(sender: self)
+                ),
+                domain: .localization
+            )
 
             coreUtilities.setLanguageCode("en")
         }
@@ -87,9 +95,12 @@ enum Localization {
                 format: nil
             ) as? [String: [String: String]] else { return .init() }
 
-        var cachedLocalizedStrings = cachedLocalizedStrings.wrappedValue ?? .init()
-        cachedLocalizedStrings[source] = dictionary
-        self.cachedLocalizedStrings.wrappedValue = cachedLocalizedStrings
+        cachedLocalizedStrings.projectedValue.withValue {
+            var cachedLocalizedStrings = $0 ?? .init()
+            cachedLocalizedStrings[source] = dictionary
+            $0 = cachedLocalizedStrings
+        }
+
         return dictionary
     }
 }

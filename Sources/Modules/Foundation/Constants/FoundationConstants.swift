@@ -28,6 +28,23 @@ enum FoundationConstants {
     enum Strings {}
 }
 
+// MARK: - Observable Registry
+
+/// A registry of app-wide ``Observable`` values used to
+/// drive reactive UI updates and cross-component communication.
+public enum Observables {
+    /// A signal that fires after Breadcrumbs captures a
+    /// screenshot.
+    public static let breadcrumbsDidCapture = Observable<Nil>()
+
+    static let isBuildInfoOverlayHidden = Observable<Bool>(true)
+    static let rootViewSheet = Observable<AnyView?>(nil)
+    static let rootViewTapped = Observable<Nil>()
+    static let rootViewToast = Observable<Toast?>(nil)
+    static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(nil)
+    static let themedViewAppearanceChanged = Observable<Nil>()
+}
+
 // MARK: - Included Keys
 
 // TODO: Investigate duplicate ID behavior and theorize potential solutions.
@@ -35,10 +52,26 @@ enum FoundationConstants {
 public extension CacheDomain {
     /* MARK: Properties */
 
-    static let appIconImage: CacheDomain = .init("appIconImage") { clearAppIconImageCache() }
-    static let encodedHash: CacheDomain = .init("encodedHash") { clearEncodedHashCache() }
-    static let localization: CacheDomain = .init("localization") { clearLocalizationCache() }
-    static let localTranslationArchive: CacheDomain = .init("localTranslationArchive") { clearLocalTranslationArchiveCache() }
+    /// The cache domain for localized string lookups.
+    static let localization: CacheDomain = .init(
+        "localization",
+        clear: clearLocalizationCache
+    )
+
+    internal static let appIconImage: CacheDomain = .init(
+        "appIconImage",
+        clear: clearAppIconImageCache
+    )
+
+    internal static let encodedHash: CacheDomain = .init(
+        "encodedHash",
+        clear: clearEncodedHashCache
+    )
+
+    internal static let localTranslationArchive: CacheDomain = .init(
+        "localTranslationArchive",
+        clear: clearLocalTranslationArchiveCache
+    )
 
     /* MARK: Methods */
 
@@ -53,7 +86,7 @@ public extension CacheDomain {
     }
 
     private static func clearLocalizationCache() {
-        Localization.clearCache()
+        LocalizedStringResolver.clearCache()
     }
 
     private static func clearLocalTranslationArchiveCache() {
@@ -63,30 +96,64 @@ public extension CacheDomain {
 }
 
 public extension ColoredItemType {
+    /// A color that reflects the accent color of the system or app.
     static let accent: ColoredItemType = .init("accent")
+
+    /// The background color.
     static let background: ColoredItemType = .init("background")
+
+    /// The color for controls in a disabled state.
     static let disabled: ColoredItemType = .init("disabled")
+
+    /// The background color for grouped content areas.
     static let groupedContentBackground: ColoredItemType = .init("groupedContentBackground")
 
+    /// The navigation bar background color.
     static let navigationBarBackground: ColoredItemType = .init("navigationBarBackground")
+
+    /// The navigation bar title text color.
     static let navigationBarTitle: ColoredItemType = .init("navigationBarTitle")
 
+    /// The color for subtitle text.
     static let subtitleText: ColoredItemType = .init("subtitleText")
+
+    /// The color for title text.
     static let titleText: ColoredItemType = .init("titleText")
 }
 
 public extension LoggerDomain {
+    /// Log messages originating from AlertKit.
     static let alertKit: LoggerDomain = .init("alertKit")
+
+    /// Log messages related to cache operations.
     static let caches: LoggerDomain = .init("caches")
+
+    /// Log messages related to concurrency operations.
     static let concurrency: LoggerDomain = .init("concurrency")
+
+    /// General-purpose log messages.
     static let general: LoggerDomain = .init("general")
+
+    /// Log messages related to localization.
+    static let localization: LoggerDomain = .init("localization")
+
+    /// Log messages related to observer registration and
+    /// notification.
     static let observer: LoggerDomain = .init("observer")
+
+    /// Log messages related to translation operations.
     static let translation: LoggerDomain = .init("translation")
 }
 
 public extension StoredItemKey {
+    /// The active language code for the current session.
     static let languageCode: StoredItemKey = .init("languageCode")
+
+    /// The dictionary mapping language codes to their
+    /// display names.
     static let languageCodeDictionary: StoredItemKey = .init("languageCodeDictionary")
+
+    /// A language code override set at runtime.
     static let overriddenLanguageCode: StoredItemKey = .init("overriddenLanguageCode")
 }
 
@@ -114,19 +181,4 @@ extension UserDefaultsKey {
     static let isTimebombActive: UserDefaultsKey = .init("isTimebombActive")
     static let pendingThemeID: UserDefaultsKey = .init("pendingThemeID")
     static let translationArchive: UserDefaultsKey = .init("translationArchive")
-}
-
-// MARK: - Observable Registry
-
-/// A registry of app-wide ``Observable`` values used to
-/// drive reactive UI updates and cross-component communication.
-public enum Observables {
-    public static let breadcrumbsDidCapture = Observable<Nil>()
-
-    static let isBuildInfoOverlayHidden = Observable<Bool>(true)
-    static let rootViewSheet = Observable<AnyView?>(nil)
-    static let rootViewTapped = Observable<Nil>()
-    static let rootViewToast = Observable<Toast?>(nil)
-    static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(nil)
-    static let themedViewAppearanceChanged = Observable<Nil>()
 }

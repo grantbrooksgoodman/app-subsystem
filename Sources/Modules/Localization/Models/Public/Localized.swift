@@ -112,7 +112,7 @@ public struct Localized<T: LocalizedStringKeyRepresentable>: Equatable {
 
     /// The localized string for the specified key and language code.
     public var wrappedValue: String {
-        Localization.string(
+        LocalizedStringResolver.string(
             for: key,
             language: languageCode,
             source: source

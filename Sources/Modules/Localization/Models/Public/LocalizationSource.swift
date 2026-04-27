@@ -22,7 +22,7 @@ import Foundation
 ///
 /// - ``app(plistName:)`` reads from the main bundle. The
 ///   property list name defaults to `LocalizedStrings`.
-/// - ``custom(plistName:bundle:)`` reads from an arbitrary
+/// - ``custom(bundle:plistName:)`` reads from an arbitrary
 ///   property list in an arbitrary bundle.
 /// - ``subsystem`` reads from AppSubsystem's own
 ///   `LocalizedStrings` property list, bundled within the
@@ -44,8 +44,8 @@ public enum LocalizationSource: Hashable {
 
     /// Reads from an arbitrary property list in an arbitrary bundle.
     case custom(
-        plistName: String,
-        bundle: Bundle = .main
+        bundle: Bundle = .main,
+        plistName: String
     )
 
     /// Reads from AppSubsystem's own `LocalizedStrings`
@@ -54,19 +54,19 @@ public enum LocalizationSource: Hashable {
 
     // MARK: - Properties
 
-    var plistName: String {
-        switch self {
-        case let .app(plistName: plistName): plistName
-        case let .custom(plistName: plistName, bundle: _): plistName
-        case .subsystem: "LocalizedStrings"
-        }
-    }
-
     var bundle: Bundle {
         switch self {
         case .app: .main
-        case let .custom(plistName: _, bundle: bundle): bundle
+        case let .custom(bundle: bundle, plistName: _): bundle
         case .subsystem: .module
+        }
+    }
+
+    var plistName: String {
+        switch self {
+        case let .app(plistName: plistName): plistName
+        case let .custom(bundle: _, plistName: plistName): plistName
+        case .subsystem: "LocalizedStrings"
         }
     }
 }

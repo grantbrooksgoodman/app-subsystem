@@ -219,7 +219,7 @@ public enum AppSubsystem {
 
         /* MARK: Localization & Logging Setup */
 
-        Localization.initialize()
+        LocalizedStringResolver.initialize()
 
         Logger.setDomainsExcludedFromSessionRecord(delegates.loggerDomainSubscription.domainsExcludedFromSessionRecord)
         Logger.subscribe(to: delegates.loggerDomainSubscription.subscribedDomains)

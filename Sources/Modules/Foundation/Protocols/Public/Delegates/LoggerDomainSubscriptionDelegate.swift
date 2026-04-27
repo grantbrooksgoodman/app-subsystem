@@ -59,7 +59,9 @@ public extension AppSubsystem.Delegates {
         public let subscribedDomains: [LoggerDomain] = [
             .alertKit,
             .caches,
+            .concurrency,
             .general,
+            .localization,
             .observer,
             .translation,
         ]

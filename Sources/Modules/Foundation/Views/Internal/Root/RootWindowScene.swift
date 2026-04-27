@@ -9,6 +9,36 @@
 import Foundation
 import SwiftUI
 
+/// The entry point for creating and managing the app's
+/// window hierarchy.
+///
+/// `RootWindowScene` creates a three-window structure
+/// during scene setup: a root window that hosts the app's
+/// SwiftUI content, an overlay window for toasts and the
+/// build-info overlay, and a status bar window. Call
+/// ``instantiate(_:rootView:)`` from the scene delegate's
+/// `scene(_:willConnectTo:options:)` implementation:
+///
+/// ```swift
+/// window = RootWindowScene.instantiate(
+///     scene,
+///     rootView: ContentView()
+/// )
+/// ```
+///
+/// Forward trait collection changes from the scene
+/// delegate's
+/// `windowScene(_:didUpdate:interfaceOrientation:traitCollection:)`
+/// implementation:
+///
+///     RootWindowScene.traitCollectionChanged()
+///
+/// - Important: Do not create additional `UIWindow`
+///   instances. The subsystem manages the full window
+///   hierarchy.
+///
+/// - Note: The window hierarchy is configured with a
+///   left-to-right layout direction.
 @MainActor
 public enum RootWindowScene {
     // MARK: - Properties
@@ -17,12 +47,39 @@ public enum RootWindowScene {
 
     // MARK: - Instantiate
 
-    public static func instantiate(_ scene: UIScene, rootView: any View) -> UIWindow {
-        rootWindowScene.instantiate(scene, rootView: rootView)
+    /// Creates the app's window hierarchy for the specified
+    /// scene.
+    ///
+    /// This method creates the root content window, an
+    /// overlay window for toasts and the build-info overlay,
+    /// and a status bar window. Store the returned window in
+    /// the scene delegate's `window` property.
+    ///
+    /// - Parameters:
+    ///   - scene: The scene provided by UIKit in the scene
+    ///     delegate callback.
+    ///   - rootView: The root SwiftUI view for the app.
+    ///
+    /// - Returns: The root window for the scene.
+    public static func instantiate(
+        _ scene: UIScene,
+        rootView: any View
+    ) -> UIWindow {
+        rootWindowScene.instantiate(
+            scene,
+            rootView: rootView
+        )
     }
 
     // MARK: - Trait Collection Changed
 
+    /// Notifies the subsystem that the interface environment
+    /// changed.
+    ///
+    /// Call this method from the scene delegate's
+    /// `windowScene(_:didUpdate:interfaceOrientation:traitCollection:)`
+    /// implementation. The subsystem updates themed views in
+    /// response.
     public static func traitCollectionChanged() {
         rootWindowScene.traitCollectionChanged()
     }

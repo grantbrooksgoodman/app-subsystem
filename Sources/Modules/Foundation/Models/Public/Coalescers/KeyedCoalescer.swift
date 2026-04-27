@@ -11,7 +11,7 @@ import Foundation
 /// A per-key async work coordinator that deduplicates concurrent
 /// callers.
 ///
-/// `KeyedCoalescer` maintains at most one in-flight task *per key*.
+/// `KeyedCoalescer` maintains at most one in-flight task per key.
 /// When multiple callers invoke the coalescer with the same key
 /// while an operation is already running, they piggyback on the
 /// existing task and receive the same result. Calls for different
@@ -35,7 +35,7 @@ import Foundation
 /// The slot for a given key is cleared automatically when its
 /// in-flight task completes, independent of which caller awaits it
 /// or whether callers are cancelled.
-
+///
 /// - Warning: The `operation` closure is executed in an
 ///   unstructured `Task`. If the calling task is cancelled, the
 ///   coalescer's in-flight operation is *not* automatically

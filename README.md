@@ -13,6 +13,7 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
 - [Installation](#installation)
   - [Bootstrap Script](#bootstrap-script)
   - [Manual Setup](#manual-setup)
+- [Module Reference](#module-reference)
 - [Architecture](#architecture)
   - [Reducers and View Models](#reducers-and-view-models)
   - [Effects](#effects)
@@ -23,7 +24,6 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
   - [Navigation](#navigation)
   - [Persistence](#persistence)
   - [Developer Tools](#developer-tools)
-- [Module Reference](#module-reference)
 - [Delegate Customization](#delegate-customization)
 - [Opinions and Conventions](#opinions-and-conventions)
 - [Dependencies](#dependencies)
@@ -254,13 +254,11 @@ This script automatically increments the build number and records the build date
 
 Set the following in the target's **Build Settings**:
 
-| Setting | Value |
-|---|---|
-| `ENABLE_USER_SCRIPT_SANDBOXING` | `NO` |
-| `GENERATE_INFOPLIST_FILE` | `NO` |
-| `INFOPLIST_FILE` | `$(TARGET_NAME)/Info.plist` |
-
-`ENABLE_USER_SCRIPT_SANDBOXING` allows the run-script phase to modify the property list. `GENERATE_INFOPLIST_FILE` tells Xcode to use the custom `Info.plist` rather than generating one. `INFOPLIST_FILE` specifies the property list path for the build system – adjust the value if `Info.plist` is in a different location.
+| Setting | Value | Purpose |
+|---|---|---|
+| `ENABLE_USER_SCRIPT_SANDBOXING` | `NO` | Allows the run-script phase to modify the property list. |
+| `GENERATE_INFOPLIST_FILE` | `NO` | Tells Xcode to use the custom `Info.plist` rather than generating one. |
+| `INFOPLIST_FILE` | `$(TARGET_NAME)/Info.plist` | Specifies the property list path for the build system – adjust the value if `Info.plist` is in a different location. |
 
 #### 7. (Optional) Suppress System Log Output
 
@@ -275,6 +273,26 @@ This suppresses the default system logging that appears in the Xcode console at 
 #### 8. Run
 
 Build and run. After completing these steps, AppSubsystem is fully active – theming, logging, localization, developer tools, and all supporting infrastructure.
+
+---
+
+## Module Reference
+
+AppSubsystem is composed of nine internal modules, each with a focused responsibility:
+
+| Module | Purpose |
+|---|---|
+| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`UserDefaultsKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/UserDefaultsKey.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
+| **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
+| **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
+| **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
+| **Observable** | The [`Observable`](Sources/Modules/Observable/Models/Observable.swift) value type, [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) lifecycle wrapper, and the [`Observers`](Sources/Modules/Observable/Services/Observers.swift) registry for reactive cross-feature communication. |
+| **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
+| **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol, and the [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) property list generation service. |
+| **Navigation** | The [`Navigating`](Sources/Modules/Navigation/Protocols/NavigatingProtocol.swift) and [`NavigatorState`](Sources/Modules/Navigation/Protocols/NavigatorStateProtocol.swift) protocols, [`NavigationCoordinator`](Sources/Modules/Navigation/Services/NavigationCoordinator.swift), and the [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) / [`@ObservedNavigator`](Sources/Modules/Navigation/Models/ObservedNavigator.swift) property wrappers for coordinated presentation. |
+| **Developer Mode** | [`DevModeService`](Sources/Modules/Developer%20Mode/Services/DevModeService.swift), [`DevModeAction`](Sources/Modules/Developer%20Mode/Models/Public/DevModeAction.swift), and the [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) for pre-release debugging tools. |
+
+All modules are compiled into a single `AppSubsystem` library. There are no separate import targets.
 
 ---
 
@@ -647,6 +665,21 @@ extension Localized where T == StringKey {
 
 For runtime translation of content not present in the property list, the `TranslationService` provides asynchronous methods with activity indicator and timeout support. Toast and alert content can be translated at runtime before presentation.
 
+#### Generating the Property List
+
+Use [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) to translate a string into every supported language and write the results to a property list in the app's temporary directory. If a property list with the specified name exists in the configured bundle, its entries are preserved in the output.
+
+Create a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to specify the dictionary key and the output file name:
+
+```swift
+let createPLISTResult = await Localization.createPLIST(
+    translating: "Hello, world!",
+    plistConfig: .init(key: "greeting"),
+)
+```
+
+On success, the returned `Callback` contains the file path of the generated property list. To apply additional processing to translated strings – such as capitalization rules, character stripping, or sentinel replacements – pass a [`PostProcessingConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift). To provide a custom translation implementation, pass a closure to the `translate` parameter.
+
 ### Navigation
 
 Navigation is coordinated through three protocols and a coordinator class that together manage stack, sheet, and modal presentation from a single published state value.
@@ -798,26 +831,6 @@ DevModeService.addAction(
 ```
 
 Additional actions can be provided by registering a [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) on `AppSubsystem.delegates`. Present the menu by calling `DevModeService.presentActionSheet()`.
-
----
-
-## Module Reference
-
-AppSubsystem is composed of nine internal modules, each with a focused responsibility:
-
-| Module | Purpose |
-|---|---|
-| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`UserDefaultsKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/UserDefaultsKey.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
-| **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
-| **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
-| **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
-| **Observable** | The [`Observable`](Sources/Modules/Observable/Models/Observable.swift) value type, [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) lifecycle wrapper, and the [`Observers`](Sources/Modules/Observable/Services/Observers.swift) registry for reactive cross-feature communication. |
-| **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
-| **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, and the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol. |
-| **Navigation** | The [`Navigating`](Sources/Modules/Navigation/Protocols/NavigatingProtocol.swift) and [`NavigatorState`](Sources/Modules/Navigation/Protocols/NavigatorStateProtocol.swift) protocols, [`NavigationCoordinator`](Sources/Modules/Navigation/Services/NavigationCoordinator.swift), and the [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) / [`@ObservedNavigator`](Sources/Modules/Navigation/Models/ObservedNavigator.swift) property wrappers for coordinated presentation. |
-| **Developer Mode** | [`DevModeService`](Sources/Modules/Developer%20Mode/Services/DevModeService.swift), [`DevModeAction`](Sources/Modules/Developer%20Mode/Models/Public/DevModeAction.swift), and the [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) for pre-release debugging tools. |
-
-All modules are compiled into a single `AppSubsystem` library. There are no separate import targets.
 
 ---
 

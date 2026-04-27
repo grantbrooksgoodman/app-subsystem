@@ -22,10 +22,10 @@ import Foundation
 /// ```
 ///
 /// The subsystem provides several built-in domains – including
-/// ``general``, ``alertKit``, ``caches``, ``observer``, and
-/// ``translation`` – that cover its own internal logging. You can
-/// subscribe to or unsubscribe from any domain at runtime using
-/// ``Logger/subscribe(to:)`` and
+/// ``general``, ``alertKit``, ``caches``, ``concurrency``,
+/// ``localization``, ``observer``, and ``translation`` – that cover
+/// its own internal logging. You can subscribe to or unsubscribe
+/// from any domain at runtime using ``Logger/subscribe(to:)`` and
 /// ``Logger/unsubscribe(from:)``.
 ///
 /// - SeeAlso: ``Logger``

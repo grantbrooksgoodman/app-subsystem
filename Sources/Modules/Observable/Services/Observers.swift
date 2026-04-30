@@ -50,12 +50,17 @@ enum Observers {
         }
 
         guard didAppend else {
-            assertionFailure(
-                """
-                [\(Swift.type(of: observer))] shares a view model instance with \
-                already-registered [\(existingType.map(String.init(describing:)) ?? "unknown")]. \
-                Each view model must have exactly one associated observer.
-                """
+            Logger.log(
+                .init(
+                    """
+                    OBSERVER REGISTRATION MISUSE: \
+                    [\(Swift.type(of: observer))] shares a view model instance with \
+                    already-registered [\(existingType.map(String.init(describing:)) ?? "unknown")]. \
+                    Each view model must have exactly one associated observer.
+                    """,
+                    metadata: .init(sender: self)
+                ),
+                showRuntimeWarning: true
             )
             return
         }

@@ -362,7 +362,7 @@ public extension AppSubsystem {
         private let _devModeAppActions = LockIsolated<DevModeAppActionDelegate?>(nil)
         private let _exceptionMetadata = LockIsolated<ExceptionMetadataDelegate?>(nil)
         private let _forcedUpdateModal = LockIsolated<ForcedUpdateModalDelegate?>(nil)
-        private let _permanentUserDefaultsKeys = LockIsolated<PermanentUserDefaultsKeyDelegate?>(nil)
+        private let _permanentPersistentStorageKeys = LockIsolated<PermanentPersistentStorageKeyDelegate?>(nil)
 
         /* MARK: Computed Properties */
 
@@ -424,10 +424,10 @@ public extension AppSubsystem {
         /// When this property is `nil`, only the subsystem's own
         /// keys are preserved during a `UserDefaults` reset.
         ///
-        /// - SeeAlso: ``PermanentUserDefaultsKeyDelegate``
-        public var permanentUserDefaultsKeys: PermanentUserDefaultsKeyDelegate? {
-            get { _permanentUserDefaultsKeys.wrappedValue }
-            set { _permanentUserDefaultsKeys.wrappedValue = newValue }
+        /// - SeeAlso: ``PermanentPersistentStorageKeyDelegate``
+        public var permanentPersistentStorageKeys: PermanentPersistentStorageKeyDelegate? {
+            get { _permanentPersistentStorageKeys.wrappedValue }
+            set { _permanentPersistentStorageKeys.wrappedValue = newValue }
         }
 
         /* MARK: Init */
@@ -468,7 +468,7 @@ public extension AppSubsystem {
         ///     forced-update presentation.
         ///   - loggerDomainSubscriptionDelegate: A delegate that
         ///     specifies subscribed logger domains.
-        ///   - permanentUserDefaultsKeyDelegate: A delegate that
+        ///   - permanentPersistentStorageKeyDelegate: A delegate that
         ///     declares permanent `UserDefaults` keys.
         ///   - uiThemeListDelegate: A delegate that provides the
         ///     theme list.
@@ -484,7 +484,7 @@ public extension AppSubsystem {
             exceptionMetadataDelegate: ExceptionMetadataDelegate? = nil,
             forcedUpdateModalDelegate: ForcedUpdateModalDelegate? = nil,
             loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate? = nil,
-            permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate? = nil,
+            permanentPersistentStorageKeyDelegate: PermanentPersistentStorageKeyDelegate? = nil,
             uiThemeListDelegate: UIThemeListDelegate? = nil
         ) {
             guard breadcrumbsCaptureDelegate != nil ||
@@ -494,7 +494,7 @@ public extension AppSubsystem {
                 exceptionMetadataDelegate != nil ||
                 forcedUpdateModalDelegate != nil ||
                 loggerDomainSubscriptionDelegate != nil ||
-                permanentUserDefaultsKeyDelegate != nil ||
+                permanentPersistentStorageKeyDelegate != nil ||
                 uiThemeListDelegate != nil else {
                 assertionFailure("No delegates provided in arguments.")
                 return
@@ -507,7 +507,7 @@ public extension AppSubsystem {
             if let exceptionMetadataDelegate { exceptionMetadata = exceptionMetadataDelegate }
             if let forcedUpdateModalDelegate { forcedUpdateModal = forcedUpdateModalDelegate }
             if let loggerDomainSubscriptionDelegate { loggerDomainSubscription = loggerDomainSubscriptionDelegate }
-            if let permanentUserDefaultsKeyDelegate { permanentUserDefaultsKeys = permanentUserDefaultsKeyDelegate }
+            if let permanentPersistentStorageKeyDelegate { permanentPersistentStorageKeys = permanentPersistentStorageKeyDelegate }
             if let uiThemeListDelegate { uiThemeList = uiThemeListDelegate }
         }
 
@@ -517,7 +517,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``BreadcrumbsCaptureDelegate``
-        public func registerBreadcrumbsCaptureDelegate(_ breadcrumbsCaptureDelegate: BreadcrumbsCaptureDelegate) {
+        public func registerBreadcrumbsCaptureDelegate(
+            _ breadcrumbsCaptureDelegate: BreadcrumbsCaptureDelegate
+        ) {
             register(breadcrumbsCaptureDelegate: breadcrumbsCaptureDelegate)
         }
 
@@ -528,7 +530,9 @@ public extension AppSubsystem {
         ///   The delegate to register.
         ///
         /// - SeeAlso: ``BuildInfoOverlayDotIndicatorColorDelegate``
-        public func registerBuildInfoOverlayDotIndicatorColorDelegate(_ buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate) {
+        public func registerBuildInfoOverlayDotIndicatorColorDelegate(
+            _ buildInfoOverlayDotIndicatorColorDelegate: BuildInfoOverlayDotIndicatorColorDelegate
+        ) {
             register(buildInfoOverlayDotIndicatorColorDelegate: buildInfoOverlayDotIndicatorColorDelegate)
         }
 
@@ -538,7 +542,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``CacheDomainListDelegate``
-        public func registerCacheDomainListDelegate(_ cacheDomainListDelegate: CacheDomainListDelegate) {
+        public func registerCacheDomainListDelegate(
+            _ cacheDomainListDelegate: CacheDomainListDelegate
+        ) {
             register(cacheDomainListDelegate: cacheDomainListDelegate)
         }
 
@@ -548,7 +554,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``DevModeAppActionDelegate``
-        public func registerDevModeAppActionDelegate(_ devModeAppActionDelegate: DevModeAppActionDelegate) {
+        public func registerDevModeAppActionDelegate(
+            _ devModeAppActionDelegate: DevModeAppActionDelegate
+        ) {
             register(devModeAppActionDelegate: devModeAppActionDelegate)
         }
 
@@ -558,7 +566,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``ExceptionMetadataDelegate``
-        public func registerExceptionMetadataDelegate(_ exceptionMetadataDelegate: ExceptionMetadataDelegate) {
+        public func registerExceptionMetadataDelegate(
+            _ exceptionMetadataDelegate: ExceptionMetadataDelegate
+        ) {
             register(exceptionMetadataDelegate: exceptionMetadataDelegate)
         }
 
@@ -568,7 +578,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``ForcedUpdateModalDelegate``
-        public func registerForcedUpdateModalDelegate(_ forcedUpdateModalDelegate: ForcedUpdateModalDelegate) {
+        public func registerForcedUpdateModalDelegate(
+            _ forcedUpdateModalDelegate: ForcedUpdateModalDelegate
+        ) {
             register(forcedUpdateModalDelegate: forcedUpdateModalDelegate)
         }
 
@@ -578,19 +590,23 @@ public extension AppSubsystem {
         ///   delegate to register.
         ///
         /// - SeeAlso: ``LoggerDomainSubscriptionDelegate``
-        public func registerLoggerDomainSubscriptionDelegate(_ loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate) {
+        public func registerLoggerDomainSubscriptionDelegate(
+            _ loggerDomainSubscriptionDelegate: LoggerDomainSubscriptionDelegate
+        ) {
             register(loggerDomainSubscriptionDelegate: loggerDomainSubscriptionDelegate)
         }
 
         /// Registers the specified permanent user defaults key
         /// delegate.
         ///
-        /// - Parameter permanentUserDefaultsKeyDelegate: The
+        /// - Parameter permanentPersistentStorageKeyDelegate: The
         ///   delegate to register.
         ///
-        /// - SeeAlso: ``PermanentUserDefaultsKeyDelegate``
-        public func registerPermanentUserDefaultsKeyDelegate(_ permanentUserDefaultsKeyDelegate: PermanentUserDefaultsKeyDelegate) {
-            register(permanentUserDefaultsKeyDelegate: permanentUserDefaultsKeyDelegate)
+        /// - SeeAlso: ``PermanentPersistentStorageKeyDelegate``
+        public func registerPermanentPersistentStorageKeyDelegate(
+            _ permanentPersistentStorageKeyDelegate: PermanentPersistentStorageKeyDelegate
+        ) {
+            register(permanentPersistentStorageKeyDelegate: permanentPersistentStorageKeyDelegate)
         }
 
         /// Registers the specified UI theme list delegate.
@@ -599,7 +615,9 @@ public extension AppSubsystem {
         ///   register.
         ///
         /// - SeeAlso: ``UIThemeListDelegate``
-        public func registerUIThemeListDelegate(_ uiThemeListDelegate: UIThemeListDelegate) {
+        public func registerUIThemeListDelegate(
+            _ uiThemeListDelegate: UIThemeListDelegate
+        ) {
             register(uiThemeListDelegate: uiThemeListDelegate)
         }
     }

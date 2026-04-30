@@ -9,14 +9,14 @@
 import Foundation
 
 /// Convenience methods for reading, writing, and resetting
-/// `UserDefaults` using ``UserDefaultsKey`` values.
+/// `UserDefaults` using ``PersistentStorageKey`` values.
 ///
-/// - SeeAlso: ``UserDefaultsKey``, ``Persistent``
+/// - SeeAlso: ``PersistentStorageKey``, ``Persistent``
 public extension UserDefaults {
     // MARK: - Types
 
     /// The strategy that determines which keys are preserved when
-    /// resetting `UserDefaults`.
+    /// resetting persistent storage.
     ///
     /// Use a preservation strategy with ``reset(preserving:)`` to
     /// control which entries survive a reset:
@@ -28,23 +28,23 @@ public extension UserDefaults {
         /* MARK: Cases */
 
         /// Preserve only the specified keys.
-        case custom([UserDefaultsKey])
+        case custom([PersistentStorageKey])
 
         /// Preserve nothing; all keys are removed.
         case none
 
         /// Preserve permanent keys registered through the
-        /// ``AppSubsystem/Delegates/PermanentUserDefaultsKeyDelegate``,
+        /// ``AppSubsystem/Delegates/PermanentPersistentStorageKeyDelegate``,
         /// subsystem keys, and any additional keys you specify.
-        case permanentAndSubsystemKeys(plus: [UserDefaultsKey]? = nil)
+        case permanentAndSubsystemKeys(plus: [PersistentStorageKey]? = nil)
 
         /// Preserve subsystem keys and any additional keys you
         /// specify.
-        case subsystemKeys(plus: [UserDefaultsKey]? = nil)
+        case subsystemKeys(plus: [PersistentStorageKey]? = nil)
 
         /* MARK: Properties */
 
-        fileprivate var keys: [UserDefaultsKey] {
+        fileprivate var keys: [PersistentStorageKey] {
             switch self {
             case let .custom(keys):
                 return keys.unique
@@ -54,30 +54,44 @@ public extension UserDefaults {
 
             case let .permanentAndSubsystemKeys(plus: additionalKeys):
                 let additionalKeys = additionalKeys ?? []
-                let permanentKeys = AppSubsystem.delegates.permanentUserDefaultsKeys?.permanentKeys ?? []
-                return (additionalKeys + permanentKeys + UserDefaultsKey.subsystemKeys).unique
+                let permanentKeys = AppSubsystem.delegates.permanentPersistentStorageKeys?.permanentKeys ?? []
+                return (additionalKeys + permanentKeys + PersistentStorageKey.subsystemKeys).unique
 
             case let .subsystemKeys(plus: additionalKeys):
-                return ((additionalKeys ?? []) + UserDefaultsKey.subsystemKeys).unique
+                return ((additionalKeys ?? []) + PersistentStorageKey.subsystemKeys).unique
             }
         }
     }
 
     // MARK: - Methods
 
-    /// Removes the value for the given key.
+    /// Removes the value for the given key from both `UserDefaults`
+    /// and the Application Support directory.
+    ///
+    /// If the key has a corresponding file written by
+    /// ``Persistent``, that file is also deleted.
     ///
     /// - Parameter defaultName: The key whose value should be removed.
-    func removeObject(forKey defaultName: UserDefaultsKey) {
+    func removeObject(forKey defaultName: PersistentStorageKey) {
+        @Dependency(\.fileManager) var fileManager: FileManager
         removeObject(forKey: defaultName.rawValue)
+        try? fileManager.removeItem(
+            at: FileManager
+                .applicationSupportDirectoryURL
+                .appending(path: defaultName.rawValue)
+        )
     }
 
-    /// Removes all entries from `UserDefaults`, preserving only the
-    /// keys specified by the given strategy.
+    /// Removes all entries from persistent storage, preserving only
+    /// the keys specified by the given strategy.
+    ///
+    /// This method removes values from both `UserDefaults` and the
+    /// Application Support directory, ensuring that filesystem-backed
+    /// entries written by ``Persistent`` are also deleted.
     ///
     /// The default strategy preserves permanent keys registered
     /// through the
-    /// ``AppSubsystem/Delegates/PermanentUserDefaultsKeyDelegate``
+    /// ``AppSubsystem/Delegates/PermanentPersistentStorageKeyDelegate``
     /// and subsystem-internal keys.
     ///
     /// - Parameter preserving: The preservation strategy. The default
@@ -103,7 +117,7 @@ public extension UserDefaults {
     ///   - defaultName: The key to associate with the value.
     func set(
         _ value: Any?,
-        forKey defaultName: UserDefaultsKey
+        forKey defaultName: PersistentStorageKey
     ) {
         set(value, forKey: defaultName.rawValue)
     }
@@ -114,7 +128,7 @@ public extension UserDefaults {
     /// - Parameter key: The key to look up.
     ///
     /// - Returns: The stored value, or `nil`.
-    func value(forKey key: UserDefaultsKey) -> Any? {
+    func value(forKey key: PersistentStorageKey) -> Any? {
         value(forKey: key.rawValue)
     }
 }

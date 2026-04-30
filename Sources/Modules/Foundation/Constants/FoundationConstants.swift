@@ -157,8 +157,8 @@ public extension StoredItemKey {
     static let overriddenLanguageCode: StoredItemKey = .init("overriddenLanguageCode")
 }
 
-extension UserDefaultsKey {
-    static let subsystemKeys: [UserDefaultsKey] = [
+extension PersistentStorageKey {
+    static let subsystemKeys: [PersistentStorageKey] = [
         .breadcrumbsCaptureEnabled,
         .breadcrumbsCaptureHistory,
         .breadcrumbsCaptureSavesToPhotos,
@@ -171,14 +171,14 @@ extension UserDefaultsKey {
         .translationArchive,
     ]
 
-    static let breadcrumbsCaptureEnabled: UserDefaultsKey = .init("breadcrumbsCaptureEnabled")
-    static let breadcrumbsCaptureHistory: UserDefaultsKey = .init("breadcrumbsCaptureHistory")
-    static let breadcrumbsCaptureSavesToPhotos: UserDefaultsKey = .init("breadcrumbsCaptureSavesToPhotos")
-    static let currentThemeID: UserDefaultsKey = .init("currentThemeID")
-    static let hidesBuildInfoOverlay: UserDefaultsKey = .init("hidesBuildInfoOverlay")
-    static let isDeveloperModeEnabled: UserDefaultsKey = .init("isDeveloperModeEnabled")
-    static let isGlassTintingEnabled: UserDefaultsKey = .init("isGlassTintingEnabled")
-    static let isTimebombActive: UserDefaultsKey = .init("isTimebombActive")
-    static let pendingThemeID: UserDefaultsKey = .init("pendingThemeID")
-    static let translationArchive: UserDefaultsKey = .init("translationArchive")
+    static let breadcrumbsCaptureEnabled: PersistentStorageKey = .init("breadcrumbsCaptureEnabled")
+    static let breadcrumbsCaptureHistory: PersistentStorageKey = .init("breadcrumbsCaptureHistory")
+    static let breadcrumbsCaptureSavesToPhotos: PersistentStorageKey = .init("breadcrumbsCaptureSavesToPhotos")
+    static let currentThemeID: PersistentStorageKey = .init("currentThemeID")
+    static let hidesBuildInfoOverlay: PersistentStorageKey = .init("hidesBuildInfoOverlay")
+    static let isDeveloperModeEnabled: PersistentStorageKey = .init("isDeveloperModeEnabled")
+    static let isGlassTintingEnabled: PersistentStorageKey = .init("isGlassTintingEnabled")
+    static let isTimebombActive: PersistentStorageKey = .init("isTimebombActive")
+    static let pendingThemeID: PersistentStorageKey = .init("pendingThemeID")
+    static let translationArchive: PersistentStorageKey = .init("translationArchive")
 }

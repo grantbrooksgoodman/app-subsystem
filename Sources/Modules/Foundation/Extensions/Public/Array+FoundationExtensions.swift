@@ -65,7 +65,8 @@ public extension [String] {
     /// Returns `true` if the array contains at least one string
     /// from the given array.
     func containsAnyString(in array: [String]) -> Bool {
-        !array.filter { contains($0) }.isEmpty
+        let lookup = Set(self)
+        return array.contains(where: { lookup.contains($0) })
     }
 
     /// Returns `true` if the array contains every string in the

@@ -348,7 +348,9 @@ public enum Localization {
             }
         }
 
-        return stringComponents.joined(separator: " ")
+        return stringComponents
+            .filter { !$0.isBlank }
+            .joined(separator: " ")
     }
 
     private static func createPLIST(

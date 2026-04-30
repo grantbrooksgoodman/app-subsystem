@@ -282,7 +282,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 
 | Module | Purpose |
 |---|---|
-| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`UserDefaultsKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/UserDefaultsKey.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
+| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
@@ -581,9 +581,9 @@ The [`LocalizationSource`](Sources/Modules/Localization/Models/Public/Localizati
 
 | Source | Property List | Bundle |
 |---|---|---|
-| `.app()` | `LocalizedStrings` (configurable) | Main bundle |
-| `.custom(plistName:bundle:)` | Configurable | Configurable |
-| `.subsystem` | `LocalizedStrings` | AppSubsystem module bundle |
+| `.app()` | `LocalizedStrings` (configurable) | Main bundle. |
+| `.custom(plistName:bundle:)` | Configurable | Configurable. |
+| `.subsystem` | `LocalizedStrings` | AppSubsystem module bundle. |
 
 #### Defining String Keys
 
@@ -661,10 +661,6 @@ extension Localized where T == StringKey {
 
 > **Note:** Most apps do not need to reference the subsystem's strings.
 
-#### Dynamic Translation
-
-For runtime translation of content not present in the property list, the `TranslationService` provides asynchronous methods with activity indicator and timeout support. Toast and alert content can be translated at runtime before presentation.
-
 #### Generating the Property List
 
 Use [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) to translate a string into every supported language and write the results to a property list in the app's temporary directory. If a property list with the specified name exists in the configured bundle, its entries are preserved in the output.
@@ -679,6 +675,10 @@ let createPLISTResult = await Localization.createPLIST(
 ```
 
 On success, the returned `Callback` contains the file path of the generated property list. To apply additional processing to translated strings – such as capitalization rules, character stripping, or sentinel replacements – pass a [`PostProcessingConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift). To provide a custom translation implementation, pass a closure to the `translate` parameter.
+
+#### Dynamic Translation
+
+For runtime translation of content not present in the property list, the `TranslationService` provides asynchronous methods with activity indicator and timeout support. Toast and alert content can be translated at runtime before presentation.
 
 ### Navigation
 
@@ -761,39 +761,43 @@ Use [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) to access 
 
 ### Persistence
 
-The [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) property wrapper binds a property directly to `UserDefaults` through a strongly typed [`UserDefaultsKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/UserDefaultsKey.swift). It handles JSON encoding and decoding automatically for any `Codable` type, falling back to direct storage for natively supported types such as `Bool`, `Int`, and `String`.
+The [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) property wrapper persists a `Codable` value across launches through a strongly typed [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift). Values are encoded as binary property lists automatically, falling back to JSON when property list coding is not supported. Types that are natively supported by `UserDefaults` (such as `Bool`, `Int`, and `String`) are stored directly.
 
 #### Defining Keys
 
-Declare keys as static properties on [`UserDefaultsKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/UserDefaultsKey.swift):
+Declare keys as static properties on [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift):
 
 ```swift
-extension UserDefaultsKey {
-    static let hasCompletedOnboarding = UserDefaultsKey("hasCompletedOnboarding")
-    static let lastSyncDate = UserDefaultsKey("lastSyncDate")
+extension PersistentStorageKey {
+    static let hasCompletedOnboarding = PersistentStorageKey("hasCompletedOnboarding")
+    static let lastSyncDate = PersistentStorageKey("lastSyncDate")
 }
 ```
 
-Using a dedicated key type prevents raw string typos and makes it straightforward to audit every persisted value in the app.
+Using a dedicated key type prevents raw-string typos and makes it straightforward to audit every persisted value in the app.
 
 #### Reading and Writing Values
 
-Use [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) to declare a property that reads from and writes to `UserDefaults`:
+Use [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) to declare a property that reads from and writes to persistent storage:
 
 ```swift
 @Persistent(.hasCompletedOnboarding) var hasCompletedOnboarding: Bool?
 @Persistent(.lastSyncDate) var lastSyncDate: Date?
 ```
 
-The wrapped value is always optional. Reading returns `nil` when no value has been stored for the key. Assigning `nil` removes the entry from `UserDefaults`.
+The wrapped value is always optional. Reading returns `nil` when no value has been stored for the key. Assigning `nil` removes the entry entirely.
 
-Custom `Codable` types are persisted as JSON data:
+Custom `Codable` types work the same way:
 
 ```swift
 @Persistent(.userPreferences) var preferences: UserPreferences?
 ```
 
-> **Note:** Keys registered through the [`PermanentUserDefaultsKeyDelegate`](Sources/Modules/Foundation/Protocols/Public/Delegates/PermanentUserDefaultsKeyDelegate.swift) are protected from cache clearing, ensuring that critical values survive a full reset.
+#### Storage Strategy
+
+Small values are stored in `UserDefaults`. When the encoded representation of a value reaches 16 KB, or the total size of `UserDefaults` reaches 2 MB, the wrapper compresses the data using LZFSE and writes it to a file in the app's Application Support directory instead. This transition is automatic and transparent – reading and writing through the property wrapper behaves the same regardless of where the value is stored.
+
+> **Note:** Keys registered through the [`PermanentPersistentStorageKeyDelegate`](Sources/Modules/Foundation/Protocols/Public/Delegates/PermanentPersistentStorageKeyDelegate.swift) are protected from cache clearing, ensuring that critical values survive a full reset. Calling `reset(preserving:)` removes values from both `UserDefaults` and the Application Support directory, so filesystem-backed entries are cleaned up automatically.
 
 ### Developer Tools
 
@@ -817,6 +821,10 @@ Logger.log(
     domain: .general
 )
 ```
+
+Any log call can optionally surface a runtime issue in Xcode by passing `showRuntimeWarning: true`. Runtime issues appear in the issue navigator alongside compiler warnings and errors, making them useful for flagging conditions that merit attention during development.
+
+> **Note:** Runtime issues are not visible when the `OS_ACTIVITY_MODE` environment variable is set to `disable`.
 
 #### Developer Mode Menu
 
@@ -855,7 +863,7 @@ Default behavior can be replaced or extended by registering delegates on `AppSub
 | `devModeAppActions` | Additional actions in the Developer Mode menu. |
 | `exceptionMetadata` | Controls which errors are reportable and provides user-facing descriptions. |
 | `forcedUpdateModal` | Drives a forced-update flow with a redirect URL and publisher. |
-| `permanentUserDefaultsKeys` | Keys that are protected from cache clearing. |
+| `permanentPersistentStorageKeys` | Keys that are protected from cache clearing. |
 
 Register delegates individually or in a single call:
 

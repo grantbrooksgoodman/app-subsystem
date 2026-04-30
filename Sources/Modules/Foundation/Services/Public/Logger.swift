@@ -9,6 +9,7 @@
 
 /* Native */
 import Foundation
+import os
 
 /* Proprietary */
 import AlertKit
@@ -48,6 +49,27 @@ import Translator
 ///
 /// Both overloads accept an optional ``AlertType`` to display an
 /// alert or toast alongside the log entry.
+///
+/// ## Runtime Warnings
+///
+/// Pass `true` for the `showRuntimeWarning` parameter on any `log`
+/// method to surface the entry as a runtime issue in Xcode.
+///
+/// Runtime issues appear in the issue navigator alongside compiler
+/// warnings and errors, making them useful for flagging conditions
+/// that merit attention during development.
+///
+/// ```swift
+/// Logger.log(
+///     "Unexpected nil value for user ID",
+///     domain: .general,
+///     showRuntimeWarning: true,
+///     sender: self
+/// )
+/// ```
+///
+/// Runtime issues are not visible when the `OS_ACTIVITY_MODE`
+/// environment variable is set to `disable`.
 ///
 /// ## Domain Subscription
 ///
@@ -250,6 +272,23 @@ public enum Logger {
         _subscribedDomains.wrappedValue
     }
 
+    @usableFromInline
+    static let swiftUIDynamicSharedObject = LockIsolated<UnsafeRawPointer?>(
+        {
+            // Walk loaded images looking for SwiftUI
+            for index in 0 ..< _dyld_image_count() {
+                if let imageName = _dyld_get_image_name(index) {
+                    let imagePath = String(cString: imageName)
+                    if imagePath.hasSuffix("/SwiftUI") ||
+                        imagePath.contains("/SwiftUI.framework/") {
+                        return UnsafeRawPointer(_dyld_get_image_header(index))
+                    }
+                }
+            }
+            return nil
+        }()
+    )
+
     private static var elapsedTime: String {
         let time = String(abs(currentTimeLastCalled.wrappedValue.seconds(from: Date.now)))
         return time == "0" ? "" : " @ \(time)s FLC"
@@ -345,21 +384,33 @@ public enum Logger {
     ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
     ///   - alertType: An optional alert to present alongside the log
     ///     entry. The default is `nil`.
+    ///   - showRuntimeWarning: A Boolean value that indicates
+    ///     whether to surface the entry as a runtime issue in
+    ///     Xcode. The default is `false`.
     ///   - metadata: The caller metadata for the log entry.
+    @_transparent
     public static func log(
         _ error: Error,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
+        showRuntimeWarning: Bool = false,
         metadata: ExceptionMetadata
     ) {
-        log(
-            .init(
-                error,
-                metadata: metadata
-            ),
+        let exception = Exception(
+            error,
+            metadata: metadata
+        )
+
+        if _logException(
+            exception,
             domain: domain,
             with: alertType
-        )
+        ), showRuntimeWarning {
+            _runtimeWarn(
+                exception.descriptor,
+                sender: metadata.sender
+            )
+        }
     }
 
     /// Logs an `NSError` value.
@@ -373,21 +424,33 @@ public enum Logger {
     ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
     ///   - alertType: An optional alert to present alongside the log
     ///     entry. The default is `nil`.
+    ///   - showRuntimeWarning: A Boolean value that indicates
+    ///     whether to surface the entry as a runtime issue in
+    ///     Xcode. The default is `false`.
     ///   - metadata: The caller metadata for the log entry.
+    @_transparent
     public static func log(
         _ error: NSError,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
+        showRuntimeWarning: Bool = false,
         metadata: ExceptionMetadata
     ) {
-        log(
-            .init(
-                error,
-                metadata: metadata
-            ),
+        let exception = Exception(
+            error,
+            metadata: metadata
+        )
+
+        if _logException(
+            exception,
             domain: domain,
             with: alertType
-        )
+        ), showRuntimeWarning {
+            _runtimeWarn(
+                exception.descriptor,
+                sender: metadata.sender
+            )
+        }
     }
 
     /// Logs an exception.
@@ -403,11 +466,91 @@ public enum Logger {
     ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
     ///   - alertType: An optional alert to present alongside the log
     ///     entry. The default is `nil`.
+    ///   - showRuntimeWarning: A Boolean value that indicates
+    ///     whether to surface the entry as a runtime issue in
+    ///     Xcode. The default is `false`.
+    @_transparent
     public static func log(
         _ exception: Exception,
         domain: LoggerDomain = .general,
-        with alertType: AlertType? = .none
+        with alertType: AlertType? = .none,
+        showRuntimeWarning: Bool = false,
     ) {
+        if _logException(
+            exception,
+            domain: domain,
+            with: alertType
+        ), showRuntimeWarning {
+            _runtimeWarn(
+                exception.descriptor,
+                sender: exception.metadata.sender
+            )
+        }
+    }
+
+    /// Logs a plain-text message.
+    ///
+    /// Use this overload for diagnostic messages that are not
+    /// associated with an exception. The log entry includes the
+    /// caller's file, function, and line number alongside the
+    /// message text.
+    ///
+    /// - Parameters:
+    ///   - text: The message to log.
+    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
+    ///   - alertType: An optional alert to present alongside the log
+    ///     entry. The default is `nil`.
+    ///   - showRuntimeWarning: A Boolean value that indicates
+    ///     whether to surface the entry as a runtime issue in
+    ///     Xcode. The default is `false`.
+    ///   - sender: The object or type that initiated the log call,
+    ///     used to identify the caller in the log header.
+    ///   - fileName: The source file. The default is the caller's
+    ///     file.
+    ///   - function: The calling function. The default is the
+    ///     caller's function.
+    ///   - line: The source line number. The default is the caller's
+    ///     line.
+    @_transparent
+    public static func log(
+        _ text: String,
+        domain: LoggerDomain = .general,
+        with alertType: AlertType? = .none,
+        showRuntimeWarning: Bool = false,
+        sender: Any,
+        fileName: String = #fileID,
+        function: String = #function,
+        line: Int = #line
+    ) {
+        let metadata = ExceptionMetadata(
+            sender: sender,
+            fileName: fileName,
+            function: function,
+            line: line
+        )
+
+        if _logText(
+            text,
+            domain: domain,
+            with: alertType,
+            metadata: metadata
+        ), showRuntimeWarning {
+            _runtimeWarn(
+                text,
+                sender: metadata.sender
+            )
+        }
+    }
+
+    // MARK: - Internal Logging
+
+    @usableFromInline
+    @discardableResult
+    static func _logException(
+        _ exception: Exception,
+        domain: LoggerDomain,
+        with alertType: AlertType?
+    ) -> Bool {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
         func showAlertIfNeeded() {
@@ -417,7 +560,7 @@ public enum Logger {
 
         if _filter.wrappedValue == .reportableExceptionsOnly,
            !exception.isReportable {
-            return
+            return false
         }
 
         let sender = String(exception.metadata.sender)
@@ -426,7 +569,7 @@ public enum Logger {
         let lineNumber = exception.metadata.line
 
         if let filterFileNames = _filter.wrappedValue?.fileNames {
-            guard filterFileNames.contains(fileName) else { return }
+            guard filterFileNames.contains(fileName) else { return false }
         }
 
         defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
@@ -443,11 +586,12 @@ public enum Logger {
         }
 
         guard !streamOpen.wrappedValue else {
-            return logToStream(
+            logToStream(
                 exception.descriptor,
                 domain: domain,
                 line: lineNumber
             )
+            return true
         }
 
         let headerAffix = exception.isReportable ? "🛑" : ""
@@ -473,37 +617,18 @@ public enum Logger {
             text,
             domain: domain
         )
+
+        return true
     }
 
-    /// Logs a plain-text message.
-    ///
-    /// Use this overload for diagnostic messages that are not
-    /// associated with an exception. The log entry includes the
-    /// caller's file, function, and line number alongside the
-    /// message text.
-    ///
-    /// - Parameters:
-    ///   - text: The message to log.
-    ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
-    ///   - alertType: An optional alert to present alongside the log
-    ///     entry. The default is `nil`.
-    ///   - sender: The object or type that initiated the log call,
-    ///     used to identify the caller in the log header.
-    ///   - fileName: The source file. The default is the caller's
-    ///     file.
-    ///   - function: The calling function. The default is the
-    ///     caller's function.
-    ///   - line: The source line number. The default is the caller's
-    ///     line.
-    public static func log(
+    @usableFromInline
+    @discardableResult
+    static func _logText(
         _ text: String,
-        domain: LoggerDomain = .general,
-        with alertType: AlertType? = .none,
-        sender: Any,
-        fileName: String = #fileID,
-        function: String = #function,
-        line: Int = #line
-    ) {
+        domain: LoggerDomain,
+        with alertType: AlertType?,
+        metadata: ExceptionMetadata
+    ) -> Bool {
         @Dependency(\.loggerDateFormatter) var dateFormatter: DateFormatter
 
         func showAlertIfNeeded() {
@@ -511,16 +636,9 @@ public enum Logger {
             showAlert(alertType, text: text)
         }
 
-        let metadata = ExceptionMetadata(
-            sender: sender,
-            fileName: fileName,
-            function: function,
-            line: line
-        )
-
         if _filter.wrappedValue == .exceptionsOnly ||
             _filter.wrappedValue == .reportableExceptionsOnly {
-            return
+            return false
         }
 
         let sender = String(metadata.sender)
@@ -529,7 +647,7 @@ public enum Logger {
         let lineNumber = metadata.line
 
         if let filterFileNames = _filter.wrappedValue?.fileNames {
-            guard filterFileNames.contains(fileName) else { return }
+            guard filterFileNames.contains(fileName) else { return false }
         }
 
         defer { // NIT: Should showAlertIfNeeded() be moved up past the filter logic?
@@ -538,11 +656,12 @@ public enum Logger {
         }
 
         guard !streamOpen.wrappedValue else {
-            return logToStream(
+            logToStream(
                 text,
                 domain: domain,
                 line: lineNumber
             )
+            return true
         }
 
         let header = "----- \(fileName) | \(domain.rawValue.camelCaseToHumanReadable.uppercased()) | \(dateFormatter.string(from: Date.now)) -----"
@@ -552,6 +671,8 @@ public enum Logger {
             "\n\(header)\n\(sender).\(functionName)() [\(lineNumber)]\(elapsedTime)\n\(text)\n\(footer)\n",
             domain: domain
         )
+
+        return true
     }
 
     // MARK: - Streaming
@@ -726,6 +847,25 @@ public enum Logger {
     }
 
     // MARK: - Auxiliary
+
+    @_transparent
+    @usableFromInline
+    static func _runtimeWarn(
+        _ message: String,
+        sender: Any,
+    ) {
+        guard let dso = swiftUIDynamicSharedObject.wrappedValue else { return }
+        os_log(
+            .fault,
+            dso: dso,
+            log: OSLog(
+                subsystem: "com.apple.runtime-issues",
+                category: String(sender)
+            ),
+            "%@",
+            message
+        )
+    }
 
     private static func canLog(to domain: LoggerDomain) -> Bool {
         @Dependency(\.build) var build: Build

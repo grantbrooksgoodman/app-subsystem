@@ -37,10 +37,16 @@ public extension Exception {
     struct Metadata: MetadataProtocol, @unchecked Sendable {
         // MARK: - Properties
 
+        /// The object or type that created the exception.
+        ///
+        /// - Important: This property is exposed for use by the
+        ///   subsystem's logging infrastructure. Don't read or
+        ///   rely on it in your own code.
+        public let sender: Any
+
         let fileName: String
         let function: String
         let line: Int
-        let sender: Any
 
         // MARK: - Computed Properties
 

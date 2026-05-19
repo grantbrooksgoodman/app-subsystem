@@ -51,13 +51,9 @@ enum Observers {
 
         guard didAppend else {
             Logger.log(
-                .init(
-                    """
-                    OBSERVER REGISTRATION MISUSE: \
-                    [\(Swift.type(of: observer))] shares a view model instance with \
-                    already-registered [\(existingType.map(String.init(describing:)) ?? "unknown")]. \
-                    Each view model must have exactly one associated observer.
-                    """,
+                .init( // swiftlint:disable line_length
+                    "OBSERVER REGISTRATION MISUSE:\n[\(Swift.type(of: observer))] shares a view model instance with already-registered [\(existingType.map(String.init(describing:)) ?? "<unknown>")].\nEach view model must have exactly one associated observer.", // swiftlint:enable line_length
+                    userInfo: [Exception.UserInfo.staticErrorCode.rawValue: "983A"],
                     metadata: .init(sender: self)
                 ),
                 showRuntimeWarning: true
@@ -110,7 +106,9 @@ public extension Observer {
     // MARK: - Properties
 
     /// A stable identifier derived from the observer's ``viewModel`` instance.
-    var id: ObjectIdentifier { .init(viewModel) }
+    var id: ObjectIdentifier {
+        .init(viewModel)
+    }
 
     // MARK: - Methods
 

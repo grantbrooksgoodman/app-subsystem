@@ -67,7 +67,8 @@ public extension AppSubsystem.Delegates.ForcedUpdateModalDelegate {
     /// status changes.
     var forcedUpdateRequiredPublisher: AnyPublisher<Bool, Never> {
         isForcedUpdateRequiredSubject
-            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .compactMap(\.self)
             .removeDuplicates()
             .eraseToAnyPublisher()
     }

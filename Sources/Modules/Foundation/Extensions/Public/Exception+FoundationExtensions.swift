@@ -38,18 +38,24 @@ extension Exception: AlertKit.Errorable {
 
 extension Exception: CustomNSError {
     /// The error domain for all exceptions.
-    public static var errorDomain: String { "exception" }
+    public static let errorDomain = "exception"
 
     /// The error code. Always `0`.
-    public var errorCode: Int { 0 }
+    public var errorCode: Int {
+        0
+    }
 
     /// The exception's user info dictionary, or an empty dictionary.
-    public var errorUserInfo: [String: Any] { userInfo ?? [:] }
+    public var errorUserInfo: [String: Any] {
+        userInfo ?? [:]
+    }
 }
 
 extension Exception: LocalizedError {
     /// The developer-facing descriptor of this exception.
-    public var errorDescription: String? { descriptor }
+    public var errorDescription: String? {
+        descriptor
+    }
 }
 
 public extension Exception {

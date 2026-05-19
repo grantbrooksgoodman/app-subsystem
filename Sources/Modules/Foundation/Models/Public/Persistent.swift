@@ -38,18 +38,34 @@ import Foundation
 /// ## Storage Strategy
 ///
 /// Small values are stored in `UserDefaults`. When the encoded
-/// representation of a value reaches 16 KB, or the total size of
-/// `UserDefaults` reaches 2 MB, the wrapper compresses the data using
-/// LZFSE and writes it to a file in the app's Application Support
+/// representation of a value reaches 16 KB, the wrapper compresses the data using
+/// LZ4 and writes it to a file in the app's Application Support
 /// directory instead. This transition is automatic and transparent to
 /// the caller – reading and writing through the property wrapper
 /// behaves the same regardless of where the value is stored.
 ///
+/// ## Caching
+///
+/// The wrapper maintains a process-wide, write-through in-memory
+/// cache managed by ``PersistenceCache``. Every write updates the
+/// cache, and every read checks it before falling back to the
+/// persistent store. Values decoded from disk are cached
+/// automatically so that subsequent reads within the same process
+/// do not repeat the decoding work.
+///
+/// The cache stores values as type-erased `Any`, which allows
+/// different generic specializations of `Persistent` to share a
+/// single backing store for the same key. A cache hit that cannot
+/// be cast to the caller's expected type falls through to the
+/// normal decode path. The persistence cache is registered as a
+/// cache domain, so clearing all cache domains also clears it.
+///
 /// On read, the wrapper resolves values in the following order:
 ///
-/// 1. Encoded `Data` in `UserDefaults`.
-/// 2. A natively stored value in `UserDefaults` (for primitive types).
-/// 3. A compressed file in the Application Support directory.
+/// 1. The in-memory cache (``PersistenceCache``).
+/// 2. Encoded `Data` in `UserDefaults`.
+/// 3. A natively stored value in `UserDefaults` (for primitive types).
+/// 4. A compressed file in the Application Support directory.
 ///
 /// If none of these sources contain a value for the key, the wrapper
 /// returns `nil`.
@@ -88,10 +104,11 @@ public final class Persistent<T: Codable> {
 
     /// The persisted value, or `nil` if no value exists for the key.
     ///
-    /// On read, the wrapper checks `UserDefaults` first, then falls
-    /// back to the Application Support directory. On write, the
-    /// wrapper encodes the value and selects the appropriate storage
-    /// location automatically.
+    /// On read, the wrapper checks the in-memory cache first, then
+    /// `UserDefaults`, then falls back to the Application Support
+    /// directory. On write, the wrapper encodes the value, selects
+    /// the appropriate storage location automatically, and updates
+    /// the in-memory cache.
     public var wrappedValue: T? {
         get { getValue() }
         set { setValue(to: newValue) }
@@ -100,8 +117,16 @@ public final class Persistent<T: Codable> {
     // MARK: - Auxiliary
 
     private func getValue() -> T? {
-        if let data = defaults.value(forKey: key) as? Data {
-            return (try? propertyListDecoder.decode(
+        if let cachedValue = PersistenceCache.getValue(
+            forKey: key
+        ) as? T {
+            return cachedValue
+        }
+
+        let decodedValue: T? = if let data = defaults.value(
+            forKey: key
+        ) as? Data {
+            (try? propertyListDecoder.decode(
                 T.self,
                 from: data
             )) ?? (try? jsonDecoder.decode(
@@ -109,25 +134,39 @@ public final class Persistent<T: Codable> {
                 from: data
             ))
         } else if let value = defaults.value(forKey: key) as? T {
-            return value
-        } else if let compressedData = try? Data(contentsOf: FileManager
-            .applicationSupportDirectoryURL
-            .appending(path: key.rawValue)),
-            let decompressedData = try? (compressedData as NSData)
-            .decompressed(using: .lzfse) as Data {
-            return (try? propertyListDecoder.decode(
+            value
+        } else if let compressedData = try? Data(
+            contentsOf: FileManager
+                .applicationSupportDirectoryURL
+                .appending(path: key.rawValue)
+        ), let decompressedData = try? (compressedData as NSData)
+            .decompressed(using: .lz4) as Data {
+            (try? propertyListDecoder.decode(
                 T.self,
                 from: decompressedData
             )) ?? (try? jsonDecoder.decode(
                 T.self,
                 from: decompressedData
             ))
+        } else {
+            nil
         }
 
-        return nil
+        if let decodedValue {
+            PersistenceCache.setValue(
+                decodedValue,
+                forKey: key
+            )
+        }
+
+        return decodedValue
     }
 
     private func removeValue() {
+        PersistenceCache.removeValue(
+            forKey: key
+        )
+
         try? fileManager.removeItem(
             at: FileManager
                 .applicationSupportDirectoryURL
@@ -143,18 +182,27 @@ public final class Persistent<T: Codable> {
 
         let encodedData = (try? propertyListEncoder.encode(newValue)) ?? (try? jsonEncoder.encode(newValue))
         guard let encodedData else {
-            return defaults.set(
+            defaults.set(
                 newValue,
+                forKey: key
+            )
+
+            return PersistenceCache.setValue(
+                newValue as Any,
                 forKey: key
             )
         }
 
-        if encodedData.count >= 16000 ||
-            UserDefaults.totalSizeInBytes >= 2_000_000 {
+        if encodedData.count >= 16000 {
             guard let compressedData = try? (encodedData as NSData)
-                .compressed(using: .lzfse) as Data else {
-                return defaults.set(
+                .compressed(using: .lz4) as Data else {
+                defaults.set(
                     encodedData,
+                    forKey: key
+                )
+
+                return PersistenceCache.setValue(
+                    newValue as Any,
                     forKey: key
                 )
             }
@@ -171,17 +219,59 @@ public final class Persistent<T: Codable> {
                 forKey: key
             )
         }
+
+        PersistenceCache.setValue(
+            newValue as Any,
+            forKey: key
+        )
+    }
+}
+
+enum PersistenceCache {
+    // MARK: - Properties
+
+    private static let storage = LockIsolated([String: Any]())
+
+    // MARK: - Methods
+
+    static func clearCache() {
+        storage.wrappedValue = [:]
+    }
+
+    fileprivate static func getValue(
+        forKey key: PersistentStorageKey
+    ) -> Any? {
+        storage.projectedValue.withValue {
+            $0[key.rawValue]
+        }
+    }
+
+    fileprivate static func removeValue(
+        forKey key: PersistentStorageKey
+    ) {
+        storage.projectedValue.withValue {
+            $0[key.rawValue] = nil
+        }
+    }
+
+    fileprivate static func setValue(
+        _ value: Any,
+        forKey key: PersistentStorageKey
+    ) {
+        storage.projectedValue.withValue {
+            $0[key.rawValue] = value
+        }
     }
 }
 
 private enum PropertyListDecoderDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> PropertyListDecoder {
+    static func resolve(_: DependencyValues) -> PropertyListDecoder {
         .init()
     }
 }
 
 private enum PropertyListEncoderDependency: DependencyKey {
-    public static func resolve(_: DependencyValues) -> PropertyListEncoder {
+    static func resolve(_: DependencyValues) -> PropertyListEncoder {
         let propertyListEncoder = PropertyListEncoder()
         propertyListEncoder.outputFormat = .binary
         return propertyListEncoder
@@ -197,16 +287,5 @@ private extension DependencyValues {
     var propertyListEncoder: PropertyListEncoder {
         get { self[PropertyListEncoderDependency.self] }
         set { self[PropertyListEncoderDependency.self] = newValue }
-    }
-}
-
-private extension UserDefaults {
-    static var totalSizeInBytes: Int {
-        @Dependency(\.userDefaults) var defaults: UserDefaults
-        return (try? PropertyListSerialization.data(
-            fromPropertyList: defaults.dictionaryRepresentation(),
-            format: .binary,
-            options: 0
-        ))?.count ?? 0
     }
 }

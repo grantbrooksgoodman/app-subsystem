@@ -155,11 +155,11 @@ public enum Logger {
         /// Returns `nil` when the current build milestone is
         /// ``Build/Milestone/generalRelease``, effectively silencing
         /// the alert in production.
-        public static var toastInPrerelease: AlertType? {
+        public static let toastInPrerelease: AlertType? = {
             @Dependency(\.build.milestone) var buildMilestone: Build.Milestone
             guard buildMilestone != .generalRelease else { return nil }
             return .toast
-        }
+        }()
 
         /* MARK: Methods */
 
@@ -230,6 +230,17 @@ public enum Logger {
 
     // MARK: - Computed Properties
 
+    /// The file URL of the on-disk session record for the current
+    /// launch.
+    ///
+    /// The session record is a UTF-8 text file stored in the
+    /// temporary directory. A new file is created for each launch and
+    /// is not persisted across sessions.
+    public static let sessionRecordFilePath: URL = {
+        @Dependency(\.fileManager) var fileManager: FileManager
+        return fileManager.temporaryDirectory.appending(path: "\(sessionID.uuidString).txt")
+    }()
+
     /// The domains whose output is excluded from the on-disk session
     /// record.
     ///
@@ -252,17 +263,6 @@ public enum Logger {
     /// requiring user interaction.
     public static var reportsErrorsAutomatically: Bool {
         _reportsErrorsAutomatically.wrappedValue
-    }
-
-    /// The file URL of the on-disk session record for the current
-    /// launch.
-    ///
-    /// The session record is a UTF-8 text file stored in the
-    /// temporary directory. A new file is created for each launch and
-    /// is not persisted across sessions.
-    public static var sessionRecordFilePath: URL {
-        @Dependency(\.fileManager) var fileManager: FileManager
-        return fileManager.temporaryDirectory.appending(path: "\(sessionID.uuidString).txt")
     }
 
     /// The domains the logger is currently subscribed to.
@@ -408,7 +408,7 @@ public enum Logger {
         ), showRuntimeWarning {
             _runtimeWarn(
                 exception.descriptor,
-                sender: metadata.sender
+                domain: domain
             )
         }
     }
@@ -448,7 +448,7 @@ public enum Logger {
         ), showRuntimeWarning {
             _runtimeWarn(
                 exception.descriptor,
-                sender: metadata.sender
+                domain: domain
             )
         }
     }
@@ -474,7 +474,7 @@ public enum Logger {
         _ exception: Exception,
         domain: LoggerDomain = .general,
         with alertType: AlertType? = .none,
-        showRuntimeWarning: Bool = false,
+        showRuntimeWarning: Bool = false
     ) {
         if _logException(
             exception,
@@ -483,7 +483,7 @@ public enum Logger {
         ), showRuntimeWarning {
             _runtimeWarn(
                 exception.descriptor,
-                sender: exception.metadata.sender
+                domain: domain
             )
         }
     }
@@ -537,7 +537,7 @@ public enum Logger {
         ), showRuntimeWarning {
             _runtimeWarn(
                 text,
-                sender: metadata.sender
+                domain: domain
             )
         }
     }
@@ -769,11 +769,12 @@ public enum Logger {
     /// - Parameters:
     ///   - message: The message to append.
     ///   - domain: The domain to log to. The default is ``LoggerDomain/general``.
-    ///   - line: The source line number of the log call.
+    ///   - line: The source line number. The default is the caller's
+    ///     line.
     public static func logToStream(
         _ message: String,
         domain: LoggerDomain = .general,
-        line: Int
+        line: Int = #line
     ) {
         if _filter.wrappedValue == .exceptionsOnly ||
             _filter.wrappedValue == .reportableExceptionsOnly {
@@ -852,7 +853,7 @@ public enum Logger {
     @usableFromInline
     static func _runtimeWarn(
         _ message: String,
-        sender: Any,
+        domain: LoggerDomain
     ) {
         guard let dso = swiftUIDynamicSharedObject.wrappedValue else { return }
         os_log(
@@ -860,7 +861,7 @@ public enum Logger {
             dso: dso,
             log: OSLog(
                 subsystem: "com.apple.runtime-issues",
-                category: String(sender)
+                category: domain.rawValue.camelCaseToHumanReadable.capitalized
             ),
             "%@",
             message
@@ -1055,7 +1056,10 @@ public enum Logger {
 
 extension Logger {
     struct AlertKitLogger: AlertKit.LoggerDelegate {
-        var reportsErrorsAutomatically: Bool { Logger._reportsErrorsAutomatically.wrappedValue }
+        var reportsErrorsAutomatically: Bool {
+            Logger._reportsErrorsAutomatically.wrappedValue
+        }
+
         init() {}
         func log(
             _ text: String,

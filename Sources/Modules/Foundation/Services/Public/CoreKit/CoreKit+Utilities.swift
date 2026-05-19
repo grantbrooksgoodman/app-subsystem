@@ -55,6 +55,16 @@ public extension CoreKit {
             domains.forEach { $0.clear() }
         }
 
+        /// Removes all files from the app's Application Support
+        /// directory.
+        ///
+        /// - Returns: An ``Exception`` if the operation fails, or
+        ///   `nil` on success.
+        @discardableResult
+        public func eraseApplicationSupportDirectory() -> Exception? {
+            eraseDirectory(at: FileManager.applicationSupportDirectoryURL)
+        }
+
         /// Removes all files from the app's documents
         /// directory.
         ///
@@ -208,9 +218,9 @@ public extension CoreKit {
 }
 
 private enum UIControlDependency: DependencyKey {
-    static func resolve(_: DependencyValues) -> UIControl {
+    static func resolve(_: DependencyValues) -> UIControl { // swiftformat:disable all
         @MainActorIsolated var uiControl = UIControl()
-        return uiControl
+        return uiControl // swiftformat:enable all
     }
 }
 

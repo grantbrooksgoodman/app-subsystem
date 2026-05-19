@@ -17,26 +17,44 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/grantbrooksgoodman/alert-kit", branch: "main"),
-        .package(url: "https://github.com/grantbrooksgoodman/component-kit", branch: "main"),
-        .package(url: "https://github.com/grantbrooksgoodman/translator", branch: "main"),
-//        .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "main"),
-//        .package(url: "https://github.com/realm/SwiftLint", branch: "main"),
+        .package(
+            url: "https://github.com/grantbrooksgoodman/alert-kit",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/grantbrooksgoodman/component-kit",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/grantbrooksgoodman/translator",
+            branch: "main"
+        ),
     ],
     targets: [
         .target(
             name: "AppSubsystem",
             dependencies: [
-                .product(name: "AlertKit", package: "alert-kit", moduleAliases: nil),
-                .product(name: "ComponentKit", package: "component-kit", moduleAliases: nil),
-                .product(name: "Translator", package: "translator", moduleAliases: nil),
+                .product(
+                    name: "AlertKit",
+                    package: "alert-kit",
+                    moduleAliases: nil
+                ),
+                .product(
+                    name: "ComponentKit",
+                    package: "component-kit",
+                    moduleAliases: nil
+                ),
+                .product(
+                    name: "Translator",
+                    package: "translator",
+                    moduleAliases: nil
+                ),
             ],
             path: "Sources",
             resources: [
                 .process("Resources"),
             ],
-            swiftSettings: [.swiftLanguageMode(.v6)],
-            plugins: [ /* .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLint") */ ]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )

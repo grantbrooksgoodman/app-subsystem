@@ -62,7 +62,7 @@ public extension Int {
 
 // MARK: - String
 
-// Implementation inherited from Translator.
+/// Implementation inherited from Translator.
 extension String: EncodedHashable {}
 
 public extension String {
@@ -231,6 +231,16 @@ public extension String {
     }
 
     /* MARK: Methods */
+
+    /// Returns a dot-separated identifier combining the sender's
+    /// type name and the calling function name, such as
+    /// `"MyView.viewDidLoad()"`.
+    static func fromCurrentEditorContext(
+        sender: Any,
+        function: String = #function
+    ) -> String {
+        "\(String(sender)).\(function)"
+    }
 
     /// Creates a cleaned type-name string from the given value,
     /// stripping module prefixes, parenthesized suffixes, and

@@ -33,11 +33,17 @@ import Foundation
 ///
 /// ## Build Expiry
 ///
-/// Prerelease builds include a 30-day timebomb that requires
-/// entry of an expiration override code after the evaluation period
-/// ends. The ``expiryDate``, ``isTimebombActive``, and
-/// ``expirationOverrideCode`` properties support this mechanism.
-/// General-release builds are exempt from expiry.
+/// Prerelease builds include a 30-day evaluation period. When the
+/// period elapses, the subsystem replaces the app's root view with
+/// a full-screen gate that requires the user to enter the
+/// ``expirationOverrideCode`` before the app can continue. If the
+/// code is not entered within 30 seconds, the app exits.
+///
+/// The ``expiryDate``, ``isTimebombActive``,
+/// ``expirationOverrideCode``, and ``expiryInfoString`` properties
+/// expose the current state of this mechanism. General-release
+/// builds are exempt – the timebomb is never activated when the
+/// milestone is ``Milestone/generalRelease``.
 ///
 /// - SeeAlso: ``BuildDependency``
 public final class Build: @unchecked Sendable {
@@ -69,6 +75,9 @@ public final class Build: @unchecked Sendable {
         case releaseCandidate = "release candidate"
 
         /// A production release distributed through the App Store.
+        ///
+        /// General-release builds are exempt from build expiry
+        /// and do not enable Developer Mode.
         case generalRelease = "general"
 
         /* MARK: Properties */
@@ -122,58 +131,107 @@ public final class Build: @unchecked Sendable {
 
     /// The major version number extracted from the bundle version
     /// string.
-    public var appStoreReleaseVersion: Int { getAppStoreReleaseVersion() }
+    public var appStoreReleaseVersion: Int {
+        getAppStoreReleaseVersion()
+    }
 
     /// The build number read from the bundle's `CFBundleVersion`.
-    public var buildNumber: Int { getBuildNumber() }
+    public var buildNumber: Int {
+        getBuildNumber()
+    }
 
     /// A unique SKU string that encodes the build date, a
     /// three-letter code-name abbreviation, the build number, and
     /// the milestone.
-    public var buildSKU: String { getBuildSKU() }
+    public var buildSKU: String {
+        getBuildSKU()
+    }
 
     /// The short bundle version string (for example, `"1.2.3"`).
-    public var bundleVersion: String { getBundleVersion() }
+    public var bundleVersion: String {
+        getBundleVersion()
+    }
 
     /// An alphabetic revision identifier derived from the number of
     /// builds since the last App Store release.
-    public var bundleRevision: String { getBundleRevision() }
+    public var bundleRevision: String {
+        getBundleRevision()
+    }
 
-    /// The six-digit code required to override build expiry.
+    /// The six-digit code required to bypass build expiry.
     ///
-    /// The code is derived deterministically from the code name.
-    public var expirationOverrideCode: String { getExpirationOverrideCode() }
+    /// This code is derived deterministically from ``codeName``
+    /// and remains stable across launches of the same build.
+    /// When the evaluation period has elapsed, the subsystem
+    /// prompts the user to enter this code before allowing
+    /// continued use of the app.
+    public var expirationOverrideCode: String {
+        getExpirationOverrideCode()
+    }
 
     /// The date on which this build's evaluation period ends.
     ///
-    /// The expiry date is 30 days after the build date.
-    public var expiryDate: Date { getExpiryDate() }
+    /// Calculated as 30 days after the build date recorded in
+    /// `CFBuildDate`. When the current date is past this value
+    /// and ``isTimebombActive`` is `true`, the subsystem presents
+    /// the expiry gate on launch.
+    public var expiryDate: Date {
+        getExpiryDate()
+    }
 
-    /// A human-readable string describing the build's expiry status.
-    public var expiryInfoString: String { getExpiryInfoString() }
+    /// A human-readable string describing the build's expiry
+    /// status.
+    ///
+    /// Before the evaluation period ends, the string includes the
+    /// expiry date and a recommendation to update the build. After
+    /// the period has elapsed, it states that the evaluation period
+    /// has ended. The build-info overlay displays this string when
+    /// the timebomb is active.
+    public var expiryInfoString: String {
+        getExpiryInfoString()
+    }
 
     /// A Boolean value that indicates whether Developer Mode is
     /// enabled.
     ///
     /// Developer mode is always disabled in general-release builds.
-    public var isDeveloperModeEnabled: Bool { getIsDeveloperModeEnabled() }
+    public var isDeveloperModeEnabled: Bool {
+        getIsDeveloperModeEnabled()
+    }
 
     /// A Boolean value that indicates whether the device currently
     /// has network connectivity.
-    public var isOnline: Bool { getNetworkStatus() }
+    public var isOnline: Bool {
+        getNetworkStatus()
+    }
 
     /// A Boolean value that indicates whether the build expiry
     /// timebomb is active.
     ///
-    /// The timebomb is always inactive in general-release builds.
-    public var isTimebombActive: Bool { getIsTimebombActive() }
+    /// When this value is `true` and the current date is past
+    /// ``expiryDate``, the subsystem replaces the app's root
+    /// view with an expiry gate on launch. The gate requires the
+    /// user to enter the ``expirationOverrideCode`` within
+    /// 30 seconds to continue.
+    ///
+    /// The timebomb defaults to `true` for all prerelease
+    /// milestones and is always `false` for general-release
+    /// builds. In Developer Mode, the timebomb can be toggled
+    /// at runtime through the Developer Mode action menu.
+    public var isTimebombActive: Bool {
+        getIsTimebombActive()
+    }
 
     /// A deterministic, alphanumeric project identifier derived from
     /// the code name and first compile date.
-    public var projectID: String { getProjectID() }
+    public var projectID: String {
+        getProjectID()
+    }
 
     /// The number of builds since the last App Store release.
-    public var revisionBuildNumber: Int { getRevisionBuildNumber() }
+    public var revisionBuildNumber: Int {
+        getRevisionBuildNumber()
+    }
 
     private var buildDateUnixDouble: TimeInterval {
         getBuildDateUnixDouble()
@@ -435,7 +493,7 @@ public final class Build: @unchecked Sendable {
         guard let forcedUpdateModalDelegate = AppSubsystem.delegates.forcedUpdateModal else { return }
         forcedUpdateModalDelegate
             .forcedUpdateRequiredPublisher
-            .filter { $0 } // Only pass through `true`
+            .filter(\.self) // Only pass through `true`
             .prefix(1) // Automatically cancel after the first `true`
             .receive(on: DispatchQueue.main)
             .sink { _ in

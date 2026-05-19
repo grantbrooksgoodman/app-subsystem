@@ -21,49 +21,35 @@ enum SystemInformation {
 
     // MARK: - Properties
 
-    static var activeCPUs: Int64 {
-        (try? informationInteger(withLevels: CTL_HW, HW_AVAILCPU)) ?? .zero
-    }
+    static let activeCPUs: Int64 = (try? informationInteger(withLevels: CTL_HW, HW_AVAILCPU)) ?? .zero
 
-    static var deviceName: String {
-        (try? informationString(withLevels: CTL_KERN, KERN_HOSTNAME)) ?? "Unknown"
-    }
+    static let deviceName: String = (try? informationString(withLevels: CTL_KERN, KERN_HOSTNAME)) ?? "Unknown"
 
-    static var kernelVersion: String {
-        (try? informationString(withLevels: CTL_KERN, KERN_VERSION)) ?? "Unknown"
-    }
+    static let kernelVersion: String = (try? informationString(withLevels: CTL_KERN, KERN_VERSION)) ?? "Unknown"
 
-    static var modelCode: String {
+    static let modelCode: String = {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
         return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #else
         return (try? informationString(withLevels: CTL_HW, HW_MACHINE)) ?? "Unknown"
         #endif
-    }
+    }()
 
-    static var modelName: String {
+    static let modelName: String = {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
         return (try? informationString(withLevels: CTL_HW, HW_MACHINE)) ?? "Unknown"
         #else
         return (try? informationString(withLevels: CTL_HW, HW_MODEL)) ?? "Unknown"
         #endif
-    }
+    }()
 
-    static var osRelease: String {
-        (try? informationString(withLevels: CTL_KERN, KERN_OSRELEASE)) ?? "Unknown"
-    }
+    static let osRelease: String = (try? informationString(withLevels: CTL_KERN, KERN_OSRELEASE)) ?? "Unknown"
 
-    static var osRevision: Int64 {
-        (try? informationInteger(withLevels: CTL_KERN, KERN_OSREV)) ?? .zero
-    }
+    static let osRevision: Int64 = (try? informationInteger(withLevels: CTL_KERN, KERN_OSREV)) ?? .zero
 
-    static var osType: String {
-        (try? informationString(withLevels: CTL_KERN, KERN_OSTYPE)) ?? "Unknown"
-    }
+    static let osType: String = (try? informationString(withLevels: CTL_KERN, KERN_OSTYPE)) ?? "Unknown"
 
-    static var osVersion: String {
-        (try? informationString(withLevels: CTL_KERN, KERN_OSVERSION)) ?? "Unknown"
-    }
+    static let osVersion: String = (try? informationString(withLevels: CTL_KERN, KERN_OSVERSION)) ?? "Unknown"
 
     // MARK: - Auxiliary
 

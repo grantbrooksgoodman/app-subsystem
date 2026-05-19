@@ -12,6 +12,36 @@ import UIKit
 public extension UIApplication {
     // MARK: - Properties
 
+    /// A Boolean value indicating whether the device is running
+    /// iOS 26 or later.
+    static let iOS26IsAvailable: Bool = {
+        if #available(iOS 26, *) { return true }
+        return false
+    }()
+
+    /// A Boolean value indicating whether the device is running
+    /// iOS 27 or later.
+    static let iOS27IsAvailable: Bool = {
+        if #available(iOS 27, *) { return true }
+        return false
+    }()
+
+    /// A Boolean value indicating whether the app is running on
+    /// iOS 26 or later, was compiled for it, and does not require
+    /// pre-iOS 26 design compatibility.
+    static let isFullyV26Compatible: Bool = !UIApplication.bundleRequiresPreV26Design &&
+        UIApplication.iOS26IsAvailable &&
+        UIApplication.isCompiledForV26OrLater
+
+    /// A Boolean value indicating whether glass tinting is enabled
+    /// and the app is fully iOS 26 compatible.
+    static var isGlassTintingEnabled: Bool {
+        @Persistent(.isGlassTintingEnabled) var isGlassTintingEnabled: Bool?
+        guard UIApplication.isFullyV26Compatible,
+              isGlassTintingEnabled == true else { return false }
+        return true
+    }
+
     /// The current first responder view, or `nil`.
     var firstResponder: UIView? {
         firstResponder()
@@ -21,38 +51,6 @@ public extension UIApplication {
     /// `nil`.
     var interfaceStyle: UIUserInterfaceStyle? {
         mainWindow?.overrideUserInterfaceStyle
-    }
-
-    /// A Boolean value indicating whether the device is running
-    /// iOS 26 or later.
-    static var iOS26IsAvailable: Bool {
-        if #available(iOS 26, *) { return true }
-        return false
-    }
-
-    /// A Boolean value indicating whether the device is running
-    /// iOS 27 or later.
-    static var iOS27IsAvailable: Bool {
-        if #available(iOS 27, *) { return true }
-        return false
-    }
-
-    /// A Boolean value indicating whether the app is running on
-    /// iOS 26 or later, was compiled for it, and does not require
-    /// pre-iOS 26 design compatibility.
-    static var isFullyV26Compatible: Bool {
-        !UIApplication.bundleRequiresPreV26Design &&
-            UIApplication.iOS26IsAvailable &&
-            UIApplication.isCompiledForV26OrLater
-    }
-
-    /// A Boolean value indicating whether glass tinting is enabled
-    /// and the app is fully iOS 26 compatible.
-    static var isGlassTintingEnabled: Bool {
-        @Persistent(.isGlassTintingEnabled) var isGlassTintingEnabled: Bool?
-        guard UIApplication.isFullyV26Compatible,
-              isGlassTintingEnabled == true else { return false }
-        return true
     }
 
     /// A Boolean value indicating whether a `UIAlertController` is
@@ -200,7 +198,7 @@ public extension UIApplication {
         }
 
         viewControllers.forEach { viewControllers.append(keyViewController($0)) }
-        return viewControllers.compactMap { $0 }.unique
+        return viewControllers.compactMap(\.self).unique
     }
 
     /// Recursively resolves all views (including superviews & subviews) associated with either the key window, or all windows in all window scenes.

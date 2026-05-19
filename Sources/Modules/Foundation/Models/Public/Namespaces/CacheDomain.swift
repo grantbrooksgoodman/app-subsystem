@@ -82,12 +82,11 @@ public struct CacheDomain: CaseIterable, Hashable, Sendable {
 }
 
 extension CacheDomain {
-    static var subsystemCases: [CacheDomain] {
-        [
-            .appIconImage,
-            .encodedHash,
-            .localization,
-            .localTranslationArchive,
-        ]
-    }
+    static let subsystemCases: [CacheDomain] = [
+        .appIconImage,
+        .encodedHash,
+        .localization,
+        .localTranslationArchive,
+        .persistence,
+    ]
 }

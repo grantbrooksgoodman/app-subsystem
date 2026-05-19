@@ -135,6 +135,7 @@ public enum AppSubsystem {
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         @Dependency(\.coreKit) var core: CoreKit
+        @Dependency(\.translationService) var translationService: TranslationService
         @Dependency(\.translatorConfig) var translatorConfig: Translator.Config
 
         /* MARK: Bundle Properties Setup */
@@ -169,6 +170,8 @@ public enum AppSubsystem {
 
         LocalTranslationArchiverDelegate.registerWithDependencies()
         translatorConfig.registerLoggerDelegate(Logger.TranslationLogger())
+
+        translationService.prewarm()
 
         /* MARK: Breadcrumbs Capture Setup */
 

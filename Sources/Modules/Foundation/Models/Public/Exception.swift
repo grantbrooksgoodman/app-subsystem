@@ -132,9 +132,9 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
         _underlyingExceptions.projectedValue.withValue {
             guard let underlyingExceptions = $0 else { return nil }
             var allExceptions = underlyingExceptions
-            underlyingExceptions.forEach {
+            for underlyingException in underlyingExceptions {
                 allExceptions.append(
-                    contentsOf: $0.traversedUnderlyingExceptions ?? []
+                    contentsOf: underlyingException.traversedUnderlyingExceptions ?? []
                 )
             }
             return allExceptions
@@ -267,6 +267,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     ///
     /// - Returns: A new exception with the merged user info.
     public func appending(userInfo: [String: Any]) -> Exception {
+        guard !userInfo.isEmpty else { return self }
         guard var currentUserInfo = self.userInfo,
               !currentUserInfo.isEmpty else {
             return .init(
@@ -376,7 +377,7 @@ private extension String {
     var errorCode: String {
         guard !isEmpty else { return "0000" }
 
-        let stopWords: Set<String> = [
+        let stopWords: Set = [
             "a",
             "an",
             "is",

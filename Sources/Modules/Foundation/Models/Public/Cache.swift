@@ -40,12 +40,12 @@ import Foundation
 /// ## Diagnostics
 ///
 /// Pass `logsAccess: true` at initialization to emit a log entry for
-/// every read, write, and removal. These entries are recorded in the
+/// every read, write, and removal. These entries are recorded by the
 /// ``Logger`` under the `.caches` domain.
 ///
 /// - SeeAlso: ``Cacheable``, ``CacheDomain``
 @propertyWrapper
-public struct Cached<KeyType: RawRepresentable, ObjectType> where KeyType.RawValue: StringProtocol, KeyType: CaseIterable {
+public struct Cached<KeyType: RawRepresentable & CaseIterable, ObjectType> where KeyType.RawValue: StringProtocol {
     // MARK: - Types
 
     private enum LoggingActionType: String {

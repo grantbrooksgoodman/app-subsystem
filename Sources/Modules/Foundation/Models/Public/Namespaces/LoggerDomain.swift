@@ -32,7 +32,9 @@ import Foundation
 public struct LoggerDomain: Hashable, Sendable {
     // MARK: - Properties
 
-    let rawValue: String
+    /// - Note: This property is exposed for use by the
+    ///   subsystem's logging infrastructure.
+    public let rawValue: String
 
     // MARK: - Init
 

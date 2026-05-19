@@ -17,7 +17,7 @@ import Translator
 ///
 /// Use `Localization` to populate a localized strings
 /// property list during development. The
-/// ``createPLIST(translating:sourceLanguageCode:plistConfig:postProcessingConfig:translate:)``
+/// ``createPLIST(translating:withKey:sourceLanguageCode:plistConfig:processingConfig:postProcessingTransformation:translate:)``
 /// method translates the input string into every language
 /// in the app's language code dictionary and writes the
 /// results to a property list in the app's temporary
@@ -31,7 +31,7 @@ import Translator
 /// ```swift
 /// let createPLISTResult = await Localization.createPLIST(
 ///     translating: "Hello, world!",
-///     plistConfig: .init(key: "greeting")
+///     withKey: "greeting"
 /// )
 ///
 /// switch createPLISTResult {
@@ -51,12 +51,12 @@ public enum Localization {
     /// are processed before they are written to the property
     /// list.
     ///
-    /// Use `PostProcessingConfiguration` to apply
+    /// Use `ProcessingConfiguration` to apply
     /// capitalization rules, character stripping, or string
     /// replacements to each translated output. All
     /// translations are stripped of translation sentinel characters
     /// and trimmed of leading and trailing whitespace regardless
-    /// of whether a post-processing configuration is provided.
+    /// of whether a processing configuration is provided.
     ///
     /// When a configuration is provided, operations are
     /// applied in the following order:
@@ -64,7 +64,7 @@ public enum Localization {
     /// 1. Capitalization
     /// 2. Sentinel replacement
     /// 3. Character stripping
-    public struct PostProcessingConfiguration: Sendable {
+    public struct ProcessingConfiguration: Sendable {
         /* MARK: Properties */
 
         fileprivate let capitalizationLengthThreshold: Int?
@@ -73,7 +73,7 @@ public enum Localization {
 
         /* MARK: Init */
 
-        /// Creates a post-processing configuration.
+        /// Creates a processing configuration.
         ///
         /// - Parameters:
         ///   - capitalizationLengthThreshold: The minimum
@@ -115,22 +115,20 @@ public enum Localization {
     /// A configuration for the property list that
     /// ``Localization`` generates when resolving strings.
     ///
-    /// A `PropertyListConfiguration` specifies the dictionary key under
-    /// which translated strings are stored and the name of
-    /// the output property list. When a property list with
-    /// the specified name exists in the configured bundle,
-    /// its entries are preserved in the output. By default,
-    /// the configuration uses the name `LocalizedStrings`,
+    /// A `PropertyListConfiguration` specifies the name of
+    /// the output property list and the bundle to search
+    /// for existing entries. When a property list with the
+    /// specified name exists in the configured bundle, its
+    /// entries are preserved in the output. By default, the
+    /// configuration uses the name `LocalizedStrings`,
     /// searches the main bundle, and overwrites any
     /// existing output file.
     ///
-    /// The following example stores translations under the
-    /// key `welcome_message` in a property list named
-    /// `AppStrings`:
+    /// The following example configures a property list
+    /// named `AppStrings`:
     ///
     /// ```swift
     /// let config = Localization.PropertyListConfiguration(
-    ///     key: "welcome_message",
     ///     name: "AppStrings"
     /// )
     /// ```
@@ -138,7 +136,6 @@ public enum Localization {
         /* MARK: Properties */
 
         fileprivate let bundle: Bundle
-        fileprivate let key: String
         fileprivate let name: String
         fileprivate let overwriteExistingFile: Bool
 
@@ -150,8 +147,6 @@ public enum Localization {
         ///   - bundle: The bundle to search for an existing
         ///     property list whose entries are preserved in
         ///     the output. Defaults to the main bundle.
-        ///   - key: The top-level dictionary key under which
-        ///     translations are stored in the property list.
         ///   - name: The name of the property list file,
         ///     without the `.plist` extension. Defaults to
         ///     `"LocalizedStrings"`.
@@ -162,12 +157,10 @@ public enum Localization {
         ///     exists at the output path. Defaults to `true`.
         public init(
             bundle: Bundle = .main,
-            key: String,
             name: String = "LocalizedStrings",
             overwriteExistingFile: Bool = true
         ) {
             self.bundle = bundle
-            self.key = key
             self.name = name
             self.overwriteExistingFile = overwriteExistingFile
         }
@@ -195,16 +188,26 @@ public enum Localization {
     ///
     /// - Parameters:
     ///   - input: The string to translate.
+    ///   - key: The top-level dictionary key under which the
+    ///     translations for this input are stored in the
+    ///     property list. When `nil`, the key is derived
+    ///     automatically from the first four words of the
+    ///     input, stripped of non-letter characters,
+    ///     lowercased, and joined with underscores.
     ///   - languageCode: The language of the input string.
     ///     Defaults to `"en"`.
     ///   - plistConfig: The configuration that specifies the
-    ///     output file name, bundle, dictionary key, and
-    ///     overwrite behavior.
-    ///   - postProcessingConfig: A configuration that
+    ///     output file name, bundle, and overwrite behavior.
+    ///     Defaults to `.init()`.
+    ///   - processingConfig: A configuration that
     ///     controls how translated strings are processed
     ///     before they are written to the property list, or
     ///     `nil` to apply default sanitization and
     ///     whitespace trimming only.
+    ///   - postProcessingTransformation: A closure that
+    ///     transforms each translated string after all
+    ///     processing is complete, or `nil` to skip
+    ///     additional transformation.
     ///   - translate: A closure that translates the input
     ///     string into a target language, or `nil` to use
     ///     the default translation service.
@@ -214,9 +217,11 @@ public enum Localization {
     ///   ``Exception`` on failure.
     public static func createPLIST(
         translating input: String,
+        withKey key: String? = nil,
         sourceLanguageCode languageCode: String = "en",
-        plistConfig: PropertyListConfiguration,
-        postProcessingConfig: PostProcessingConfiguration? = nil,
+        plistConfig: PropertyListConfiguration = .init(),
+        processingConfig: ProcessingConfiguration? = nil,
+        postProcessingTransformation postProcess: ((String) -> String)? = nil,
         translate: ((String) async -> Callback<Translation, Exception>)? = nil
     ) async -> Callback<String, Exception> {
         @Dependency(\.translationService) var translator: TranslationService
@@ -278,10 +283,12 @@ public enum Localization {
         case let .success(translations):
             translationOutputsByLanguageCode = translations
                 .reduce(into: [String: String]()) { partialResult, translation in
-                    partialResult[translation.languagePair.to] = postProcess(
-                        translation.output,
-                        with: postProcessingConfig
-                    )
+                    var processedOutput = process(translation.output, with: processingConfig)
+                    if let postProcess {
+                        processedOutput = postProcess(processedOutput)
+                    }
+
+                    partialResult[translation.languagePair.to] = processedOutput
                 }
 
         case let .failure(exception):
@@ -294,7 +301,20 @@ public enum Localization {
             onLine: #line
         )
 
-        propertyList[plistConfig.key] = translationOutputsByLanguageCode
+        let whitespaceSeparatedComponents = input
+            .components(separatedBy: .whitespaces)
+            .map { $0.filter(\.isLetter) }
+
+        let derivedKey = (
+            whitespaceSeparatedComponents.count >= 4 ?
+                Array(whitespaceSeparatedComponents[0 ... 3]) :
+                whitespaceSeparatedComponents
+        )
+        .filter { !$0.isBlank }
+        .joined(separator: "_")
+        .lowercased()
+
+        propertyList[key ?? derivedKey] = translationOutputsByLanguageCode
         return createPLIST(
             from: propertyList,
             fileName: plistConfig.name,
@@ -303,55 +323,6 @@ public enum Localization {
     }
 
     // MARK: - Auxiliary
-
-    private static func postProcess(
-        _ string: String,
-        with configuration: PostProcessingConfiguration?
-    ) -> String {
-        guard let configuration else { return string.sanitized.trimmingBorderedWhitespace }
-        let whitespaceSeparatedComponents = string
-            .sanitized
-            .trimmingBorderedWhitespace
-            .components(separatedBy: .whitespaces)
-
-        var stringComponents = [String]()
-        if let lengthThreshold = configuration.capitalizationLengthThreshold {
-            for (index, component) in whitespaceSeparatedComponents.enumerated() {
-                guard component.count > lengthThreshold ||
-                    index == 0 ||
-                    index == whitespaceSeparatedComponents.count - 1 else {
-                    stringComponents.append(component)
-                    continue
-                }
-
-                stringComponents.append(component.firstUppercase)
-            }
-        } else {
-            stringComponents = whitespaceSeparatedComponents
-        }
-
-        if let sentinelReplacements = configuration.sentinelReplacements,
-           !sentinelReplacements.isEmpty {
-            for (key, value) in sentinelReplacements {
-                stringComponents = stringComponents.map {
-                    $0.replacingOccurrences(
-                        of: key,
-                        with: value
-                    )
-                }
-            }
-        }
-
-        if let characterSet = configuration.strippingCharacterSet {
-            stringComponents = stringComponents.map {
-                $0.trimmingCharacters(in: characterSet)
-            }
-        }
-
-        return stringComponents
-            .filter { !$0.isBlank }
-            .joined(separator: " ")
-    }
 
     private static func createPLIST(
         from dictionary: [String: [String: String]],
@@ -398,5 +369,54 @@ public enum Localization {
         )
 
         return .success(filePathString)
+    }
+
+    private static func process(
+        _ string: String,
+        with configuration: ProcessingConfiguration?
+    ) -> String {
+        guard let configuration else { return string.sanitized.trimmingBorderedWhitespace }
+        let whitespaceSeparatedComponents = string
+            .sanitized
+            .trimmingBorderedWhitespace
+            .components(separatedBy: .whitespaces)
+
+        var stringComponents = [String]()
+        if let lengthThreshold = configuration.capitalizationLengthThreshold {
+            for (index, component) in whitespaceSeparatedComponents.enumerated() {
+                guard component.count > lengthThreshold ||
+                    index == 0 ||
+                    index == whitespaceSeparatedComponents.count - 1 else {
+                    stringComponents.append(component)
+                    continue
+                }
+
+                stringComponents.append(component.firstUppercase)
+            }
+        } else {
+            stringComponents = whitespaceSeparatedComponents
+        }
+
+        if let sentinelReplacements = configuration.sentinelReplacements,
+           !sentinelReplacements.isEmpty {
+            for (key, value) in sentinelReplacements {
+                stringComponents = stringComponents.map {
+                    $0.replacingOccurrences(
+                        of: key,
+                        with: value
+                    )
+                }
+            }
+        }
+
+        if let characterSet = configuration.strippingCharacterSet {
+            stringComponents = stringComponents.map {
+                $0.trimmingCharacters(in: characterSet)
+            }
+        }
+
+        return stringComponents
+            .filter { !$0.isBlank }
+            .joined(separator: " ")
     }
 }

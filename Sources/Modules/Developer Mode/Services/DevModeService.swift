@@ -131,10 +131,8 @@ public enum DevModeService {
                 $0.metadata(isEqual: precedingAction)
             }) else { return }
 
-            insertAction(
-                action,
-                at: index + 1
-            )
+            $0.removeAll(where: { $0.metadata(isEqual: action) })
+            $0.insert(action, at: min(index + 1, $0.count))
         }
     }
 
@@ -154,14 +152,11 @@ public enum DevModeService {
         at index: Int
     ) {
         appActions.projectedValue.withValue {
-            guard index < $0.count else {
-                guard index == $0.count else { return }
-                return addAction(action)
-            }
+            guard index > -1,
+                  index <= $0.count else { return }
 
-            guard index > -1 else { return }
             $0.removeAll(where: { $0.metadata(isEqual: action) })
-            $0.insert(action, at: index)
+            $0.insert(action, at: min(index, $0.count))
         }
     }
 
@@ -197,10 +192,8 @@ public enum DevModeService {
                 $0.metadata(isEqual: succeedingAction)
             }) else { return }
 
-            insertAction(
-                action,
-                at: index
-            )
+            $0.removeAll(where: { $0.metadata(isEqual: action) })
+            $0.insert(action, at: min(index, $0.count))
         }
     }
 

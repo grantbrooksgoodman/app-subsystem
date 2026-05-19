@@ -31,7 +31,7 @@ import Foundation
 /// Call ``get()`` to convert the callback into a throwing expression.
 ///
 /// - SeeAlso: ``Exception``, ``Exceptionable``
-public enum Callback<Success, Failure> where Failure: Exceptionable {
+public enum Callback<Success, Failure: Exceptionable> {
     /// The operation succeeded with the associated value.
     case success(Success)
 
@@ -70,11 +70,60 @@ public protocol Exceptionable {
 extension Callback: @unchecked Sendable {}
 
 public extension Callback {
+    /// Creates a callback by evaluating a throwing closure.
+    ///
+    /// Use this as the inverse of ``get()`` to convert a
+    /// `throws(Exception)` expression into a ``Callback``:
+    ///
+    /// ```swift
+    /// let result: Callback<User, Exception> = .asCallback {
+    ///     try await fetchUser()
+    /// }
+    /// ```
+    static func asCallback(
+        userInfo: [String: Any]? = nil,
+        _ body: () throws -> Success
+    ) -> Callback where Failure == Exception {
+        do {
+            return try .success(body())
+        } catch let exception as Exception {
+            guard let userInfo else { return .failure(exception) }
+            return .failure(exception.appending(userInfo: userInfo))
+        } catch {
+            return .failure(Exception(
+                error,
+                userInfo: userInfo,
+                metadata: .init(sender: self)
+            ))
+        }
+    }
+
+    /// Creates a callback by evaluating an asynchronous throwing
+    /// closure.
+    static func asCallback(
+        userInfo: [String: Any]? = nil,
+        _ body: () async throws -> Success
+    ) async -> Callback where Failure == Exception {
+        do {
+            return try await .success(body())
+        } catch let exception as Exception {
+            guard let userInfo else { return .failure(exception) }
+            return .failure(exception.appending(userInfo: userInfo))
+        } catch {
+            return .failure(Exception(
+                error,
+                userInfo: userInfo,
+                metadata: .init(sender: self)
+            ))
+        }
+    }
+
+    // swiftformat:disable all
     /// Converts the callback to a throwing expression.
     ///
     /// Returns the success value, or throws the failure as an
     /// ``Exception``.
-    func get() throws -> Success {
+    func get() throws(Exception) -> Success { // swiftformat:enable all
         switch self {
         case let .success(success):
             return success

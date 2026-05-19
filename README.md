@@ -25,7 +25,7 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
   - [Persistence](#persistence)
   - [Developer Tools](#developer-tools)
 - [Delegate Customization](#delegate-customization)
-- [Opinions and Conventions](#opinions-and-conventions)
+- [Conventions](#conventions)
 - [Dependencies](#dependencies)
 
 ---
@@ -46,7 +46,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Navigation.** A coordinator-based navigation system manages stack, sheet, and modal presentation through a single published state value. SwiftUI views bind directly to the coordinator and respond to navigation changes automatically.
 
-- **Developer tools.** Pre-release builds include a build-info overlay, breadcrumb capture, logging, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically.
+- **Developer tools.** Pre-release builds include a build expiry timebomb, a build-info overlay, breadcrumb capture, logging, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically.
 
 ---
 
@@ -665,16 +665,30 @@ extension Localized where T == StringKey {
 
 Use [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) to translate a string into every supported language and write the results to a property list in the app's temporary directory. If a property list with the specified name exists in the configured bundle, its entries are preserved in the output.
 
-Create a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to specify the dictionary key and the output file name:
-
 ```swift
-let createPLISTResult = await Localization.createPLIST(
-    translating: "Hello, world!",
-    plistConfig: .init(key: "greeting"),
+let result = await Localization.createPLIST(
+    translating: "Hello, world!"
 )
 ```
 
-On success, the returned `Callback` contains the file path of the generated property list. To apply additional processing to translated strings – such as capitalization rules, character stripping, or sentinel replacements – pass a [`PostProcessingConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift). To provide a custom translation implementation, pass a closure to the `translate` parameter.
+On success, the returned `Callback` contains the file path of the generated property list. Pass a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to control the output file name, the bundle searched for existing entries, and the overwrite behavior.
+
+Each set of translations is stored under a top-level dictionary key in the property list. When no key is provided, the method derives one automatically from the first four words of the input, stripped of non-letter characters, lowercased, and joined with underscores. To specify the key explicitly, pass the `withKey` parameter:
+
+```swift
+let result = await Localization.createPLIST(
+    translating: "Hello, world!",
+    withKey: "greeting"
+)
+```
+
+> **Note:** Non-letter characters are stripped before derivation. For example, `"Hello, world!"` produces the key `hello_world`.
+
+To apply processing to translated strings before they are written – such as capitalization rules, character stripping, or sentinel replacements – pass a [`ProcessingConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift). When a configuration is provided, operations are applied in order: capitalization, sentinel replacement, then character stripping. All translations are sanitized and trimmed of leading and trailing whitespace regardless of whether a processing configuration is provided.
+
+> **Note:** [`ProcessingConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) requires at least one non-`nil` parameter. Passing `nil` for all three triggers a runtime assertion failure.
+
+For additional transformation after processing is complete, pass a closure to the `postProcessingTransformation` parameter. The closure receives the fully processed string and returns the transformed result. To provide a custom translation implementation, pass a closure to the `translate` parameter.
 
 #### Dynamic Translation
 
@@ -795,7 +809,13 @@ Custom `Codable` types work the same way:
 
 #### Storage Strategy
 
-Small values are stored in `UserDefaults`. When the encoded representation of a value reaches 16 KB, or the total size of `UserDefaults` reaches 2 MB, the wrapper compresses the data using LZFSE and writes it to a file in the app's Application Support directory instead. This transition is automatic and transparent – reading and writing through the property wrapper behaves the same regardless of where the value is stored.
+Small values are stored in `UserDefaults`. When the encoded representation of a value reaches 16 KB, the wrapper compresses the data using LZ4 and writes it to a file in the app's Application Support directory instead. This transition is automatic and transparent – reading and writing through the property wrapper behaves the same regardless of where the value is stored.
+
+#### In-Memory Cache
+
+`@Persistent` maintains a process-wide, write-through in-memory cache. Every write updates the cache, and every read checks it before falling back to disk. Values decoded from the persistent store are cached automatically so that subsequent reads within the same process do not repeat the decoding work.
+
+The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift), so clearing all cache domains also clears the persistence cache.
 
 > **Note:** Keys registered through the [`PermanentPersistentStorageKeyDelegate`](Sources/Modules/Foundation/Protocols/Public/Delegates/PermanentPersistentStorageKeyDelegate.swift) are protected from cache clearing, ensuring that critical values survive a full reset. Calling `reset(preserving:)` removes values from both `UserDefaults` and the Application Support directory, so filesystem-backed entries are cleaned up automatically.
 
@@ -806,6 +826,12 @@ Pre-release builds (any milestone before `generalRelease`) automatically include
 #### Build-Info Overlay
 
 A persistent banner displays the build number, version, and milestone. It can be toggled through Developer Mode and is managed automatically by the subsystem.
+
+#### Build Expiry
+
+Pre-release builds enforce a 30-day evaluation period. The expiry date is calculated as the build date (recorded in `CFBuildDate`) plus 30 days. Once the period elapses, the app presents a full-screen gate on launch that requires a six-digit expiration override code to continue. If the correct code is not entered within 30 seconds, the app exits. General-release builds are exempt – the timebomb is never active when the milestone is `generalRelease`. The timebomb can also be toggled at runtime through the Developer Mode action menu.
+
+> **Important:** Keep pre-release builds up to date. After 30 days a build becomes restricted and cannot be used without the expiration override code.
 
 #### Breadcrumb Capture
 
@@ -878,7 +904,7 @@ AppSubsystem.delegates.registerExceptionMetadataDelegate(MyExceptionDelegate())
 
 ---
 
-## Opinions and Conventions
+## Conventions
 
 AppSubsystem is an opinionated framework. Adopting it means adopting its conventions:
 

@@ -15,6 +15,7 @@ extension FoundationConstants.CGFloats {
     enum ToastView {
         static let bannerCornerRadius: CGFloat = 8 // swiftlint:disable:next identifier_name
         static let bannerDismissButtonForegroundColorOpacity: CGFloat = 0.7
+        static let bannerDismissButtonMinSize: CGFloat = 30
         static let bannerHorizontalPadding: CGFloat = 16
 
         static let bannerMessageLabelForegroundColorOpacity: CGFloat = 0.6

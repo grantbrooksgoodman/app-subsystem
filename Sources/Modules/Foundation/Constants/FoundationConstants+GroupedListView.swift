@@ -15,6 +15,9 @@ extension FoundationConstants.CGFloats {
     enum GroupedListView {
         /* MARK: Properties */
 
+        @MainActor
+        static let cornerRadius: CGFloat = UIApplication.isFullyV26Compatible ? 20 : 10
+
         static let dividerAlternateLeadingPadding: CGFloat = 60
         static let dividerLeadingPadding: CGFloat = 20
         static let dividerTrailingPadding: CGFloat = 20
@@ -24,12 +27,5 @@ extension FoundationConstants.CGFloats {
 
         static let headerLabelHorizontalPadding: CGFloat = 16
         static let headerLabelSystemFontScale: CGFloat = 13.5
-
-        /* MARK: Computed Properties */
-
-        @MainActor
-        static var cornerRadius: CGFloat {
-            UIApplication.isFullyV26Compatible ? 20 : 10
-        }
     }
 }

@@ -25,7 +25,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 toggleGlassTintingAction,
                 toggleTimebombAction,
                 viewLoggerSessionRecordAction,
-            ].compactMap { $0 }
+            ].compactMap(\.self)
 
             if UITheme.allCases.count > 1 {
                 availableActions.insert(changeThemeAction, at: 0)
@@ -36,7 +36,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
         // MARK: - Standard Actions
 
-        private static var changeThemeAction: DevModeAction {
+        private static let changeThemeAction: DevModeAction = {
             @Sendable
             func changeTheme() {
                 Task { @MainActor in
@@ -66,9 +66,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 title: "Change Theme",
                 perform: changeTheme
             )
-        }
+        }()
 
-        private static var eraseContentAndSettingsAction: DevModeAction {
+        private static let eraseContentAndSettingsAction: DevModeAction = {
             @Sendable
             func eraseContentAndSettings() {
                 @Dependency(\.coreKit) var core: CoreKit
@@ -77,6 +77,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 func perform(
                     clearCaches: Bool = false,
                     resetUserDefaults: Bool = false,
+                    eraseApplicationSupportDirectory: Bool = false,
                     eraseDocumentsDirectory: Bool = false,
                     eraseTemporaryDirectory: Bool = false
                 ) {
@@ -87,6 +88,11 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     if resetUserDefaults {
                         @Dependency(\.userDefaults) var defaults: UserDefaults
                         defaults.reset()
+                    }
+
+                    if eraseApplicationSupportDirectory,
+                       let exception = core.utils.eraseApplicationSupportDirectory() {
+                        Logger.log(exception, with: .toast)
                     }
 
                     if eraseDocumentsDirectory,
@@ -105,21 +111,20 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     core.hud.showSuccess(text: "Cleared Caches")
                 }
 
-                let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
-                    if let exception = core.utils.eraseDocumentsDirectory() {
-                        Logger.log(exception, with: .toast)
-                        return
-                    }
+                let eraseApplicationSupportDirectoryAction: AKAction = .init(
+                    "Erase Application Support Directory"
+                ) {
+                    perform(eraseApplicationSupportDirectory: true)
+                    core.hud.showSuccess(text: "Erased Application Support Directory")
+                }
 
+                let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
+                    perform(eraseDocumentsDirectory: true)
                     core.hud.showSuccess(text: "Erased Documents Directory")
                 }
 
                 let eraseTemporaryDirectoryAction: AKAction = .init("Erase Temporary Directory") {
-                    if let exception = core.utils.eraseTemporaryDirectory() {
-                        Logger.log(exception, with: .toast)
-                        return
-                    }
-
+                    perform(eraseTemporaryDirectory: true)
                     core.hud.showSuccess(text: "Erased Temporary Directory")
                 }
 
@@ -128,10 +133,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     core.hud.showSuccess(text: "Reset UserDefaults")
                 }
 
-                let eraseAllContentAndSettingsAction: AKAction = .init("Erase All Content & Settings", style: .destructivePreferred) {
+                let eraseAllContentAndSettingsAction: AKAction = .init(
+                    "Erase All Content & Settings",
+                    style: .destructivePreferred
+                ) {
                     perform(
                         clearCaches: true,
                         resetUserDefaults: true,
+                        eraseApplicationSupportDirectory: true,
                         eraseDocumentsDirectory: true,
                         eraseTemporaryDirectory: true
                     )
@@ -144,6 +153,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         title: "Erase Content & Settings",
                         actions: [
                             clearCachesAction,
+                            eraseApplicationSupportDirectoryAction,
                             eraseDocumentsDirectoryAction,
                             eraseTemporaryDirectoryAction,
                             resetUserDefaultsAction,
@@ -157,7 +167,27 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                 title: "Erase Content & Settings",
                 perform: eraseContentAndSettings
             )
-        }
+        }()
+
+        private static let viewLoggerSessionRecordAction: DevModeAction = {
+            @Sendable
+            func viewLoggerSessionRecord() {
+                Task { @MainActor in
+                    @Dependency(\.quickViewer) var quickViewer: QuickViewer
+                    if let exception = quickViewer.preview(
+                        filesAtPaths: [Logger.sessionRecordFilePath.path()],
+                        embedded: true
+                    ) {
+                        Logger.log(exception, with: .toast)
+                    }
+                }
+            }
+
+            return .init(
+                title: "View Logger Session Record",
+                perform: viewLoggerSessionRecord
+            )
+        }()
 
         private static var overrideLanguageCodeAction: DevModeAction {
             @Sendable
@@ -398,26 +428,6 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             return .init(
                 title: "\(isTimebombActive ? "Disable" : "Enable") Build Expiry Timebomb",
                 perform: toggleTimebomb
-            )
-        }
-
-        private static var viewLoggerSessionRecordAction: DevModeAction {
-            @Sendable
-            func viewLoggerSessionRecord() {
-                Task { @MainActor in
-                    @Dependency(\.quickViewer) var quickViewer: QuickViewer
-                    if let exception = quickViewer.preview(
-                        filesAtPaths: [Logger.sessionRecordFilePath.path()],
-                        embedded: true
-                    ) {
-                        Logger.log(exception, with: .toast)
-                    }
-                }
-            }
-
-            return .init(
-                title: "View Logger Session Record",
-                perform: viewLoggerSessionRecord
             )
         }
     }

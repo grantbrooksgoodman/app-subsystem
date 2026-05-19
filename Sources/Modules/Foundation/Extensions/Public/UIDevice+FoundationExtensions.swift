@@ -12,11 +12,11 @@ import UIKit
 public extension UIDevice {
     /// A Boolean value indicating whether the app is running in the
     /// Simulator.
-    static var isSimulator: Bool {
+    static let isSimulator: Bool = {
         #if targetEnvironment(simulator)
         return true
         #else
         return false
         #endif
-    }
+    }()
 }

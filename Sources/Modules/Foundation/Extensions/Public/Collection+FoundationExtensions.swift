@@ -21,7 +21,7 @@ public extension Collection {
     ///   - failForEmptyCollection: A Boolean value that indicates whether calling this method on an empty
     ///     collection is treated as a failure. The default is `false`.
     ///   - maxConcurrentOperations: The maximum number of transformations to execute simultaneously. Pass
-    ///     `nil` to allow the system to determine the appropriate level of concurrency. The default is `15`.
+    ///     `nil` to allow the system to determine the appropriate level of concurrency. The default is `10`.
     ///   - transform: An asynchronous closure that accepts an element of the collection as its parameter
     ///     and returns a `Callback` containing the transformed value.
     ///
@@ -30,7 +30,7 @@ public extension Collection {
     func parallelMap<Output>(
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
-        maxConcurrentOperations: Int? = 15,
+        maxConcurrentOperations: Int? = 10,
         transform: @escaping (Element) async -> Callback<Output, Exception>
     ) async -> Callback<[Output], Exception> {
         if failForEmptyCollection {
@@ -74,7 +74,9 @@ public extension Collection {
                 elements.count
             )
 
-            for _ in 0 ..< initialBatch { enqueueNextTask() }
+            for _ in 0 ..< initialBatch {
+                enqueueNextTask()
+            }
 
             var exceptions = [Exception]()
             while let (index, result) = await taskGroup.next() {
@@ -109,6 +111,55 @@ public extension Collection {
         }
     }
 
+    /// Returns an array of transformed elements by applying a throwing closure to each element of the collection concurrently.
+    ///
+    /// The returned array preserves the relative order of the original collection. Use this method when
+    /// you need to perform independent asynchronous work for each element and collect the results,
+    /// propagating failures as typed throws rather than `Callback` values.
+    ///
+    /// - Parameters:
+    ///   - failFast: A Boolean value that determines the error-handling strategy. Pass `true` to cancel
+    ///     all remaining tasks when any single transformation fails. Pass `false` to allow all tasks to
+    ///     complete and throw a compiled exception. The default is `true`.
+    ///   - failForEmptyCollection: A Boolean value that indicates whether calling this method on an empty
+    ///     collection is treated as a failure. The default is `false`.
+    ///   - maxConcurrentOperations: The maximum number of transformations to execute simultaneously. Pass
+    ///     `nil` to allow the system to determine the appropriate level of concurrency. The default is `10`.
+    ///   - transform: An asynchronous throwing closure that accepts an element of the collection as its parameter
+    ///     and returns the transformed value.
+    ///
+    /// - Returns: The ordered array of transformed values.
+    ///
+    /// - Throws: An `Exception` if any transformation fails.
+    func parallelMap<Output>(
+        failFast: Bool = true,
+        failForEmptyCollection: Bool = false,
+        maxConcurrentOperations: Int? = 10,
+        transform: @escaping (Element) async throws -> Output // swiftformat:disable all
+    ) async throws(Exception) -> [Output] { // swiftformat:enable all
+        let parallelMapResult = await parallelMap(
+            failFast: failFast,
+            failForEmptyCollection: failForEmptyCollection,
+            maxConcurrentOperations: maxConcurrentOperations
+        ) {
+            do {
+                return try await .success(transform($0))
+            } catch let exception as Exception {
+                return .failure(exception)
+            } catch {
+                return .failure(Exception(
+                    error,
+                    metadata: .init(sender: self)
+                ))
+            }
+        }
+
+        switch parallelMapResult {
+        case let .success(output): return output
+        case let .failure(exception): throw exception
+        }
+    }
+
     /// Performs an operation on each element of the collection concurrently.
     ///
     /// Use this method when you need to perform independent asynchronous work for each element
@@ -121,7 +172,7 @@ public extension Collection {
     ///   - failForEmptyCollection: A Boolean value that indicates whether calling this method on an empty
     ///     collection is treated as a failure. The default is `false`.
     ///   - maxConcurrentOperations: The maximum number of operations to execute simultaneously. Pass
-    ///     `nil` to allow the system to determine the appropriate level of concurrency. The default is `15`.
+    ///     `nil` to allow the system to determine the appropriate level of concurrency. The default is `10`.
     ///   - perform: An asynchronous closure that accepts an element of the collection as its parameter
     ///     and returns an optional exception indicating whether the operation succeeded.
     ///
@@ -129,7 +180,7 @@ public extension Collection {
     func parallelMap(
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
-        maxConcurrentOperations: Int? = 15,
+        maxConcurrentOperations: Int? = 10,
         perform: @escaping (Element) async -> Exception?
     ) async -> Exception? {
         if failForEmptyCollection {
@@ -165,7 +216,9 @@ public extension Collection {
                 elements.count
             )
 
-            for _ in 0 ..< initialBatch { enqueueNextTask() }
+            for _ in 0 ..< initialBatch {
+                enqueueNextTask()
+            }
 
             var exceptions = [Exception]()
             while let exception = await taskGroup.next() {

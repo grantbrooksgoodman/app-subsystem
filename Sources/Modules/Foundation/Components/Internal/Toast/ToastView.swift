@@ -33,7 +33,9 @@ struct ToastView: View {
 
     // MARK: - Computed Properties
 
-    private var accentColor: Color? { (Toast.overrideColorPalette ?? type.colorPalette)?.accent ?? type.style.defaultColor }
+    private var accentColor: Color? {
+        (Toast.overrideColorPalette ?? type.colorPalette)?.accent ?? type.style.defaultColor
+    }
 
     // MARK: - Init
 
@@ -54,16 +56,18 @@ struct ToastView: View {
     // MARK: - Body
 
     var body: some View {
-        switch type {
-        case let .banner(style: style, appearanceEdge: _, colorPalette: colorPalette, showsDismissButton: showsDismissButton):
-            bannerContentView(
-                style: style,
-                colorPalette: Toast.overrideColorPalette ?? colorPalette,
-                showsDismissButton: showsDismissButton
-            )
+        ThemedView {
+            switch type {
+            case let .banner(style: style, appearanceEdge: _, colorPalette: colorPalette, showsDismissButton: showsDismissButton):
+                bannerContentView(
+                    style: style,
+                    colorPalette: Toast.overrideColorPalette ?? colorPalette,
+                    showsDismissButton: showsDismissButton
+                )
 
-        case let .capsule(style: style):
-            capsuleContentView(style: style)
+            case let .capsule(style: style):
+                capsuleContentView(style: style)
+            }
         }
     }
 
@@ -130,11 +134,26 @@ struct ToastView: View {
                     ) {
                         onDismiss()
                     }
+                    .frame(
+                        minWidth: Floats.bannerDismissButtonMinSize,
+                        minHeight: Floats.bannerDismissButtonMinSize
+                    )
+                    .contentShape(Rectangle())
                 }
             }
             .padding()
         }
-        .background(colorPalette?.background ?? .navigationBarBackground)
+        .if(
+            UIApplication.isFullyV26Compatible && colorPalette?.background == nil
+        ) {
+            $0.glassEffect(
+                shape: RoundedRectangle(cornerRadius: Floats.bannerCornerRadius)
+            )
+        } else: {
+            $0.background(
+                colorPalette?.background ?? .navigationBarBackground
+            )
+        }
         .frame(maxWidth: .infinity)
         .ifLet(accentColor) { bannerContentView, accentColor in
             bannerContentView
@@ -217,15 +236,24 @@ struct ToastView: View {
         }
         .padding(.horizontal, Floats.capsulePrimaryHorizontalPadding)
         .padding(.vertical, Floats.capsuleVerticalPadding)
-        .background(Color.navigationBarBackground)
-        .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(
-                    Colors.capsuleOverlayStroke.opacity(Floats.capsuleOverlayStrokeColorOpacity),
-                    lineWidth: Floats.capsuleOverlayStrokeLineWidth
+        .if(
+            UIApplication.isFullyV26Compatible
+        ) {
+            $0.glassEffect()
+        } else: {
+            $0
+                .background(Color.navigationBarBackground)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            Colors.capsuleOverlayStroke.opacity(
+                                Floats.capsuleOverlayStrokeColorOpacity
+                            ),
+                            lineWidth: Floats.capsuleOverlayStrokeLineWidth
+                        )
                 )
-        )
+        }
         .frame(maxWidth: .infinity)
         .shadow(
             color: Colors.capsuleShadowColor.opacity(Floats.capsuleShadowColorOpacity),
@@ -255,9 +283,9 @@ struct ToastView: View {
 /* MARK: UISelectionFeedbackGenerator Dependency */
 
 private enum UISelectionFeedbackGeneratorDependency: DependencyKey {
-    static func resolve(_: DependencyValues) -> UISelectionFeedbackGenerator {
+    static func resolve(_: DependencyValues) -> UISelectionFeedbackGenerator { // swiftformat:disable all
         @MainActorIsolated var uiSelectionFeedbackGenerator = UISelectionFeedbackGenerator()
-        return uiSelectionFeedbackGenerator
+        return uiSelectionFeedbackGenerator // swiftformat:enable all
     }
 }
 

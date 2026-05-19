@@ -41,7 +41,7 @@ public enum Observables {
     static let rootViewSheet = Observable<AnyView?>(nil)
     static let rootViewTapped = Observable<Nil>()
     static let rootViewToast = Observable<Toast?>(nil)
-    static let rootViewToastAction: Observable < (@Sendable () -> Void)?> = .init(nil)
+    static let rootViewToastAction: Observable<(@Sendable () -> Void)?> = .init(nil)
     static let themedViewAppearanceChanged = Observable<Nil>()
 }
 
@@ -73,6 +73,11 @@ public extension CacheDomain {
         clear: clearLocalTranslationArchiveCache
     )
 
+    internal static let persistence: CacheDomain = .init(
+        "persistence",
+        clear: clearPersistenceCache
+    )
+
     /* MARK: Methods */
 
     private static func clearAppIconImageCache() {
@@ -92,6 +97,10 @@ public extension CacheDomain {
     private static func clearLocalTranslationArchiveCache() {
         @Dependency(\.translationArchiverDelegate) var translationArchiverDelegate: TranslationArchiverDelegate
         translationArchiverDelegate.clearArchive()
+    }
+
+    private static func clearPersistenceCache() {
+        PersistenceCache.clearCache()
     }
 }
 

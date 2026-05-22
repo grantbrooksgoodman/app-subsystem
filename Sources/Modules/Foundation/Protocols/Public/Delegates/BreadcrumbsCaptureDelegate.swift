@@ -65,19 +65,17 @@ public extension AppSubsystem.Delegates {
         /// unique view configuration is captured at most once per
         /// session.
         ///
-        /// - Returns: An ``Exception`` if a capture session is
-        ///   already running, or `nil` on success.
-        @discardableResult
-        func startCapture() -> Exception?
+        /// - Throws: An ``Exception`` if a capture session is
+        ///   already running.
+        func startCapture() throws(Exception)
 
         /// Stops the current capture session.
         ///
         /// Any in-progress capture completes, but no further
         /// snapshots are taken.
         ///
-        /// - Returns: An ``Exception`` if no capture session is
-        ///   currently running, or `nil` on success.
-        @discardableResult
-        func stopCapture() -> Exception?
+        /// - Throws: An ``Exception`` if no capture session is
+        ///   currently running.
+        func stopCapture() throws(Exception)
     }
 }

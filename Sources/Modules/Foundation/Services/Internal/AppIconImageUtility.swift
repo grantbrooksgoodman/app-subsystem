@@ -27,9 +27,12 @@ final class AppIconImageUtility {
 
     // MARK: - Computed Properties
 
-    var localAppIconImage: UIImage? { getLocalAppIconImage() }
+    var localAppIconImage: UIImage? {
+        getLocalAppIconImage()
+    }
+
     var remoteAppIconImage: UIImage? {
-        get async { try? await getRemoteAppIconImage().get() }
+        get async { try? await getRemoteAppIconImage() }
     }
 
     // MARK: - Init
@@ -78,11 +81,28 @@ final class AppIconImageUtility {
         return upscaledImage
     }
 
-    private func getRemoteAppIconImage() async -> Callback<UIImage, Exception> {
-        await withCheckedContinuation { continuation in
-            getRemoteAppIconImage { callback in
-                continuation.resume(returning: callback)
+    private func getRemoteAppIconImage() async throws(Exception) -> UIImage {
+        do {
+            return try await withCheckedThrowingContinuation { continuation in
+                getRemoteAppIconImage { callback in
+                    switch callback {
+                    case let .success(appIconImage):
+                        continuation.resume(returning: appIconImage)
+
+                    case let .failure(exception):
+                        continuation.resume(throwing: exception)
+                    }
+                }
             }
+        } catch {
+            guard let exception = error as? Exception else {
+                throw Exception(
+                    error,
+                    metadata: .init(sender: self)
+                )
+            }
+
+            throw exception
         }
     }
 
@@ -149,5 +169,7 @@ final class AppIconImageUtility {
 }
 
 private extension UIImage {
-    var pixelCount: CGFloat { (size.width * scale) * (size.height * scale) }
+    var pixelCount: CGFloat {
+        (size.width * scale) * (size.height * scale)
+    }
 }

@@ -11,7 +11,7 @@ import Foundation
 enum Observers {
     // MARK: - Properties
 
-    private static let instances = LockIsolated<[any Observer]>([])
+    private static let instances = LockIsolated([any Observer]())
 
     // MARK: - Association
 

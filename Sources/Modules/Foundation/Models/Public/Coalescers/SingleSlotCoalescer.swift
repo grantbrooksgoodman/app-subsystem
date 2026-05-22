@@ -24,18 +24,25 @@ import Foundation
 /// Because `SingleSlotCoalescer` is an actor, all slot management is
 /// concurrency-safe without external synchronization.
 ///
+/// Both throwing and non-throwing operations are supported. Use the
+/// throwing overload when the operation can fail with an
+/// ``Exception``, or the non-throwing overload when it cannot:
+///
 /// ```swift
 /// let coalescer = SingleSlotCoalescer<Profile>()
 ///
-/// // Both calls share the same network request.
+/// // Non-throwing usage.
 /// async let a = coalescer(mode: .coalesce) { await fetchProfile() }
 /// async let b = coalescer(mode: .coalesce) { await fetchProfile() }
 /// let (profileA, profileB) = await (a, b) // identical result
+///
+/// // Throwing usage.
+/// let profile = try await coalescer { try await loadProfile() }
 /// ```
 ///
 /// The slot is cleared automatically when the in-flight task
-/// completes, independent of which caller awaits it or whether
-/// callers are cancelled.
+/// completes – whether it succeeds or throws – independent of which
+/// caller awaits it or whether callers are cancelled.
 ///
 /// - Important: ``Mode/lastCallerWins`` relies on *cooperative
 ///   cancellation*. The cancelled operation must periodically check
@@ -56,8 +63,8 @@ public actor SingleSlotCoalescer<Output: Sendable> {
     // MARK: - Type Aliases
 
     /// A sendable, asynchronous closure that produces the
-    /// coalescer's output value.
-    public typealias Operation = @Sendable () async -> Output
+    /// coalescer's output value or throws an ``Exception``.
+    public typealias Operation = @Sendable () async throws(Exception) -> Output
 
     // MARK: - Types
 
@@ -85,7 +92,9 @@ public actor SingleSlotCoalescer<Output: Sendable> {
 
     // MARK: - Properties
 
-    private var currentTask: (id: UUID, task: Task<Output, Never>)?
+    private var nonThrowingTask: (id: UUID, task: Task<Output, Never>)?
+
+    private var throwingTask: (id: UUID, task: Task<Output, any Error>)?
 
     // MARK: - Init
 
@@ -94,8 +103,8 @@ public actor SingleSlotCoalescer<Output: Sendable> {
 
     // MARK: - Call as Function
 
-    /// Submits an operation to the coalescer, resolving overlapping
-    /// calls according to the specified mode.
+    /// Submits a non-throwing operation to the coalescer, resolving
+    /// overlapping calls according to the specified mode.
     ///
     /// If no operation is currently in flight, `operation` is
     /// started immediately. Otherwise, the coalescer applies the
@@ -115,72 +124,158 @@ public actor SingleSlotCoalescer<Output: Sendable> {
     ///   awaits.
     public func callAsFunction(
         mode: Mode = .coalesce,
-        _ operation: @escaping Operation
+        _ operation: @escaping @Sendable () async -> Output
     ) async -> Output {
-        switch mode {
-        case .coalesce: await coalesce(operation)
-        case .lastCallerWins: await lastCallerWins(operation)
+        if let nonThrowingTask {
+            switch mode {
+            case .coalesce:
+                Logger.log(
+                    .init(
+                        "Coalescing task with existing in-flight operation.",
+                        isReportable: false,
+                        userInfo: ["TaskID": nonThrowingTask.id],
+                        metadata: .init(sender: self)
+                    ),
+                    domain: .concurrency
+                )
+
+                return await nonThrowingTask.task.value
+
+            case .lastCallerWins:
+                Logger.log(
+                    .init(
+                        "Cancelling previous in-flight operation to prioritize last caller.",
+                        isReportable: false,
+                        userInfo: ["TaskID": nonThrowingTask.id],
+                        metadata: .init(sender: self)
+                    ),
+                    domain: .concurrency
+                )
+
+                nonThrowingTask.task.cancel()
+            }
         }
+
+        return await runNonThrowing(operation)
     }
 
-    // MARK: - Core Behavior
+    /// Submits a throwing operation to the coalescer, resolving
+    /// overlapping calls according to the specified mode.
+    ///
+    /// If no operation is currently in flight, `operation` is
+    /// started immediately. Otherwise, the coalescer applies the
+    /// given ``Mode``:
+    ///
+    /// | Mode | Behavior |
+    /// |---|---|
+    /// | ``Mode/coalesce`` | Await the existing task. |
+    /// | ``Mode/lastCallerWins`` | Cancel the existing task and start `operation`. |
+    ///
+    /// When the in-flight operation throws an ``Exception``, every
+    /// coalesced caller receives the same error.
+    ///
+    /// - Parameters:
+    ///   - mode: The resolution strategy for concurrent calls. The
+    ///     default is ``Mode/coalesce``.
+    ///   - operation: The asynchronous work to perform.
+    ///
+    /// - Returns: The output of whichever task the caller ultimately
+    ///   awaits.
+    ///
+    /// - Throws: The ``Exception`` thrown by the in-flight operation,
+    ///   if any.
+    public func callAsFunction(
+        mode: Mode = .coalesce,
+        _ operation: @escaping Operation
+    ) async throws(Exception) -> Output {
+        if let throwingTask {
+            switch mode {
+            case .coalesce:
+                Logger.log(
+                    .init(
+                        "Coalescing task with existing in-flight operation.",
+                        isReportable: false,
+                        userInfo: ["TaskID": throwingTask.id],
+                        metadata: .init(sender: self)
+                    ),
+                    domain: .concurrency
+                )
 
-    private func coalesce(_ operation: @escaping Operation) async -> Output {
-        if let currentTask {
-            Logger.log(
-                .init(
-                    "Coalescing task with existing in-flight operation.",
-                    isReportable: false,
-                    userInfo: ["TaskID": currentTask.id],
-                    metadata: .init(sender: self)
-                ),
-                domain: .concurrency
-            )
+                return try await resolve(throwingTask.task)
 
-            return await currentTask.task.value
+            case .lastCallerWins:
+                Logger.log(
+                    .init(
+                        "Cancelling previous in-flight operation to prioritize last caller.",
+                        isReportable: false,
+                        userInfo: ["TaskID": throwingTask.id],
+                        metadata: .init(sender: self)
+                    ),
+                    domain: .concurrency
+                )
+
+                throwingTask.task.cancel()
+            }
         }
 
-        return await run(operation)
-    }
-
-    private func lastCallerWins(_ operation: @escaping Operation) async -> Output {
-        if let currentTask {
-            Logger.log(
-                .init(
-                    "Cancelling previous in-flight operation to prioritize last caller.",
-                    isReportable: false,
-                    userInfo: ["TaskID": currentTask.id],
-                    metadata: .init(sender: self)
-                ),
-                domain: .concurrency
-            )
-
-            currentTask.task.cancel()
-        }
-
-        return await run(operation)
+        return try await runThrowing(operation)
     }
 
     // MARK: - Auxiliary
 
-    private func clearIfMatches(id: UUID) {
-        guard let currentTask,
-              currentTask.id == id else { return }
+    private func clearNonThrowingTaskIfMatches(id: UUID) {
+        guard let nonThrowingTask,
+              nonThrowingTask.id == id else { return }
 
-        self.currentTask = nil
+        self.nonThrowingTask = nil
     }
 
-    private func run(_ operation: @escaping Operation) async -> Output {
+    private func clearThrowingTaskIfMatches(id: UUID) {
+        guard let throwingTask,
+              throwingTask.id == id else { return }
+
+        self.throwingTask = nil
+    }
+
+    private func resolve(
+        _ task: Task<Output, any Error>
+    ) async throws(Exception) -> Output {
+        do {
+            return try await task.value
+        } catch {
+            throw error as! Exception
+        }
+    }
+
+    private func runNonThrowing(
+        _ operation: @escaping @Sendable () async -> Output
+    ) async -> Output {
         let id = UUID()
         let task = Task { await operation() }
-        currentTask = (id: id, task: task)
+        nonThrowingTask = (id: id, task: task)
 
         // Always-clear finisher; runs regardless of who awaits/cancels.
         Task { [id] in
             _ = await task.value
-            self.clearIfMatches(id: id)
+            self.clearNonThrowingTaskIfMatches(id: id)
         }
 
         return await task.value
+    }
+
+    private func runThrowing(
+        _ operation: @escaping @Sendable () async throws -> Output
+    ) async throws(Exception) -> Output {
+        let id = UUID()
+        let task = Task { try await operation() }
+        throwingTask = (id: id, task: task)
+
+        // Always-clear finisher; runs regardless of who awaits/cancels.
+        Task { [id] in
+            _ = await task.result
+            self.clearThrowingTaskIfMatches(id: id)
+        }
+
+        return try await resolve(task)
     }
 }

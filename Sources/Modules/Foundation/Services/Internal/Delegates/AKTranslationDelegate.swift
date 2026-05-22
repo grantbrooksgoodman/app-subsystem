@@ -42,19 +42,17 @@ struct TranslationDelegate: AlertKit.TranslationDelegate {
             hudConfigTuple = (hudConfig.appearsAfter, hudConfig.isModal)
         }
 
-        let getTranslationsResult = await translator.getTranslations(
-            inputs,
-            languagePair: languagePair,
-            hud: hudConfigTuple,
-            timeout: (timeoutConfig.duration, timeoutConfig.returnsInputsOnFailure)
-        )
-
-        switch getTranslationsResult {
-        case let .success(translations):
-            return .success(translations)
-
-        case let .failure(exception):
-            return .failure(.unknown(exception.descriptor))
+        do {
+            return try await .success(
+                translator.getTranslations(
+                    inputs,
+                    languagePair: languagePair,
+                    hud: hudConfigTuple,
+                    timeout: (timeoutConfig.duration, timeoutConfig.returnsInputsOnFailure)
+                )
+            )
+        } catch {
+            return .failure(.unknown(error.descriptor))
         }
     }
 }

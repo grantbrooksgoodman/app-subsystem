@@ -90,19 +90,37 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         defaults.reset()
                     }
 
-                    if eraseApplicationSupportDirectory,
-                       let exception = core.utils.eraseApplicationSupportDirectory() {
-                        Logger.log(exception, with: .toast)
+                    if eraseApplicationSupportDirectory {
+                        do {
+                            try core.utils.eraseApplicationSupportDirectory()
+                        } catch {
+                            Logger.log(
+                                error,
+                                with: .toast
+                            )
+                        }
                     }
 
-                    if eraseDocumentsDirectory,
-                       let exception = core.utils.eraseDocumentsDirectory() {
-                        Logger.log(exception, with: .toast)
+                    if eraseDocumentsDirectory {
+                        do {
+                            try core.utils.eraseDocumentsDirectory()
+                        } catch {
+                            Logger.log(
+                                error,
+                                with: .toast
+                            )
+                        }
                     }
 
-                    if eraseTemporaryDirectory,
-                       let exception = core.utils.eraseTemporaryDirectory() {
-                        Logger.log(exception, with: .toast)
+                    if eraseTemporaryDirectory {
+                        do {
+                            try core.utils.eraseTemporaryDirectory()
+                        } catch {
+                            Logger.log(
+                                error,
+                                with: .toast
+                            )
+                        }
                     }
                 }
 
@@ -174,11 +192,16 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             func viewLoggerSessionRecord() {
                 Task { @MainActor in
                     @Dependency(\.quickViewer) var quickViewer: QuickViewer
-                    if let exception = quickViewer.preview(
-                        filesAtPaths: [Logger.sessionRecordFilePath.path()],
-                        embedded: true
-                    ) {
-                        Logger.log(exception, with: .toast)
+                    do throws(Exception) {
+                        try quickViewer.preview(
+                            filesAtPaths: [Logger.sessionRecordFilePath.path()],
+                            embedded: true
+                        )
+                    } catch {
+                        Logger.log(
+                            error,
+                            with: .toast
+                        )
                     }
                 }
             }
@@ -303,12 +326,19 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         @Persistent(.breadcrumbsCaptureEnabled) var breadcrumbsCaptureEnabled: Bool?
                         breadcrumbsCaptureEnabled = false
 
-                        if let exception = AppSubsystem.delegates.breadcrumbsCapture.stopCapture() {
-                            Logger.log(exception, with: .errorAlert)
-                        } else {
+                        do throws(Exception) {
+                            try AppSubsystem.delegates.breadcrumbsCapture.stopCapture()
                             coreHUD.showSuccess()
                             DevModeService.removeAction(withTitle: "Stop Breadcrumbs Capture")
-                            DevModeService.insertAction(toggleBreadcrumbsAction, after: overrideLanguageCodeAction)
+                            DevModeService.insertAction(
+                                toggleBreadcrumbsAction,
+                                after: overrideLanguageCodeAction
+                            )
+                        } catch {
+                            Logger.log(
+                                error,
+                                with: .errorAlert
+                            )
                         }
 
                         return
@@ -319,12 +349,19 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         Task { @MainActor in
                             @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
                             AppSubsystem.delegates.breadcrumbsCapture.setSavesToPhotos(savesToPhotos)
-                            if let exception = AppSubsystem.delegates.breadcrumbsCapture.startCapture() {
-                                Logger.log(exception, with: .errorAlert)
-                            } else {
+                            do throws(Exception) {
+                                try AppSubsystem.delegates.breadcrumbsCapture.startCapture()
                                 coreHUD.showSuccess()
                                 DevModeService.removeAction(withTitle: "Start Breadcrumbs Capture")
-                                DevModeService.insertAction(toggleBreadcrumbsAction, after: overrideLanguageCodeAction)
+                                DevModeService.insertAction(
+                                    toggleBreadcrumbsAction,
+                                    after: overrideLanguageCodeAction
+                                )
+                            } catch {
+                                Logger.log(
+                                    error,
+                                    with: .errorAlert
+                                )
                             }
                         }
                     }

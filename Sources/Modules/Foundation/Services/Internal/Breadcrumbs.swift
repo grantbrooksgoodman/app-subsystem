@@ -28,7 +28,9 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
     // MARK: - Computed Properties
 
-    var isCapturing: Bool { captureTask != nil }
+    var isCapturing: Bool {
+        captureTask != nil
+    }
 
     private var captureHistory: Set<String> {
         get { @Persistent(.breadcrumbsCaptureHistory) var persistedValue: Set<String>?; return persistedValue ?? .init() }
@@ -62,10 +64,9 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
     // MARK: - Capture
 
-    @discardableResult
-    func startCapture() -> Exception? {
+    func startCapture() throws(Exception) {
         guard !isCapturing else {
-            return .init(
+            throw Exception(
                 "Breadcrumbs capture is already running.",
                 metadata: .init(sender: self)
             )
@@ -78,14 +79,11 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
                 try? await Task.sleep(for: .seconds(10))
             }
         }
-
-        return nil
     }
 
-    @discardableResult
-    func stopCapture() -> Exception? {
+    func stopCapture() throws(Exception) {
         guard isCapturing else {
-            return .init(
+            throw Exception(
                 "Breadcrumbs capture is not running.",
                 metadata: .init(sender: self)
             )
@@ -93,7 +91,6 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
         captureTask?.cancel()
         captureTask = nil
-        return nil
     }
 
     // MARK: - Set Saves to Photos
@@ -107,12 +104,14 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
     private func capture() {
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
-        let viewHierarchyID = (uiApplication
-            .presentedViews
-            .map(\.descriptor) + ["\(build.buildNumber)\(build.milestone.shortString)"])
-            .sorted()
-            .joined()
-            .encodedHash
+        let viewHierarchyID = (
+            uiApplication
+                .presentedViews
+                .map(\.descriptor) + ["\(build.buildNumber)\(build.milestone.shortString)"]
+        )
+        .sorted()
+        .joined()
+        .encodedHash
 
         var captureHistory = captureHistory
         guard !captureHistory.contains(viewHierarchyID),

@@ -81,7 +81,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     /// the exception.
     public let userInfo: [String: Any]?
 
-    private let _descriptor = LockIsolated<String>("")
+    private let _descriptor = LockIsolated("")
     private let _underlyingExceptions = LockIsolated<[Exception]?>(nil)
 
     // MARK: - Computed Properties

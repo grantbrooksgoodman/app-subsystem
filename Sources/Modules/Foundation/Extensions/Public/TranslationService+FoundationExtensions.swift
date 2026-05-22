@@ -46,23 +46,41 @@ public extension TranslationService {
     ///     with an exception (`false`). The default is 10 seconds
     ///     with fallback enabled.
     ///
-    /// - Returns: A ``Callback`` containing the translations on
-    ///   success, or an ``Exception`` on failure.
+    /// - Returns: The translated values.
+    ///
+    /// - Throws: An ``Exception`` if the translation fails.
     func getTranslations(
         _ inputs: [TranslationInput],
         languagePair: LanguagePair,
         hud hudConfig: (appearsAfter: Duration, isModal: Bool)? = nil,
         timeout timeoutConfig: (duration: Duration, returnsInputs: Bool) = (.seconds(10), true)
-    ) async -> Callback<[Translation], Exception> {
-        await withCheckedContinuation { continuation in
-            getTranslations(
-                inputs,
-                languagePair: languagePair,
-                hud: hudConfig,
-                timeout: timeoutConfig
-            ) { result in
-                continuation.resume(returning: result)
+    ) async throws(Exception) -> [Translation] {
+        do {
+            return try await withCheckedThrowingContinuation { continuation in
+                getTranslations(
+                    inputs,
+                    languagePair: languagePair,
+                    hud: hudConfig,
+                    timeout: timeoutConfig
+                ) { result in
+                    switch result {
+                    case let .success(translations):
+                        continuation.resume(returning: translations)
+
+                    case let .failure(exception):
+                        continuation.resume(throwing: exception)
+                    }
+                }
             }
+        } catch {
+            guard let exception = error as? Exception else {
+                throw Exception(
+                    error,
+                    metadata: .init(sender: self)
+                )
+            }
+
+            throw exception
         }
     }
 
@@ -78,54 +96,48 @@ public extension TranslationService {
     /// fallback.
     ///
     /// ```swift
-    /// let result = await translator.resolve(MyStrings.self)
-    /// switch result {
-    /// case let .success(outputMaps):
-    ///     // Apply outputMaps to your view.
-    /// case let .failure(exception):
-    ///     Logger.log(exception)
-    /// }
+    /// let outputMaps = try await translator.resolve(
+    ///     MyStrings.self
+    /// )
     /// ```
     ///
     /// - Parameter strings: The ``TranslatedLabelStrings`` type
     ///   whose key pairs should be resolved.
     ///
-    /// - Returns: A ``Callback`` containing an array of
-    ///   ``TranslationOutputMap`` values on success, or an
-    ///   ``Exception`` on failure.
+    /// - Returns: An array of ``TranslationOutputMap`` values.
+    ///
+    /// - Throws: An ``Exception`` if the translation fails.
     func resolve(
         _ strings: TranslatedLabelStrings.Type
-    ) async -> Callback<[TranslationOutputMap], Exception> {
-        let getTranslationsResult = await getTranslations(
-            strings.keyPairs.map(\.input),
-            languagePair: .system
-        )
+    ) async throws(Exception) -> [TranslationOutputMap] {
+        let translations: [Translation]
 
-        switch getTranslationsResult {
-        case let .success(translations):
-            return .success(
-                strings
-                    .keyPairs
-                    .reduce(into: [TranslationOutputMap]()) { partialResult, keyPair in
-                        if let translation = translations.first(where: {
-                            $0.input.value == keyPair.input.value
-                        }) {
-                            partialResult.append(.init(
-                                key: keyPair.key,
-                                value: translation.output
-                            ))
-                        } else {
-                            partialResult.append(keyPair.defaultOutputMap)
-                        }
-                    }
+        do {
+            translations = try await getTranslations(
+                strings.keyPairs.map(\.input),
+                languagePair: .system
             )
-
-        case let .failure(error):
-            return .failure(.init(
+        } catch {
+            throw Exception(
                 error,
                 metadata: .init(sender: self)
-            ))
+            )
         }
+
+        return strings
+            .keyPairs
+            .reduce(into: [TranslationOutputMap]()) { partialResult, keyPair in
+                if let translation = translations.first(where: {
+                    $0.input.value == keyPair.input.value
+                }) {
+                    partialResult.append(.init(
+                        key: keyPair.key,
+                        value: translation.output
+                    ))
+                } else {
+                    partialResult.append(keyPair.defaultOutputMap)
+                }
+            }
     }
 
     /// Translates a single input asynchronously, with optional HUD
@@ -134,7 +146,7 @@ public extension TranslationService {
     /// This is a convenience wrapper around
     /// ``getTranslations(_:languagePair:hud:timeout:)`` for the
     /// common case of translating a single value. It returns the
-    /// first translation from the result, or fails with an
+    /// first translation from the result, or throws an
     /// ``Exception`` if the response is empty.
     ///
     /// - Parameters:
@@ -145,34 +157,27 @@ public extension TranslationService {
     ///   - timeoutConfig: A tuple controlling timeout behavior. The
     ///     default is 10 seconds with input-value fallback enabled.
     ///
-    /// - Returns: A ``Callback`` containing the translation on
-    ///   success, or an ``Exception`` on failure.
+    /// - Returns: The completed translation.
+    ///
+    /// - Throws: An ``Exception`` if the translation fails.
     func translate(
         _ input: TranslationInput,
         languagePair: LanguagePair,
         hud hudConfig: (appearsAfter: Duration, isModal: Bool)? = nil,
         timeout timeoutConfig: (duration: Duration, returnsInputs: Bool) = (.seconds(10), true)
-    ) async -> Callback<Translation, Exception> {
-        let getTranslationsResult = await getTranslations(
+    ) async throws(Exception) -> Translation {
+        guard let translation = try await getTranslations(
             [input],
             languagePair: languagePair,
             hud: hudConfig,
             timeout: timeoutConfig
-        )
-
-        switch getTranslationsResult {
-        case let .success(translations):
-            guard let translation = translations.first else {
-                return .failure(.init(
-                    metadata: .init(sender: self)
-                ))
-            }
-
-            return .success(translation)
-
-        case let .failure(exception):
-            return .failure(exception)
+        ).first else {
+            throw Exception(
+                metadata: .init(sender: self)
+            )
         }
+
+        return translation
     }
 
     private func getTranslations(
@@ -185,9 +190,9 @@ public extension TranslationService {
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
         @Dependency(\.translationService) var translator: TranslationService
 
-        let didComplete = LockIsolated(wrappedValue: false)
+        let didComplete = LockIsolated(false)
         let exception = LockIsolated<Exception?>(nil)
-        let translations = LockIsolated<[Translation]>([])
+        let translations = LockIsolated([Translation]())
 
         if let hudConfig {
             Task.delayed(by: hudConfig.appearsAfter) { @MainActor in
@@ -274,22 +279,19 @@ public extension TranslationService {
         }
 
         Task {
-            let getTranslationsResult = await translator.getTranslations(
-                inputs,
-                languagePair: languagePair
-            )
-
-            timeout.cancel()
-
-            switch getTranslationsResult {
-            case let .success(_translations): translations.wrappedValue = _translations
-            case let .failure(error):
+            do {
+                translations.wrappedValue = try await translator.getTranslations(
+                    inputs,
+                    languagePair: languagePair
+                )
+            } catch {
                 exception.wrappedValue = .init(
                     error,
                     metadata: .init(sender: self)
                 )
             }
 
+            timeout.cancel()
             return complete(timedOut: false)
         }
     }

@@ -29,16 +29,14 @@ import Translator
 /// stores the results under the key `greeting`:
 ///
 /// ```swift
-/// let createPLISTResult = await Localization.createPLIST(
-///     translating: "Hello, world!",
-///     withKey: "greeting"
-/// )
-///
-/// switch createPLISTResult {
-/// case let .success(filePath):
+/// do {
+///     let filePath = try await Localization.createPLIST(
+///         translating: "Hello, world!",
+///         withKey: "greeting"
+///     )
 ///     Logger.log("Written to \(filePath)", sender: self)
-/// case let .failure(exception):
-///     Logger.log(exception)
+/// } catch {
+///     Logger.log(error)
 /// }
 /// ```
 ///
@@ -182,9 +180,8 @@ public enum Localization {
     /// dependency to perform translations by default. To
     /// provide a custom implementation, pass a closure to
     /// the `translate` parameter. The closure receives the
-    /// target language code and returns a ``Callback`` with
-    /// a `Translation` on success or an ``Exception`` on
-    /// failure.
+    /// target language code and returns a `Translation` on
+    /// success or an ``Exception`` on failure.
     ///
     /// - Parameters:
     ///   - input: The string to translate.
@@ -212,9 +209,9 @@ public enum Localization {
     ///     string into a target language, or `nil` to use
     ///     the default translation service.
     ///
-    /// - Returns: A ``Callback`` containing the file path
-    ///   of the generated property list on success, or an
-    ///   ``Exception`` on failure.
+    /// - Returns: The file path of the generated property list.
+    ///
+    /// - Throws: An ``Exception``.
     public static func createPLIST(
         translating input: String,
         withKey key: String? = nil,
@@ -222,15 +219,15 @@ public enum Localization {
         plistConfig: PropertyListConfiguration = .init(),
         processingConfig: ProcessingConfiguration? = nil,
         postProcessingTransformation postProcess: ((String) -> String)? = nil,
-        translate: ((String) async -> Callback<Translation, Exception>)? = nil
-    ) async -> Callback<String, Exception> {
+        translate: ((String) async throws(Exception) -> Translation)? = nil
+    ) async throws(Exception) -> String {
         @Dependency(\.translationService) var translator: TranslationService
 
         guard let languageCodes = RuntimeStorage.languageCodeDictionary?.keys else {
-            return .failure(.init(
+            throw Exception(
                 "Failed to resolve language codes.",
                 metadata: .init(sender: self)
-            ))
+            )
         }
 
         var propertyList = [String: [String: String]]()
@@ -254,7 +251,7 @@ public enum Localization {
         )
 
         var totalCompleted = 0
-        let translateResults = await languageCodes.parallelMap(
+        let translationOutputsByLanguageCode = try await languageCodes.parallelMap(
             failForEmptyCollection: true
         ) {
             totalCompleted += 1
@@ -266,33 +263,23 @@ public enum Localization {
             )
 
             if let translate {
-                return await translate($0)
+                return try await translate($0)
             }
 
-            return await translator.translate(
+            return try await translator.translate(
                 .init(input),
                 languagePair: .init(
                     from: languageCode,
                     to: $0
                 )
             )
-        }
+        }.reduce(into: [String: String]()) { partialResult, translation in
+            var processedOutput = process(translation.output, with: processingConfig)
+            if let postProcess {
+                processedOutput = postProcess(processedOutput)
+            }
 
-        var translationOutputsByLanguageCode = [String: String]()
-        switch translateResults {
-        case let .success(translations):
-            translationOutputsByLanguageCode = translations
-                .reduce(into: [String: String]()) { partialResult, translation in
-                    var processedOutput = process(translation.output, with: processingConfig)
-                    if let postProcess {
-                        processedOutput = postProcess(processedOutput)
-                    }
-
-                    partialResult[translation.languagePair.to] = processedOutput
-                }
-
-        case let .failure(exception):
-            return .failure(exception)
+            partialResult[translation.languagePair.to] = processedOutput
         }
 
         Logger.closeStream(
@@ -315,7 +302,7 @@ public enum Localization {
         .lowercased()
 
         propertyList[key ?? derivedKey] = translationOutputsByLanguageCode
-        return createPLIST(
+        return try createPLIST(
             from: propertyList,
             fileName: plistConfig.name,
             overwriteExistingFile: plistConfig.overwriteExistingFile
@@ -328,7 +315,7 @@ public enum Localization {
         from dictionary: [String: [String: String]],
         fileName: String,
         overwriteExistingFile: Bool
-    ) -> Callback<String, Exception> {
+    ) throws(Exception) -> String {
         @Dependency(\.fileManager) var fileManager: FileManager
 
         let filePathURL = URL.temporaryDirectory.appending(path: "/\(fileName).plist")
@@ -336,21 +323,21 @@ public enum Localization {
 
         if !overwriteExistingFile {
             guard !fileManager.fileExists(atPath: filePathString) else {
-                return .failure(.init(
+                throw Exception(
                     "File already exists.",
                     userInfo: ["FilePath": filePathString],
                     metadata: .init(sender: self)
-                ))
+                )
             }
         } else if fileManager.fileExists(atPath: filePathString) {
             do {
                 try fileManager.removeItem(at: filePathURL)
             } catch {
-                return .failure(.init(
+                throw Exception(
                     error,
                     userInfo: ["FilePath": filePathString],
                     metadata: .init(sender: self)
-                ))
+                )
             }
         }
 
@@ -368,7 +355,7 @@ public enum Localization {
             atomically: true
         )
 
-        return .success(filePathString)
+        return filePathString
     }
 
     private static func process(

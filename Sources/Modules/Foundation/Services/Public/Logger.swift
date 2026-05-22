@@ -218,15 +218,15 @@ public enum Logger {
 
     // MARK: - Properties
 
-    private static let currentTimeLastCalled = LockIsolated<Date>(.now)
+    private static let currentTimeLastCalled = LockIsolated(Date.now)
     private static let ioLock = NSRecursiveLock()
     private static let sessionID = UUID()
-    private static let streamOpen = LockIsolated<Bool>(false)
+    private static let streamOpen = LockIsolated(false)
     private static let utf8BOM = Data([0xEF, 0xBB, 0xBF])
-    private static let _domainsExcludedFromSessionRecord = LockIsolated<[LoggerDomain]>([])
+    private static let _domainsExcludedFromSessionRecord = LockIsolated([LoggerDomain]())
     private static let _filter = LockIsolated<Filter?>(nil)
-    private static let _reportsErrorsAutomatically = LockIsolated<Bool>(false)
-    private static let _subscribedDomains = LockIsolated<[LoggerDomain]>([])
+    private static let _reportsErrorsAutomatically = LockIsolated(false)
+    private static let _subscribedDomains = LockIsolated([LoggerDomain]())
 
     // MARK: - Computed Properties
 

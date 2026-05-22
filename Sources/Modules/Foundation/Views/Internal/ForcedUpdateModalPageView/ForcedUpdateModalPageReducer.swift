@@ -27,7 +27,8 @@ struct ForcedUpdateModalPageReducer: Reducer {
 
         case installButtonTapped
         case remoteAppIconImageReturned(UIImage?)
-        case resolveReturned(Callback<[TranslationOutputMap], Exception>)
+        case resolveFailed(Exception)
+        case resolveReturned([TranslationOutputMap])
     }
 
     // MARK: - State
@@ -41,7 +42,9 @@ struct ForcedUpdateModalPageReducer: Reducer {
         var versionLabelText = ""
         var viewState: StatefulView.ViewState = .loading
 
-        fileprivate var installButtonRedirectURL: URL? { AppSubsystem.delegates.forcedUpdateModal?.installButtonRedirectURL }
+        fileprivate var installButtonRedirectURL: URL? {
+            AppSubsystem.delegates.forcedUpdateModal?.installButtonRedirectURL
+        }
 
         /* MARK: Init */
 
@@ -96,8 +99,13 @@ struct ForcedUpdateModalPageReducer: Reducer {
             }
 
             let resolveTask: Effect<Action> = .task {
-                let result = await translator.resolve(ForcedUpdateModalPageViewStrings.self)
-                return .resolveReturned(result)
+                do throws(Exception) {
+                    return try await .resolveReturned(
+                        translator.resolve(ForcedUpdateModalPageViewStrings.self)
+                    )
+                } catch {
+                    return .resolveFailed(error)
+                }
             }
 
             return hideInteractiveContentTask
@@ -114,12 +122,12 @@ struct ForcedUpdateModalPageReducer: Reducer {
             guard let remoteAppIconImage else { return .none }
             state.appIconImage = .init(uiImage: remoteAppIconImage)
 
-        case let .resolveReturned(.success(strings)):
-            state.strings = strings
+        case let .resolveFailed(exception):
+            Logger.log(exception)
             state.viewState = .loaded
 
-        case let .resolveReturned(.failure(exception)):
-            Logger.log(exception)
+        case let .resolveReturned(strings):
+            state.strings = strings
             state.viewState = .loaded
         }
 

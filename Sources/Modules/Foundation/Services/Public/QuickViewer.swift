@@ -71,20 +71,18 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, @precon
     ///   - embedded: Pass `true` to wrap the preview controller in
     ///     a `UINavigationController` before presenting.
     ///
-    /// - Returns: An ``Exception`` if no valid paths are provided,
-    ///   or `nil` on success.
-    @discardableResult
+    /// - Throws: An ``Exception`` if no valid paths are provided.
     public func preview(
         filesAtPaths paths: [String],
         startingIndex: Int = 0,
         title: String? = nil,
         embedded: Bool = false
-    ) -> Exception? {
+    ) throws(Exception) {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
 
         let paths = paths.filter { !$0.isEmpty }
         guard !paths.isEmpty else {
-            return .init(
+            throw Exception(
                 "No file to preview.",
                 metadata: .init(sender: self)
             )
@@ -106,8 +104,6 @@ public final class QuickViewer: NSObject, QLPreviewControllerDataSource, @precon
         }
 
         coreUI.present(previewController, embedded: embedded)
-
-        return nil
     }
 
     // MARK: - On Dismiss

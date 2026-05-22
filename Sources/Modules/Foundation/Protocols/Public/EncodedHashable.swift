@@ -83,7 +83,7 @@ public extension EncodedHashable {
 enum EncodedHashStore {
     // MARK: - Properties
 
-    static let storedEncodedHashesForCompiledHashFactorStrings = LockIsolated<[String: String]>([:])
+    static let storedEncodedHashesForCompiledHashFactorStrings = LockIsolated([String: String]())
 
     // MARK: - Clear Cache
 

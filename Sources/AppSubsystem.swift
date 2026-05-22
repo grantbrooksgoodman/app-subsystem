@@ -94,7 +94,7 @@ public enum AppSubsystem {
     /// subsystem's behavior.
     public static let delegates = Delegates.shared
 
-    private static let _didInitialize = LockIsolated<Bool>(false)
+    private static let _didInitialize = LockIsolated(false)
 
     /* MARK: Computed Properties */
 
@@ -187,7 +187,7 @@ public enum AppSubsystem {
                   let breadcrumbsCaptureSavesToPhotos,
                   breadcrumbsCaptureEnabled {
             delegates.breadcrumbsCapture.setSavesToPhotos(breadcrumbsCaptureSavesToPhotos)
-            delegates.breadcrumbsCapture.startCapture()
+            try? delegates.breadcrumbsCapture.startCapture()
         }
 
         /* MARK: Build Info Overlay Setup */

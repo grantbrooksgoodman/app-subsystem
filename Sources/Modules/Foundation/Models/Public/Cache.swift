@@ -115,9 +115,9 @@ public struct Cached<KeyType: RawRepresentable & CaseIterable, ObjectType> where
 private enum Cache {
     // MARK: - Properties
 
-    fileprivate static let didReachMemoryCeiling = LockIsolated<Bool>(false)
+    fileprivate static let didReachMemoryCeiling = LockIsolated(false)
 
-    private static let _value = LockIsolated<NSCache<NSString, AnyObject>>(.init())
+    private static let _value = LockIsolated(NSCache<NSString, AnyObject>())
 
     // MARK: - Computed Properties
 

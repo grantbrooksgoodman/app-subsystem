@@ -58,31 +58,31 @@ public extension CoreKit {
         /// Removes all files from the app's Application Support
         /// directory.
         ///
-        /// - Returns: An ``Exception`` if the operation fails, or
-        ///   `nil` on success.
-        @discardableResult
-        public func eraseApplicationSupportDirectory() -> Exception? {
-            eraseDirectory(at: FileManager.applicationSupportDirectoryURL)
+        /// - Throws: An ``Exception`` if the operation fails.
+        public func eraseApplicationSupportDirectory() throws(Exception) {
+            try eraseDirectory(
+                at: FileManager.applicationSupportDirectoryURL
+            )
         }
 
         /// Removes all files from the app's documents
         /// directory.
         ///
-        /// - Returns: An ``Exception`` if the operation fails, or
-        ///   `nil` on success.
-        @discardableResult
-        public func eraseDocumentsDirectory() -> Exception? {
-            eraseDirectory(at: fileManager.documentsDirectoryURL)
+        /// - Throws: An ``Exception`` if the operation fails.
+        public func eraseDocumentsDirectory() throws(Exception) {
+            try eraseDirectory(
+                at: fileManager.documentsDirectoryURL
+            )
         }
 
         /// Removes all files from the app's temporary
         /// directory.
         ///
-        /// - Returns: An ``Exception`` if the operation fails, or
-        ///   `nil` on success.
-        @discardableResult
-        public func eraseTemporaryDirectory() -> Exception? {
-            eraseDirectory(at: fileManager.temporaryDirectory)
+        /// - Throws: An ``Exception`` if the operation fails.
+        public func eraseTemporaryDirectory() throws(Exception) {
+            try eraseDirectory(
+                at: fileManager.temporaryDirectory
+            )
         }
 
         /// Returns to the Home screen before terminating the
@@ -198,7 +198,7 @@ public extension CoreKit {
 
         // MARK: - Auxiliary
 
-        private func eraseDirectory(at path: URL) -> Exception? {
+        private func eraseDirectory(at path: URL) throws(Exception) {
             do {
                 let filePaths = try fileManager.contentsOfDirectory(
                     at: path,
@@ -209,10 +209,11 @@ public extension CoreKit {
                     try fileManager.removeItem(at: path)
                 }
             } catch {
-                return .init(error, metadata: .init(sender: self))
+                throw Exception(
+                    error,
+                    metadata: .init(sender: self)
+                )
             }
-
-            return nil
         }
     }
 }

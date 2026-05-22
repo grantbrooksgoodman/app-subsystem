@@ -73,11 +73,11 @@ public typealias Nil = NSNull
 public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     // MARK: - Properties
 
-    private let observers = LockIsolated<[any Observer]>([])
+    private let observers = LockIsolated([any Observer]())
     private let _value: LockIsolated<T>
 
-    // Set only on notification objects.
-    // Real observables leave this nil – their identity is ObjectIdentifier(self).
+    /// Set only on notification objects.
+    /// Real observables leave this nil – their identity is ObjectIdentifier(self).
     fileprivate let originID: ObjectIdentifier?
 
     // MARK: - Computed Properties
@@ -104,7 +104,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
         _value = LockIsolated(initialValue)
     }
 
-    // Used internally to record the originator's identity on notification objects.
+    /// Used internally to record the originator's identity on notification objects.
     fileprivate init(
         _ initialValue: T,
         originID: ObjectIdentifier
@@ -169,7 +169,9 @@ extension Observable: ObserverRegistrable {
     ) {
         self.observers.projectedValue.withValue {
             $0.removeAll { Swift.type(of: $0) == type }
-            for observer in observers { $0.append(observer) }
+            for observer in observers {
+                $0.append(observer)
+            }
         }
     }
 }

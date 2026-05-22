@@ -38,7 +38,7 @@ import Foundation
 public final class Timeout: Sendable {
     // MARK: - Types
 
-    private enum State: Sendable {
+    private enum State {
         case cancelled
         case fired
         case pending(@Sendable () -> Void)
@@ -46,7 +46,7 @@ public final class Timeout: Sendable {
 
     // MARK: - Properties
 
-    private let _state = LockIsolated<State>(.cancelled)
+    private let _state = LockIsolated(State.cancelled)
     private let _task = LockIsolated<Task<Void, Never>?>(nil)
 
     // MARK: - Object Lifecycle

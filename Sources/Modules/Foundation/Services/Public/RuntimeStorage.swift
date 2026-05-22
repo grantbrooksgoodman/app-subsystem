@@ -42,7 +42,7 @@ import Foundation
 public enum RuntimeStorage {
     // MARK: - Properties
 
-    private static let storedItems = LockIsolated<[String: Any]>([:])
+    private static let storedItems = LockIsolated([String: Any]())
 
     // MARK: - Removal
 
@@ -95,11 +95,15 @@ public extension RuntimeStorage {
     /// Returns the overridden language code if one has been stored,
     /// the explicitly stored language code if available, or the
     /// system language code as a fallback.
-    static var languageCode: String { getLanguageCode() }
+    static var languageCode: String {
+        getLanguageCode()
+    }
 
     /// The language-code dictionary for the current session, or
     /// `nil` if none has been stored.
-    static var languageCodeDictionary: [String: String]? { getLanguageCodeDictionary() }
+    static var languageCodeDictionary: [String: String]? {
+        getLanguageCodeDictionary()
+    }
 
     // MARK: - Functions
 

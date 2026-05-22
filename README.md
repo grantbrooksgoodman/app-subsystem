@@ -23,6 +23,7 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
   - [Localization](#localization)
   - [Navigation](#navigation)
   - [Persistence](#persistence)
+  - [Async Work Coalescing](#async-work-coalescing)
   - [Developer Tools](#developer-tools)
 - [Delegate Customization](#delegate-customization)
 - [Conventions](#conventions)
@@ -282,7 +283,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 
 | Module | Purpose |
 |---|---|
-| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
+| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), async work coalescing ([`KeyedCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/KeyedCoalescer.swift), [`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
@@ -666,17 +667,17 @@ extension Localized where T == StringKey {
 Use [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) to translate a string into every supported language and write the results to a property list in the app's temporary directory. If a property list with the specified name exists in the configured bundle, its entries are preserved in the output.
 
 ```swift
-let result = await Localization.createPLIST(
+let filePath = try await Localization.createPLIST(
     translating: "Hello, world!"
 )
 ```
 
-On success, the returned `Callback` contains the file path of the generated property list. Pass a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to control the output file name, the bundle searched for existing entries, and the overwrite behavior.
+On success, the method returns the file path of the generated property list. Pass a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to control the output file name, the bundle searched for existing entries, and the overwrite behavior.
 
 Each set of translations is stored under a top-level dictionary key in the property list. When no key is provided, the method derives one automatically from the first four words of the input, stripped of non-letter characters, lowercased, and joined with underscores. To specify the key explicitly, pass the `withKey` parameter:
 
 ```swift
-let result = await Localization.createPLIST(
+let filePath = try await Localization.createPLIST(
     translating: "Hello, world!",
     withKey: "greeting"
 )
@@ -818,6 +819,53 @@ Small values are stored in `UserDefaults`. When the encoded representation of a 
 The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift), so clearing all cache domains also clears the persistence cache.
 
 > **Note:** Keys registered through the [`PermanentPersistentStorageKeyDelegate`](Sources/Modules/Foundation/Protocols/Public/Delegates/PermanentPersistentStorageKeyDelegate.swift) are protected from cache clearing, ensuring that critical values survive a full reset. Calling `reset(preserving:)` removes values from both `UserDefaults` and the Application Support directory, so filesystem-backed entries are cleaned up automatically.
+
+### Async Work Coalescing
+
+When multiple callers request the same asynchronous work concurrently, coalescers deduplicate the requests so that only one operation runs at a time. All callers share the result – or the error – of the single in-flight task.
+
+AppSubsystem provides two coalescer types. Both are actors, so all slot management is concurrency-safe without external synchronization. Both throwing and non-throwing operations are supported – use the throwing overload when the operation can fail with an [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift), or the non-throwing overload when it cannot.
+
+#### KeyedCoalescer
+
+[`KeyedCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/KeyedCoalescer.swift) maintains at most one in-flight task per key. Callers with the same key share a result; callers with different keys run independently:
+
+```swift
+let coalescer = KeyedCoalescer<UserID, Profile>()
+
+// Non-throwing: callers share the result without try.
+async let a = coalescer(userID) { await fetchProfile(userID) }
+async let b = coalescer(userID) { await fetchProfile(userID) }
+let (profileA, profileB) = await (a, b) // identical result
+
+// Throwing: callers share the result or the error.
+let profile = try await coalescer(userID) { try await loadProfile(userID) }
+```
+
+The slot for a given key is cleared automatically when its in-flight task completes, whether it succeeds or throws.
+
+#### SingleSlotCoalescer
+
+[`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift) maintains a single slot. A `Mode` parameter determines how concurrent calls are resolved:
+
+| Mode | Behavior |
+|---|---|
+| `coalesce` | Subsequent callers share the in-flight task's result. |
+| `lastCallerWins` | The in-flight task is cancelled and replaced by a new one. |
+
+```swift
+let coalescer = SingleSlotCoalescer<Profile>()
+
+// Non-throwing usage.
+async let a = coalescer(mode: .coalesce) { await fetchProfile() }
+async let b = coalescer(mode: .coalesce) { await fetchProfile() }
+let (profileA, profileB) = await (a, b) // identical result
+
+// Throwing usage.
+let profile = try await coalescer { try await loadProfile() }
+```
+
+> **Note:** `lastCallerWins` relies on cooperative cancellation. The cancelled operation must check `Task.isCancelled` or call cancellation-aware APIs to stop promptly.
 
 ### Developer Tools
 

@@ -125,7 +125,7 @@ public final class Build: @unchecked Sendable {
     /// The release cycle stage of this build.
     public let milestone: Milestone
 
-    private let _cancellables = LockIsolated<Set<AnyCancellable>>([])
+    private let _cancellables = LockIsolated(Set<AnyCancellable>())
 
     // MARK: - Computed Properties
 

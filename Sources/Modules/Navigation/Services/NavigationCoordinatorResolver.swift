@@ -54,10 +54,7 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
 
     // MARK: - Resolve
 
-    /// Returns the stored coordinator, cast to the requested type.
-    ///
-    /// - Returns: The stored ``NavigationCoordinator`` instance.
-    public func resolve<N: Navigating>() -> NavigationCoordinator<N> {
+    func resolve<N: Navigating>() -> NavigationCoordinator<N> {
         guard let navigationCoordinator = navigationCoordinator as? NavigationCoordinator<N> else {
             fatalError(
                 navigationCoordinator == nil ?
@@ -81,7 +78,9 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
         _ navigationCoordinator: NavigationCoordinator<some Navigating>
     ) {
         guard self.navigationCoordinator == nil else {
-            fatalError("The NavigationCoordinator instance already exists")
+            fatalError(
+                "The NavigationCoordinator instance already exists"
+            )
         }
 
         self.navigationCoordinator = navigationCoordinator
@@ -89,17 +88,14 @@ public final class NavigationCoordinatorResolver: @unchecked Sendable {
 
     // MARK: - Update
 
-    /// Replaces the stored coordinator and returns the updated instance.
-    ///
-    /// - Parameter navigationCoordinator: The coordinator to store.
-    ///
-    /// - Returns: The newly stored coordinator.
-    public func update<N: Navigating>(
+    func update<N: Navigating>(
         _ navigationCoordinator: NavigationCoordinator<N>
     ) -> NavigationCoordinator<N> {
         self.navigationCoordinator = navigationCoordinator
         guard let updatedNavigationCoordinator = self.navigationCoordinator as? NavigationCoordinator<N> else {
-            fatalError("Failed to update the NavigationCoordinator instance")
+            fatalError(
+                "Failed to update the NavigationCoordinator instance"
+            )
         }
 
         return updatedNavigationCoordinator

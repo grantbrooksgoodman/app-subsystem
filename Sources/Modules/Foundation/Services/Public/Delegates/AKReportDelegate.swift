@@ -216,24 +216,23 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
               let prompt else { return compose(body: nil, prompt: nil) }
 
         guard let translationDelegate = alertKitConfig.translationDelegate else { return }
-        let getTranslationsResult = await translationDelegate.getTranslations(
-            [
-                .init(body),
-                .init(prompt),
-            ],
-            languagePair: .system,
-            hud: alertKitConfig.translationHUDConfig,
-            timeout: alertKitConfig.translationTimeoutConfig
-        )
 
-        switch getTranslationsResult {
-        case let .success(translations):
+        do {
+            let translations = try await translationDelegate.getTranslations(
+                [
+                    .init(body),
+                    .init(prompt),
+                ],
+                languagePair: .system,
+                hud: alertKitConfig.translationHUDConfig,
+                timeout: alertKitConfig.translationTimeoutConfig
+            )
+
             compose(
                 body: translations.first(where: { $0.input.value == body })?.output ?? body,
                 prompt: translations.first(where: { $0.input.value == prompt })?.output ?? prompt
             )
-
-        case let .failure(error):
+        } catch {
             Logger.log(.init(error, metadata: .init(sender: self)))
             compose(body: body, prompt: prompt)
         }
@@ -331,9 +330,11 @@ public struct ReportDelegate: @MainActor AlertKit.ReportDelegate, Sendable {
 
 /// The dependency key that provides a ``ReportDelegate`` instance.
 public enum ReportDelegateDependency: DependencyKey {
-    public static func resolve(_ dependencies: DependencyValues) -> ReportDelegate {
-        @MainActorIsolated var reportDelegate = (dependencies.alertKitConfig.reportDelegate as? ReportDelegate) ?? .init()
-        return reportDelegate
+    public static func resolve(_ dependencies: DependencyValues) -> ReportDelegate { // swiftformat:disable all
+        @MainActorIsolated var reportDelegate = (
+            dependencies.alertKitConfig.reportDelegate as? ReportDelegate
+        ) ?? .init()
+        return reportDelegate // swiftformat:enable all
     }
 }
 

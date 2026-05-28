@@ -36,23 +36,17 @@ struct TranslationDelegate: AlertKit.TranslationDelegate {
         languagePair: LanguagePair,
         hud hudConfig: AlertKit.HUDConfig?,
         timeout timeoutConfig: AlertKit.TranslationTimeoutConfig
-    ) async -> Result<[Translation], TranslationError> {
+    ) async throws -> [Translation] {
         var hudConfigTuple: (Duration, Bool)?
         if let hudConfig {
             hudConfigTuple = (hudConfig.appearsAfter, hudConfig.isModal)
         }
 
-        do {
-            return try await .success(
-                translator.getTranslations(
-                    inputs,
-                    languagePair: languagePair,
-                    hud: hudConfigTuple,
-                    timeout: (timeoutConfig.duration, timeoutConfig.returnsInputsOnFailure)
-                )
-            )
-        } catch {
-            return .failure(.unknown(error.descriptor))
-        }
+        return try await translator.getTranslations(
+            inputs,
+            languagePair: languagePair,
+            hud: hudConfigTuple,
+            timeout: (timeoutConfig.duration, timeoutConfig.returnsInputsOnFailure)
+        )
     }
 }

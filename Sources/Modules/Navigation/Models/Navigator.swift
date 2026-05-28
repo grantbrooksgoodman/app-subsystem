@@ -37,7 +37,9 @@ public struct Navigator<N: Navigating> {
 
     // MARK: - Computed Properties
 
-    public var wrappedValue: NavigationCoordinator<N> { NavigationCoordinatorResolver.shared.update(value) }
+    public var wrappedValue: NavigationCoordinator<N> {
+        NavigationCoordinatorResolver.shared.update(value)
+    }
 
     // MARK: - Init
 

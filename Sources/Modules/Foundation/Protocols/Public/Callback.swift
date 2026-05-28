@@ -118,12 +118,11 @@ public extension Callback {
         }
     }
 
-    // swiftformat:disable all
     /// Converts the callback to a throwing expression.
     ///
     /// Returns the success value, or throws the failure as an
     /// ``Exception``.
-    func get() throws(Exception) -> Success { // swiftformat:enable all
+    func get() throws(Exception) -> Success {
         switch self {
         case let .success(success):
             return success

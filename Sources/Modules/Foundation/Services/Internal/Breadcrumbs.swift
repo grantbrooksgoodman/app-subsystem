@@ -75,7 +75,7 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
         captureTask = Task { @MainActor in
             while !Task.isCancelled,
                   isCapturing {
-                capture()
+                await capture()
                 try? await Task.sleep(for: .seconds(10))
             }
         }
@@ -101,7 +101,7 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
     // MARK: - Auxiliary
 
-    private func capture() {
+    private func capture() async {
         guard Int.random(in: 1 ... 1_000_000) % 3 == 0 else { return }
 
         let viewHierarchyID = (
@@ -115,7 +115,7 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
         var captureHistory = captureHistory
         guard !captureHistory.contains(viewHierarchyID),
-              let image = uiApplication.snapshot,
+              let image = await uiApplication.snapshot,
               let pngData = image.pngData() else { return }
 
         captureHistory.insert(viewHierarchyID)

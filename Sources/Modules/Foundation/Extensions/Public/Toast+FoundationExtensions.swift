@@ -44,8 +44,10 @@ public extension Toast {
     private static var isShowingToast: Bool {
         UIApplication.iOS27IsAvailable ?
             !isHidden :
-            (Observables.rootViewToast.value != nil ||
-                Observables.rootViewToastAction.value != nil)
+            (
+                Observables.rootViewToast.value != nil ||
+                    Observables.rootViewToastAction.value != nil
+            )
     }
 
     // MARK: - Show / Hide
@@ -98,15 +100,14 @@ public extension Toast {
         }
 
         Task {
-            let getTranslationsResult = await translationDelegate.getTranslations(
-                inputs,
-                languagePair: languagePair,
-                hud: alertKitConfig.translationHUDConfig,
-                timeout: alertKitConfig.translationTimeoutConfig
-            )
+            do {
+                let translations = try await translationDelegate.getTranslations(
+                    inputs,
+                    languagePair: languagePair,
+                    hud: alertKitConfig.translationHUDConfig,
+                    timeout: alertKitConfig.translationTimeoutConfig
+                )
 
-            switch getTranslationsResult {
-            case let .success(translations):
                 Toast.show(
                     .init(
                         toast.type,
@@ -116,8 +117,7 @@ public extension Toast {
                     ),
                     onTap: onTap
                 )
-
-            case let .failure(error):
+            } catch {
                 Logger.log(.init(
                     error,
                     metadata: .init(sender: self)
@@ -125,7 +125,7 @@ public extension Toast {
 
                 Toast.show(
                     toast,
-                    onTap: onTap,
+                    onTap: onTap
                 )
             }
         }
@@ -233,8 +233,10 @@ public extension Toast {
         onTap: (@Sendable () -> Void)? = nil
     ) {
         // Return early if same toast is already being shown.
-        guard !(Observables.rootViewToast.value == toast &&
-            (Observables.rootViewToastAction.value == nil) == (onTap == nil)) else { return }
+        guard !(
+            Observables.rootViewToast.value == toast &&
+                (Observables.rootViewToastAction.value == nil) == (onTap == nil)
+        ) else { return }
 
         guard !UIApplication.isBlockingUserInteraction,
               !isShowingToast else {

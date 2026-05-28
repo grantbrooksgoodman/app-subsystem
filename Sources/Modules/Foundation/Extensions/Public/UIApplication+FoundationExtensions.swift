@@ -93,27 +93,51 @@ public extension UIApplication {
 
     /// A screenshot of the current screen contents.
     var snapshot: UIImage? {
-        #if targetEnvironment(simulator)
-        let snapshotView = mainScreen.snapshotView(afterScreenUpdates: true)
-        snapshotView.bounds = .init(origin: .zero, size: mainScreen.bounds.size)
+        get async {
+            let buildInfoOverlayWasHidden = BuildInfoOverlay.isHidden
+            if buildInfoOverlayWasHidden {
+                BuildInfoOverlay.show(persistSetting: false)
+                // Yield to allow the Observable notification and SwiftUI
+                // rendering pipeline to process the visibility change.
+                try? await Task.sleep(for: .milliseconds(100))
+            }
 
-        let renderer = UIGraphicsImageRenderer(size: mainScreen.bounds.size)
-        return renderer.image { _ in
-            snapshotView.drawHierarchy(in: mainScreen.bounds, afterScreenUpdates: true)
+            defer {
+                if buildInfoOverlayWasHidden {
+                    BuildInfoOverlay.hide(persistSetting: false)
+                }
+            }
+
+            #if targetEnvironment(simulator)
+            let snapshotView = mainScreen.snapshotView(afterScreenUpdates: true)
+            snapshotView.bounds = .init(origin: .zero, size: mainScreen.bounds.size)
+
+            let renderer = UIGraphicsImageRenderer(size: mainScreen.bounds.size)
+            return renderer.image { _ in
+                snapshotView.drawHierarchy(
+                    in: mainScreen.bounds,
+                    afterScreenUpdates: true
+                )
+            }
+            #else
+            guard let mainWindow else { return nil }
+            var image: UIImage?
+
+            UIGraphicsBeginImageContextWithOptions(
+                mainWindow.layer.frame.size,
+                false,
+                mainWindow.screen.scale
+            )
+
+            guard let context = UIGraphicsGetCurrentContext() else { return nil }
+            mainWindow.layer.render(in: context)
+
+            image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+
+            return image
+            #endif
         }
-        #else
-        guard let mainWindow else { return nil }
-        var image: UIImage?
-
-        UIGraphicsBeginImageContextWithOptions(mainWindow.layer.frame.size, false, mainWindow.screen.scale)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-        mainWindow.layer.render(in: context)
-
-        image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return image
-        #endif
     }
 
     /// All windows across all connected scenes.
@@ -123,30 +147,20 @@ public extension UIApplication {
             .flatMap(\.windows)
     }
 
-    private static var bundleRequiresPreV26Design: Bool {
+    private static let bundleRequiresPreV26Design: Bool = {
         @Dependency(\.mainBundle) var mainBundle: Bundle
-
-        if let _bundleRequiresPreV26Design {
-            return _bundleRequiresPreV26Design
-        }
-
-        let designRequiresCompatibility = mainBundle.object(
+        return mainBundle.object(
             forInfoDictionaryKey: "UIDesignRequiresCompatibility"
-        ) as? Bool
+        ) as? Bool ?? false
+    }()
 
-        _bundleRequiresPreV26Design = designRequiresCompatibility
-        return designRequiresCompatibility ?? false
-    }
-
-    private static var isCompiledForV26OrLater: Bool {
+    private static let isCompiledForV26OrLater: Bool = {
         #if compiler(>=6.2)
         return true
         #else
         return false
         #endif
-    }
-
-    private static var _bundleRequiresPreV26Design: Bool?
+    }()
 
     // MARK: - Methods
 

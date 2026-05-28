@@ -34,8 +34,8 @@ public extension Collection {
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
         maxConcurrentOperations: Int? = 10,
-        transform: @escaping (Element) async throws -> Output // swiftformat:disable all
-    ) async throws(Exception) -> [Output] { // swiftformat:enable all
+        transform: @escaping (Element) async throws -> Output
+    ) async throws(Exception) -> [Output] {
         let parallelMapResult = await parallelMap(
             failFast: failFast,
             failForEmptyCollection: failForEmptyCollection,
@@ -79,8 +79,8 @@ public extension Collection {
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
         maxConcurrentOperations: Int? = 10,
-        perform: @escaping (Element) async throws(Exception) -> Void // swiftformat:disable all
-    ) async throws(Exception) { // swiftformat:enable all
+        perform: @escaping (Element) async throws(Exception) -> Void
+    ) async throws(Exception) {
         if failForEmptyCollection {
             guard !isEmpty else {
                 throw Exception(

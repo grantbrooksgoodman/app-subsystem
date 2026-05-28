@@ -188,7 +188,7 @@ public enum Localization {
     ///   - key: The top-level dictionary key under which the
     ///     translations for this input are stored in the
     ///     property list. When `nil`, the key is derived
-    ///     automatically from the first four words of the
+    ///     automatically from the first three words of the
     ///     input, stripped of non-letter characters,
     ///     lowercased, and joined with underscores.
     ///   - languageCode: The language of the input string.
@@ -293,8 +293,8 @@ public enum Localization {
             .map { $0.filter(\.isLetter) }
 
         let derivedKey = (
-            whitespaceSeparatedComponents.count >= 4 ?
-                Array(whitespaceSeparatedComponents[0 ... 3]) :
+            whitespaceSeparatedComponents.count >= 3 ?
+                Array(whitespaceSeparatedComponents[0 ... 2]) :
                 whitespaceSeparatedComponents
         )
         .filter { !$0.isBlank }

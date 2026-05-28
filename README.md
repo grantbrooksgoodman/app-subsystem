@@ -55,7 +55,7 @@ AppSubsystem is organized around several key concepts:
 
 | Platform | Minimum Version |
 | --- | --- |
-| iOS | 17.0 |
+| iOS | 18.0 |
 
 ---
 
@@ -75,7 +75,7 @@ A setup script creates the required files in an existing Xcode project:
 
 The script creates `AppDelegate.swift`, `ContentView.swift`, `SceneDelegate.swift`, `Info.plist`, and `LocalizedStrings.plist`. It also removes any existing `@main` entry point, adds the AppSubsystem package dependency, configures build settings (`ENABLE_USER_SCRIPT_SANDBOXING`, `GENERATE_INFOPLIST_FILE`, `INFOPLIST_FILE`), adds the Run Script build phase, removes `Info.plist` from Copy Bundle Resources, and sets `OS_ACTIVITY_MODE = disable` in the scheme's environment variables automatically.
 
-See [`bootstrap.sh`](Resources/bootstrap.sh) for details. To set things up manually instead, follow the steps below.
+See [`bootstrap.sh`](Sources/Resources/bootstrap.sh) for details. To set things up manually instead, follow the steps below.
 
 ### Manual Setup
 
@@ -674,7 +674,7 @@ let filePath = try await Localization.createPLIST(
 
 On success, the method returns the file path of the generated property list. Pass a [`PropertyListConfiguration`](Sources/Modules/Localization/Services/Public/Localization.swift) to control the output file name, the bundle searched for existing entries, and the overwrite behavior.
 
-Each set of translations is stored under a top-level dictionary key in the property list. When no key is provided, the method derives one automatically from the first four words of the input, stripped of non-letter characters, lowercased, and joined with underscores. To specify the key explicitly, pass the `withKey` parameter:
+Each set of translations is stored under a top-level dictionary key in the property list. When no key is provided, the method derives one automatically from the first three words of the input, stripped of non-letter characters, lowercased, and joined with underscores. To specify the key explicitly, pass the `withKey` parameter:
 
 ```swift
 let filePath = try await Localization.createPLIST(

@@ -69,34 +69,32 @@ final class BuildExpiryAlert {
         }
 
         guard let translationDelegate = alertKitConfig.translationDelegate else { return }
-        let getTranslationsResult = await translationDelegate.getTranslations(
-            [
-                .init(expiryAlertMessage),
-                .init(incorrectOverrideCodeHUDText),
-                .init(timeExpiredAlertMessage),
-                .init(timeExpiredAlertTitle),
-            ],
-            languagePair: .system,
-            hud: alertKitConfig.translationHUDConfig,
-            timeout: alertKitConfig.translationTimeoutConfig
-        )
 
-        switch getTranslationsResult {
-        case let .success(translations):
+        do {
+            let translations = try await translationDelegate.getTranslations(
+                [
+                    .init(expiryAlertMessage),
+                    .init(incorrectOverrideCodeHUDText),
+                    .init(timeExpiredAlertMessage),
+                    .init(timeExpiredAlertTitle),
+                ],
+                languagePair: .system,
+                hud: alertKitConfig.translationHUDConfig,
+                timeout: alertKitConfig.translationTimeoutConfig
+            )
+
             expiryAlertMessage = translations.first(where: { $0.input.value == expiryAlertMessage })?.output ?? expiryAlertMessage
             incorrectOverrideCodeHUDText = translations.first(where: { $0.input.value == incorrectOverrideCodeHUDText })?.output ?? incorrectOverrideCodeHUDText
             timeExpiredAlertMessage = translations.first(where: { $0.input.value == timeExpiredAlertMessage })?.output ?? timeExpiredAlertMessage
             timeExpiredAlertTitle = translations.first(where: { $0.input.value == timeExpiredAlertTitle })?.output ?? timeExpiredAlertTitle
-            await presentAlert()
-
-        case let .failure(error):
+        } catch {
             Logger.log(
                 .init(error, metadata: .init(sender: self)),
                 domain: .translation
             )
-
-            await presentAlert()
         }
+
+        await presentAlert()
 
         func presentAlert() async {
             let textInputAlert = AKTextInputAlert(
@@ -202,7 +200,7 @@ final class BuildExpiryAlert {
 
         guard let exitTimer,
               exitTimer.isValid else {
-            return self.exitTimer = .scheduledTimer(
+            return exitTimer = .scheduledTimer(
                 timeInterval: 1,
                 target: self,
                 selector: #selector(decrementSecond),

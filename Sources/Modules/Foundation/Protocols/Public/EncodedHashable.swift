@@ -63,7 +63,10 @@ public extension EncodedHashable {
     /// factors does not recompute the digest.
     var encodedHash: String {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
-        let compiledString = hashFactors.joined()
+
+        // Unit separator prevents boundary collisions:
+        // ["ab", "c"] vs ["a", "bc"] produce distinct keys.
+        let compiledString = hashFactors.joined(separator: "\u{1F}")
 
         if let storedValue = EncodedHashStore.storedEncodedHashesForCompiledHashFactorStrings.projectedValue[compiledString] {
             return storedValue

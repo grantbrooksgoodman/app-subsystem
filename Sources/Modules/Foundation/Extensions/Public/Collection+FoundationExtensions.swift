@@ -29,14 +29,13 @@ public extension Collection {
     /// - Returns: The ordered array of transformed values.
     ///
     /// - Throws: An `Exception` if any transformation fails.
-    @discardableResult
     func parallelMap<Output>(
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
         maxConcurrentOperations: Int? = 10,
         transform: @escaping (Element) async throws -> Output
     ) async throws(Exception) -> [Output] {
-        let parallelMapResult = await parallelMap(
+        let mapResult = await map(
             failFast: failFast,
             failForEmptyCollection: failForEmptyCollection,
             maxConcurrentOperations: maxConcurrentOperations
@@ -53,7 +52,7 @@ public extension Collection {
             }
         }
 
-        switch parallelMapResult {
+        switch mapResult {
         case let .success(output): return output
         case let .failure(exception): throw exception
         }
@@ -75,7 +74,7 @@ public extension Collection {
     ///   - perform: An asynchronous throwing closure that accepts an element of the collection as its parameter.
     ///
     /// - Throws: An `Exception` if one or more operations failed.
-    func parallelMap(
+    func forEachConcurrently(
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
         maxConcurrentOperations: Int? = 10,
@@ -145,7 +144,7 @@ public extension Collection {
         }
     }
 
-    private func parallelMap<Output>(
+    private func map<Output>(
         failFast: Bool = true,
         failForEmptyCollection: Bool = false,
         maxConcurrentOperations: Int? = 10,

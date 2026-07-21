@@ -14,6 +14,7 @@ public enum TimestampDateFormatterDependency: DependencyKey {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss zzz"
         formatter.locale = .init(identifier: "en_US_POSIX")
+        formatter.timeZone = .init(identifier: "UTC")
         return formatter
     }
 }

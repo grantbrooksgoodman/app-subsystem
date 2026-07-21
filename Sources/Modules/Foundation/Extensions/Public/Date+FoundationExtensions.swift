@@ -104,11 +104,21 @@ public extension Date {
         return nil
     }
 
+    /// Returns the number of milliseconds between this date and
+    /// the given date.
+    func milliseconds(from date: Date) -> Int {
+        Int(timeIntervalSince(date) * 1000)
+    }
+
     /// Returns the number of seconds between this date and the
     /// given date.
     func seconds(from date: Date) -> Int {
         @Dependency(\.currentCalendar) var calendar: Calendar
-        return calendar.dateComponents([.second], from: date, to: self).second ?? 0
+        return calendar.dateComponents(
+            [.second],
+            from: date,
+            to: self
+        ).second ?? 0
     }
 
     /// Returns the localized weekday name for this date.

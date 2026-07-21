@@ -229,15 +229,81 @@ public extension UIApplication {
 
     /// Resigns all first responders within the given view, or
     /// across all presented views when `nil`.
-    func resignFirstResponders(in view: UIView? = nil) {
-        guard let view else {
-            return presentedViews
-                .filter(\.isFirstResponder)
-                .forEach { $0.resignFirstResponder() }
+    ///
+    /// When no view is specified, the method escalates through
+    /// increasingly aggressive dismissal strategies until no
+    /// first responder remains:
+    ///
+    /// 1. Direct resignation of every discovered first responder.
+    /// 2. Forced `endEditing(_:)` on every window.
+    /// 3. Responder-chain action dispatch.
+    /// 4. First-responder transfer to a temporary text field.
+    ///
+    /// When `repeatingFor` is specified, the method re-attempts
+    /// dismissal every 100 milliseconds for the given duration,
+    /// regardless of whether a first responder exists at the time
+    /// of each attempt.
+    func resignFirstResponders(
+        in view: UIView? = nil,
+        repeatingFor duration: Duration? = nil
+    ) {
+        resignFirstResponders(in: view)
+
+        guard let duration else { return }
+
+        let startDate = Date.now
+        Task { @MainActor in
+            while true {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard Date.now.milliseconds(
+                    from: startDate
+                ) < Int(duration.milliseconds) else { return }
+                resignFirstResponders(in: view)
+            }
+        }
+    }
+
+    private func resignFirstResponders(in view: UIView?) {
+        if let view {
+            guard let firstResponder = firstResponder(in: view) else { return }
+            firstResponder.resignFirstResponder()
+            return
         }
 
-        guard let firstResponder = firstResponder(in: view) else { return }
-        firstResponder.resignFirstResponder()
+        // Direct resignation of all discovered first responders.
+        presentedViews
+            .filter(\.isFirstResponder)
+            .forEach { $0.resignFirstResponder() }
+
+        guard firstResponder != nil else { return }
+
+        // Forced end-editing on every window.
+        for window in windows {
+            window.endEditing(true)
+        }
+
+        guard firstResponder != nil else { return }
+
+        // Responder-chain action dispatch.
+        sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+
+        guard firstResponder != nil else { return }
+
+        // Last resort: force first-responder transfer to a
+        // temporary text field, then resign it.
+        guard let mainWindow else { return }
+
+        let textField = UITextField(frame: .zero)
+        mainWindow.addSubview(textField)
+
+        textField.becomeFirstResponder()
+        textField.resignFirstResponder()
+        textField.removeFromSuperview()
     }
 
     private func keyViewController(_ baseVC: UIViewController?) -> UIViewController? {

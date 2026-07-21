@@ -26,8 +26,6 @@ import Translator
 ///
 /// ## Overview
 ///
-/// The framework is organized around a few central ideas:
-///
 /// AppSubsystem is organized around several key concepts:
 ///
 /// - **Reducers and view models.** Each screen defines a ``Reducer`` that describes how state changes in response to actions. A ``ViewModel`` connects that reducer to SwiftUI, publishing state and accepting actions through bindings. Data flows in one direction: from actions, through the reducer, into state, and out to the view.

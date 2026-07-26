@@ -178,6 +178,7 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
 
     private func setValue(to newValue: T?) {
         guard newValue != nil else { return removeValue() }
+        removeValue()
 
         let encodedData = (try? propertyListEncoder.encode(newValue)) ?? (try? jsonEncoder.encode(newValue))
         guard let encodedData else {
@@ -186,18 +187,11 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
                 forKey: key
             )
 
-            // Clear the file-based counterpart now that
-            // the value lives in UserDefaults.
-            clearFileStorage()
             return PersistenceCache.setValue(
                 newValue as Any,
                 forKey: key
             )
         }
-
-        let fileURL = FileManager
-            .applicationSupportDirectoryURL
-            .appending(path: key.rawValue)
 
         if encodedData.count >= 16000 {
             guard let compressedData = try? (encodedData as NSData)
@@ -207,60 +201,35 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
                     forKey: key
                 )
 
-                clearFileStorage()
                 return PersistenceCache.setValue(
                     newValue as Any,
                     forKey: key
                 )
             }
 
-            // Write to a temporary file, then atomic-rename
-            // over the destination to avoid a window where
-            // neither the old nor new value exists on disk.
-            let temporaryURL = fileURL.appendingPathExtension("tmp")
-
             do {
                 try compressedData.write(
-                    to: temporaryURL,
+                    to: FileManager
+                        .applicationSupportDirectoryURL
+                        .appending(path: key.rawValue),
                     options: [.atomic]
                 )
-
-                _ = try fileManager.replaceItemAt(
-                    fileURL,
-                    withItemAt: temporaryURL
-                )
             } catch {
-                Logger.log(
-                    .init(
-                        "Failed to write persistent value for key \"\(key.rawValue)\": \(error.localizedDescription)",
-                        metadata: .init(sender: self)
-                    )
-                )
+                Logger.log(.init(
+                    error,
+                    metadata: .init(sender: self)
+                ))
             }
-
-            // Clear the UserDefaults counterpart now that
-            // the value lives on disk.
-            defaults.removeObject(forKey: key)
         } else {
             defaults.set(
                 encodedData,
                 forKey: key
             )
-
-            clearFileStorage()
         }
 
         PersistenceCache.setValue(
             newValue as Any,
             forKey: key
-        )
-    }
-
-    private func clearFileStorage() {
-        try? fileManager.removeItem(
-            at: FileManager
-                .applicationSupportDirectoryURL
-                .appending(path: key.rawValue)
         )
     }
 }

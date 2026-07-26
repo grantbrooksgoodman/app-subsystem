@@ -9,9 +9,15 @@
 import Foundation
 import UIKit
 
-class PassthroughWindow: UIWindow {
-    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? { // swiftlint:disable:next identifier_name
-        func _hitTest(_ point: CGPoint, from view: UIView) -> UIView? {
+final class PassthroughWindow: UIWindow {
+    override func hitTest(
+        _ point: CGPoint,
+        with event: UIEvent?
+    ) -> UIView? { // swiftlint:disable:next identifier_name
+        func _hitTest(
+            _ point: CGPoint,
+            from view: UIView
+        ) -> UIView? {
             let convertedPoint = convert(point, to: view)
 
             guard view.alpha > 0,

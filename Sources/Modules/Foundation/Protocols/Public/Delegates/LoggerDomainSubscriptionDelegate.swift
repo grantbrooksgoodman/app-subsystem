@@ -62,7 +62,6 @@ public extension AppSubsystem.Delegates {
             .concurrency,
             .general,
             .localization,
-            .observer,
             .translation,
         ]
     }

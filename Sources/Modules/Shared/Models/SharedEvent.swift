@@ -75,7 +75,7 @@ public final class SharedEvent<Payload: Sendable>: Sendable {
     ///
     /// The stream finishes when the `SharedEvent` deallocates.
     public var events: AsyncStream<Payload> {
-        AsyncStream(bufferingPolicy: .unbounded) { continuation in
+        AsyncStream { continuation in
             let id = UUID()
 
             continuation.onTermination = { [weak self] _ in
@@ -86,7 +86,7 @@ public final class SharedEvent<Payload: Sendable>: Sendable {
         }
     }
 
-    // MARK: - Init
+    // MARK: - Object Lifecycle
 
     /// Creates a shared event broadcaster.
     public init() {}

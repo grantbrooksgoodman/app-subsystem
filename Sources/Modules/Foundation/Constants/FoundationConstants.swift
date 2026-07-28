@@ -146,10 +146,6 @@ public extension LoggerDomain {
     /// Log messages related to localization.
     static let localization: LoggerDomain = .init("localization")
 
-    /// Log messages related to observer registration and
-    /// notification.
-    static let observer: LoggerDomain = .init("observer")
-
     /// Log messages related to translation operations.
     static let translation: LoggerDomain = .init("translation")
 }

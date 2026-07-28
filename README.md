@@ -25,10 +25,10 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
     - [Using Dependencies](#using-dependencies)
     - [Scope Propagation](#scope-propagation)
   - [Reactive Observation](#reactive-observation)
-    - [Declaring Observables](#declaring-observables)
-    - [Responding to Changes](#responding-to-changes)
-    - [Lifecycle Management](#lifecycle-management)
-    - [Observing Changes Asynchronously](#observing-changes-asynchronously)
+    - [Declaring Shared Values](#declaring-shared-values)
+    - [Writing Values and Sending Events](#writing-values-and-sending-events)
+    - [Subscribing from View Models](#subscribing-from-view-models)
+    - [Subscribing from Services](#subscribing-from-services)
   - [Theming](#theming)
     - [Defining a Theme](#defining-a-theme)
     - [Applying Themes](#applying-themes)
@@ -75,7 +75,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Dependency injection.** Services and configuration are provided through the [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
 
-- **Reactive observation.** Shared values that cross feature boundaries are expressed as [`Observable`](Sources/Modules/Observable/Models/Observable.swift) instances. Views subscribe through the [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, which dispatches changes to the appropriate reducer on the main actor. Consumers without a view lifetime, such as services, iterate changes through an asynchronous stream instead.
+- **Reactive observation.** Values that cross feature boundaries are expressed as [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) and [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) instances. View models subscribe with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), which maps each element to a reducer action delivered on the main actor. Consumers without a view lifetime, such as services, iterate the underlying asynchronous streams directly.
 
 - **Theming.** Appearance is driven by a [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) value that can be swapped at runtime. Views that adopt the theming system update automatically when the active theme changes.
 
@@ -323,7 +323,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
-| **Observable** | The [`Observable`](Sources/Modules/Observable/Models/Observable.swift) value type, [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) lifecycle wrapper, and the [`Observers`](Sources/Modules/Observable/Services/Observers.swift) registry for reactive cross-feature communication. |
+| **Shared** | The [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) container for values that emit changes and the [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) broadcaster for typed occurrences, used for reactive cross-feature communication. |
 | **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
 | **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol, and the [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) property list generation service. |
 | **Navigation** | The [`Navigating`](Sources/Modules/Navigation/Protocols/NavigatingProtocol.swift) and [`NavigatorState`](Sources/Modules/Navigation/Protocols/NavigatorStateProtocol.swift) protocols, [`NavigationCoordinator`](Sources/Modules/Navigation/Services/NavigationCoordinator.swift), and the [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) / [`@ObservedNavigator`](Sources/Modules/Navigation/Models/ObservedNavigator.swift) property wrappers for coordinated presentation. |
@@ -504,86 +504,72 @@ Each access to a [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/D
 
 ### Reactive Observation
 
-Values that need to be shared across feature boundaries – such as authentication state, toast messages, or refresh signals – are expressed as [`Observable`](Sources/Modules/Observable/Models/Observable.swift) instances.
+Values that need to be shared across feature boundaries are expressed with two primitives, chosen by whether a current value is meaningful:
 
-#### Declaring Observables
+- [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) holds a value – such as authentication state or a visibility flag – and shares its changes with subscribers.
+- [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) broadcasts occurrences that carry a typed payload – such as a refresh signal or a change delta – and stores nothing.
 
-Declare observables as static properties on a shared namespace. Each observable stores a typed value and notifies registered observers when that value changes:
+#### Declaring Shared Values
+
+Declare shared values as static properties on the `Shared` namespace. Use `SharedEvent<Void>` for signals that carry no payload:
 
 ```swift
-public enum Observables {
-    static let isLoggedIn = Observable<Bool>(false)
-    static let sessionDidExpire = Observable<Nil>()
+public extension Shared {
+    static let isLoggedIn = SharedState<Bool>(false)
+    static let sessionDidExpire = SharedEvent<Void>()
+    static let storeDidChange = SharedEvent<StoreChange>()
 }
 ```
 
-Use [`Observable<Nil>`](Sources/Modules/Observable/Models/Observable.swift) for event-style signals that carry no payload. Call `trigger()` instead of assigning a value:
+#### Writing Values and Sending Events
+
+Write to a `SharedState` through its `value` property, and send events with `send(_:)`. Both are safe from any isolation context, and every subscriber observes writes and events in the same order:
 
 ```swift
-Observables.sessionDidExpire.trigger()
+Shared.isLoggedIn.value = true
+Shared.sessionDidExpire.send()
+Shared.storeDidChange.send(change)
 ```
 
-#### Responding to Changes
+#### Subscribing from View Models
 
-Conform to the [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol to define which observables a view watches and how each change maps to a reducer action:
+Subscribe a view model with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), mapping each element to a reducer action. Each call returns the view model, so subscriptions chain directly after the initializer:
 
 ```swift
-struct MyObserver: Observer {
-    typealias R = MyReducer
-
-    let observedValues: [any ObservableProtocol] = [Observables.isLoggedIn]
-    let viewModel: ViewModel<MyReducer>
-
-    init(_ viewModel: ViewModel<MyReducer>) {
-        self.viewModel = viewModel
-    }
-
-    func onChange(of observable: Observable<Any>) {
-        switch observable {
-        case Observables.isLoggedIn:
-            send(.refreshUI)
-        default: ()
-        }
-    }
-}
+@StateObject private var viewModel = ViewModel<SettingsReducer>(
+    initialState: .init(),
+    reducer: SettingsReducer()
+)
+.observing(Shared.isLoggedIn.changes) { .isLoggedInChanged($0) }
+.observing(Shared.sessionDidExpire.events) { _ in .sessionExpired }
 ```
 
-The pattern-matching operator (`~=`) compares the identity of the observable that changed against the candidate passed to the observer, so each `case` uniquely identifies a single source of truth.
+Mapped actions are dispatched on the main actor with the element's payload delivered in the stream – there is no need to re-read the shared value. Return `nil` from the mapping closure to skip an element. The subscription tasks are retained by the view model and cancelled when it deinitializes, so subscriptions live exactly as long as the view model.
 
-#### Lifecycle Management
+#### Subscribing from Services
 
-Wrap an observer in a [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) to tie its registration to the lifetime of a SwiftUI view. When the view appears, the observer is registered; when the view is deallocated, the observer is removed:
+Consumers without a view lifetime – a service that reacts to changing network conditions, for example – iterate the underlying streams directly. Each access creates an independent `AsyncStream`.
 
-```swift
-@StateObject private var observer: ViewObserver<MyObserver>
-```
-
-#### Observing Changes Asynchronously
-
-Some consumers have no view lifetime to anchor a [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) to – a service that reacts to changing network conditions, for example. For these cases, iterate the observable's [`values`](Sources/Modules/Observable/Models/Observable.swift) stream. Each access creates an independent `AsyncStream` that yields the observable's value each time it changes:
+A `SharedState`'s `changes` stream yields the current value immediately upon subscription, then each subsequent write. If the consumer suspends while multiple writes occur, only the most recent value is retained:
 
 ```swift
-for await isLoggedIn in Observables.isLoggedIn.values {
+for await isLoggedIn in Shared.isLoggedIn.changes {
     guard isLoggedIn else { continue }
     // Handle login
 }
 ```
 
-The stream does not yield the current value upon creation; read `value` to inspect the latest state before iterating. If the consumer suspends while multiple changes occur, only the most recent value is retained.
-
-When every change must be observed – such as when values carry deltas rather than absolute state – use `values(bufferingPolicy:)` to choose how intermediate values are buffered instead:
+A `SharedEvent`'s `events` stream yields only the payloads sent after subscription. Delivery is buffered without bound, so no event is dropped while the consumer is suspended:
 
 ```swift
-for await change in Observables.storeDidChange.values(
-    bufferingPolicy: .unbounded
-) {
+for await change in Shared.storeDidChange.events {
     // Handle every change.
 }
 ```
 
-Both forms are available on observables whose payload conforms to `Sendable`.
+Both streams finish when the shared value they belong to deallocates.
 
-> **Note:** [`Observable`](Sources/Modules/Observable/Models/Observable.swift) is thread-safe. The `value` property can be read and written from any isolation context. Observer callbacks are always dispatched to the main actor.
+> **Note:** [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) and [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) are thread-safe. Values can be read, written, and sent from any isolation context. Subscribers receive elements on whatever isolation they iterate from.
 
 ### Theming
 

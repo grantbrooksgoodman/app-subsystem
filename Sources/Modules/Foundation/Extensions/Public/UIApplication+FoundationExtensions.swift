@@ -97,7 +97,7 @@ public extension UIApplication {
             let buildInfoOverlayWasHidden = BuildInfoOverlay.isHidden
             if buildInfoOverlayWasHidden {
                 BuildInfoOverlay.show(persistSetting: false)
-                // Yield to allow the Observable notification and SwiftUI
+                // Yield to allow the shared state change and SwiftUI
                 // rendering pipeline to process the visibility change.
                 try? await Task.sleep(for: .milliseconds(100))
             }

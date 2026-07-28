@@ -117,7 +117,7 @@ public final class SharedState<Value: Sendable>: Sendable {
         }
     }
 
-    // MARK: - Init
+    // MARK: - Object Lifecycle
 
     /// Creates a shared state container with the given initial value.
     ///

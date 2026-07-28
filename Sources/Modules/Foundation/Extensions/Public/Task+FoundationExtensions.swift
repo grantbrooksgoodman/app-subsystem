@@ -8,6 +8,50 @@
 /* Native */
 import Foundation
 
+public extension Task {
+    /// Awaits the task's result, abandoning the wait – without
+    /// cancelling the task – if the calling task is cancelled.
+    ///
+    /// Unlike `result`, which always waits for the task to complete,
+    /// this method returns as soon as *either* the task settles or
+    /// the calling task is cancelled. The awaited task itself never
+    /// receives a cancellation signal from this method; it continues
+    /// running so that other interested parties can still receive
+    /// its result.
+    ///
+    /// If the calling task is already cancelled when this method is
+    /// invoked, a `CancellationError` is thrown immediately.
+    ///
+    /// - Warning: Each abandoned wait leaves behind a lightweight
+    ///   observer task that lives until the awaited task settles.
+    ///   Ensure awaited tasks are bounded in duration – by a timeout,
+    ///   for example – to avoid accumulating observers indefinitely.
+    ///
+    /// - Returns: The task's settled result.
+    ///
+    /// - Throws: A `CancellationError` if the calling task was
+    ///   cancelled before the awaited task settled.
+    func abandonableResult() async throws(_Concurrency.CancellationError) -> Result<Success, Failure> {
+        let awaiter = AbandonableAwait<Result<Success, Failure>>()
+
+        do {
+            return try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Result<Success, Failure>, any Error>) in
+                    awaiter.register(continuation)
+
+                    Task<Void, Never> {
+                        await awaiter.settle(returning: self.result)
+                    }
+                }
+            } onCancel: {
+                awaiter.abandon()
+            }
+        } catch {
+            throw _Concurrency.CancellationError()
+        }
+    }
+}
+
 public extension Task where Failure == Error {
     /// Runs an operation on a background-priority task, optionally
     /// after a delay.
@@ -34,6 +78,34 @@ public extension Task where Failure == Error {
             try await Task<Never, Never>.sleep(nanoseconds: .init(duration.timeInterval * 1_000_000_000))
             return try await operation()
         }
+    }
+}
+
+public extension Task where Failure == Never {
+    /// Awaits the task's value, abandoning the wait – without
+    /// cancelling the task – if the calling task is cancelled.
+    ///
+    /// Unlike `value`, which always waits for the task to complete,
+    /// this method returns as soon as *either* the task settles or
+    /// the calling task is cancelled. The awaited task itself never
+    /// receives a cancellation signal from this method; it continues
+    /// running so that other interested parties can still receive
+    /// its result.
+    ///
+    /// If the calling task is already cancelled when this method is
+    /// invoked, a `CancellationError` is thrown immediately.
+    ///
+    /// - Warning: Each abandoned wait leaves behind a lightweight
+    ///   observer task that lives until the awaited task settles.
+    ///   Ensure awaited tasks are bounded in duration – by a timeout,
+    ///   for example – to avoid accumulating observers indefinitely.
+    ///
+    /// - Returns: The task's value.
+    ///
+    /// - Throws: A `CancellationError` if the calling task was
+    ///   cancelled before the awaited task settled.
+    func abandonableValue() async throws(_Concurrency.CancellationError) -> Success {
+        try await abandonableResult().get()
     }
 }
 
@@ -108,6 +180,88 @@ public extension Task where Success == Void, Failure == Never {
         }
 
         return task
+    }
+}
+
+/// A single-resume settlement arbiter for an abandonable await.
+///
+/// `AbandonableAwait` guarantees that its continuation is resumed
+/// exactly once, regardless of how registration, settlement, and
+/// abandonment interleave. Cancellation may fire before the
+/// continuation is even registered – `withTaskCancellationHandler`
+/// invokes its handler immediately when the calling task is already
+/// cancelled – so the state machine records an early abandonment and
+/// applies it upon registration.
+private final class AbandonableAwait<Value: Sendable>: Sendable {
+    // MARK: - Types
+
+    private enum State {
+        case abandoned
+        case pending
+        case registered(CheckedContinuation<Value, any Error>)
+        case settled
+    }
+
+    // MARK: - Properties
+
+    private let state = LockIsolated<State>(.pending)
+
+    // MARK: - Methods
+
+    fileprivate func abandon() {
+        let continuation = state.projectedValue.withValue { state -> CheckedContinuation<Value, any Error>? in
+            switch state {
+            case .abandoned,
+                 .settled:
+                return nil
+
+            case .pending:
+                state = .abandoned
+                return nil
+
+            case let .registered(continuation):
+                state = .settled
+                return continuation
+            }
+        }
+
+        continuation?.resume(throwing: CancellationError())
+    }
+
+    fileprivate func register(
+        _ continuation: CheckedContinuation<Value, any Error>
+    ) {
+        let wasAbandoned = state.projectedValue.withValue { state -> Bool in
+            switch state {
+            case .abandoned:
+                state = .settled
+                return true
+
+            case .pending:
+                state = .registered(continuation)
+                return false
+
+            // Unreachable – registration occurs exactly once.
+            case .registered,
+                 .settled:
+                return false
+            }
+        }
+
+        guard wasAbandoned else { return }
+        continuation.resume(throwing: CancellationError())
+    }
+
+    fileprivate func settle(
+        returning value: Value
+    ) {
+        let continuation = state.projectedValue.withValue { state -> CheckedContinuation<Value, any Error>? in
+            guard case let .registered(continuation) = state else { return nil }
+            state = .settled
+            return continuation
+        }
+
+        continuation?.resume(returning: value)
     }
 }
 

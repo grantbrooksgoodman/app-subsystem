@@ -17,15 +17,51 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
 - [Architecture](#architecture)
   - [Reducers and View Models](#reducers-and-view-models)
   - [Effects](#effects)
+    - [Cancellation](#cancellation)
+    - [Combining Effects](#combining-effects)
+    - [Dependency Scope](#dependency-scope)
   - [Dependency Injection](#dependency-injection)
+    - [Declaring a Dependency](#declaring-a-dependency)
+    - [Using Dependencies](#using-dependencies)
+    - [Scope Propagation](#scope-propagation)
   - [Reactive Observation](#reactive-observation)
+    - [Declaring Observables](#declaring-observables)
+    - [Responding to Changes](#responding-to-changes)
+    - [Lifecycle Management](#lifecycle-management)
+    - [Observing Changes Asynchronously](#observing-changes-asynchronously)
   - [Theming](#theming)
+    - [Defining a Theme](#defining-a-theme)
+    - [Applying Themes](#applying-themes)
+    - [Themed Views](#themed-views)
   - [Localization](#localization)
+    - [Localization Sources](#localization-sources)
+    - [Defining String Keys](#defining-string-keys)
+    - [Resolving Strings](#resolving-strings)
+    - [Accessing Subsystem Strings](#accessing-subsystem-strings)
+    - [Generating the Property List](#generating-the-property-list)
+    - [Dynamic Translation](#dynamic-translation)
   - [Navigation](#navigation)
+    - [Defining Navigation State](#defining-navigation-state)
+    - [Defining Routes](#defining-routes)
+    - [The Navigation Coordinator](#the-navigation-coordinator)
+    - [Property Wrappers](#property-wrappers)
   - [Persistence](#persistence)
+    - [Defining Keys](#defining-keys)
+    - [Reading and Writing Values](#reading-and-writing-values)
+    - [Storage Strategy](#storage-strategy)
+    - [In-Memory Cache](#in-memory-cache)
   - [Async Work Coalescing](#async-work-coalescing)
+    - [KeyedCoalescer](#keyedcoalescer)
+    - [SingleSlotCoalescer](#singleslotcoalescer)
   - [Developer Tools](#developer-tools)
+    - [Build-Info Overlay](#build-info-overlay)
+    - [Build Expiry](#build-expiry)
+    - [Breadcrumb Capture](#breadcrumb-capture)
+    - [Logger](#logger)
+    - [Developer Mode Menu](#developer-mode-menu)
 - [Delegate Customization](#delegate-customization)
+  - [Delegates with Defaults](#delegates-with-defaults)
+  - [Optional Delegates](#optional-delegates)
 - [Conventions](#conventions)
 - [Dependencies](#dependencies)
 
@@ -39,7 +75,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Dependency injection.** Services and configuration are provided through the [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
 
-- **Reactive observation.** Shared values that cross feature boundaries are expressed as [`Observable`](Sources/Modules/Observable/Models/Observable.swift) instances. Views subscribe through the [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, which dispatches changes to the appropriate reducer on the main actor.
+- **Reactive observation.** Shared values that cross feature boundaries are expressed as [`Observable`](Sources/Modules/Observable/Models/Observable.swift) instances. Views subscribe through the [`Observer`](Sources/Modules/Observable/Protocols/ObserverProtocol.swift) protocol, which dispatches changes to the appropriate reducer on the main actor. Consumers without a view lifetime, such as services, iterate changes through an asynchronous stream instead.
 
 - **Theming.** Appearance is driven by a [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) value that can be swapped at runtime. Views that adopt the theming system update automatically when the active theme changes.
 
@@ -522,6 +558,31 @@ Wrap an observer in a [`ViewObserver`](Sources/Modules/Observable/Models/ViewObs
 @StateObject private var observer: ViewObserver<MyObserver>
 ```
 
+#### Observing Changes Asynchronously
+
+Some consumers have no view lifetime to anchor a [`ViewObserver`](Sources/Modules/Observable/Models/ViewObserver.swift) to – a service that reacts to changing network conditions, for example. For these cases, iterate the observable's [`values`](Sources/Modules/Observable/Models/Observable.swift) stream. Each access creates an independent `AsyncStream` that yields the observable's value each time it changes:
+
+```swift
+for await isLoggedIn in Observables.isLoggedIn.values {
+    guard isLoggedIn else { continue }
+    // Handle login
+}
+```
+
+The stream does not yield the current value upon creation; read `value` to inspect the latest state before iterating. If the consumer suspends while multiple changes occur, only the most recent value is retained.
+
+When every change must be observed – such as when values carry deltas rather than absolute state – use `values(bufferingPolicy:)` to choose how intermediate values are buffered instead:
+
+```swift
+for await change in Observables.storeDidChange.values(
+    bufferingPolicy: .unbounded
+) {
+    // Handle every change.
+}
+```
+
+Both forms are available on observables whose payload conforms to `Sendable`.
+
 > **Note:** [`Observable`](Sources/Modules/Observable/Models/Observable.swift) is thread-safe. The `value` property can be read and written from any isolation context. Observer callbacks are always dispatched to the main actor.
 
 ### Theming
@@ -843,6 +904,14 @@ let profile = try await coalescer(userID) { try await loadProfile(userID) }
 ```
 
 The slot for a given key is cleared automatically when its in-flight task completes, whether it succeeds or throws.
+
+By default, callers wait for the in-flight task to settle even when their own task is cancelled. When abandoning the wait is preferable – racing network work against a fallback, for example – use `submitUnlessCancelled(_:_:)` instead. The non-throwing variant returns `nil` if the calling task is cancelled before the operation settles; the throwing variant throws a cancellation [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift). If the calling task is already cancelled on entry, no operation is started. In every case, the shared operation itself is never cancelled – other coalesced callers still receive its result, and the slot is still cleared on completion:
+
+```swift
+// nil when the calling task is cancelled; the operation continues
+// for any other coalesced callers.
+let profile = await coalescer.submitUnlessCancelled(userID) { await fetchProfile(userID) }
+```
 
 #### SingleSlotCoalescer
 

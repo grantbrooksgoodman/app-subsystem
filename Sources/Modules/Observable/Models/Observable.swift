@@ -64,6 +64,12 @@ public typealias Nil = NSNull
 /// observable that originally changed against the candidate passed to your
 /// observer, so each `case` uniquely identifies a single source of truth.
 ///
+/// To respond to changes from contexts that have no view lifetime to anchor
+/// a ``ViewObserver`` to, such as services, iterate the asynchronous
+/// ``values`` stream instead:
+///
+///     for await value in Observables.isLoggedIn.values { ... }
+///
 /// ## Thread Safety
 ///
 /// All stored state is protected by ``LockIsolated``. The ``value`` property
@@ -74,6 +80,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
     // MARK: - Properties
 
     private let observers = LockIsolated([any Observer]())
+    private let streamHandlers = LockIsolated([UUID: @Sendable (T) -> Void]())
     private let _value: LockIsolated<T>
 
     /// Set only on notification objects.
@@ -90,6 +97,7 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
         get { _value.wrappedValue }
         set {
             _value.wrappedValue = newValue
+            yieldToStreams(newValue)
             dispatchChange(newValue as Any)
         }
     }
@@ -147,6 +155,10 @@ public final class Observable<T>: ObservableProtocol, @unchecked Sendable {
             observers.forEach { $0.onChange(of: observable) }
         }
     }
+
+    private func yieldToStreams(_ value: T) {
+        streamHandlers.wrappedValue.values.forEach { $0(value) }
+    }
 }
 
 public func ~= (
@@ -154,6 +166,75 @@ public func ~= (
     candidate: Observable<Any>
 ) -> Bool {
     candidate.originID == ObjectIdentifier(pattern)
+}
+
+public extension Observable where T: Sendable {
+    /// An asynchronous sequence of value changes.
+    ///
+    /// Each access creates an independent stream that yields the observable's
+    /// value each time it changes. The stream does not yield the current
+    /// value upon creation; read ``value`` to inspect the latest state before
+    /// iterating.
+    ///
+    /// Use `values` to respond to changes from contexts that have no view
+    /// lifetime to anchor a ``ViewObserver`` to, such as services:
+    ///
+    /// ```swift
+    /// for await isLoggedIn in Observables.isLoggedIn.values {
+    ///     guard isLoggedIn else { continue }
+    ///     // Handle login
+    /// }
+    /// ```
+    ///
+    /// If the consumer suspends while multiple changes occur, only the most
+    /// recent value is retained; intermediate values are discarded. To receive
+    /// every value regardless of consumer timing, use ``values(bufferingPolicy:)``
+    /// with an `.unbounded` buffering policy.
+    ///
+    /// The stream finishes when the observable is deallocated.
+    var values: AsyncStream<T> {
+        values(bufferingPolicy: .bufferingNewest(1))
+    }
+
+    /// Returns an asynchronous sequence of value changes, buffering values
+    /// according to the given policy.
+    ///
+    /// Each access creates an independent stream that yields the observable's
+    /// value each time it changes. The stream does not yield the current
+    /// value upon creation; read ``value`` to inspect the latest state before
+    /// iterating.
+    ///
+    /// Unlike ``values``, which retains only the most recent value while the
+    /// consumer is suspended, this method lets you choose how intermediate
+    /// values are buffered. Pass `.unbounded` when every change must be
+    /// observed, such as when values carry deltas rather than absolute state:
+    ///
+    /// ```swift
+    /// for await change in Observables.storeDidChange.values(
+    ///     bufferingPolicy: .unbounded
+    /// ) {
+    ///     // Handle every change.
+    /// }
+    /// ```
+    ///
+    /// The stream finishes when the observable is deallocated.
+    ///
+    /// - Parameter bufferingPolicy: The policy governing how values are
+    ///   buffered while the consumer is suspended.
+    /// - Returns: An asynchronous stream of the observable's value changes.
+    func values(
+        bufferingPolicy: AsyncStream<T>.Continuation.BufferingPolicy
+    ) -> AsyncStream<T> {
+        AsyncStream(bufferingPolicy: bufferingPolicy) { continuation in
+            let id = UUID()
+
+            continuation.onTermination = { [weak self] _ in
+                self?.streamHandlers.projectedValue.withValue { $0[id] = nil }
+            }
+
+            streamHandlers.projectedValue[id] = { continuation.yield($0) }
+        }
+    }
 }
 
 extension Observable: ObserverRegistrable {
@@ -195,6 +276,7 @@ public extension Observable<Nil> {
     ///
     ///     Observables.userDidLogOut.trigger()
     func trigger() {
+        yieldToStreams(Nil())
         let observersSnapshot = observers.wrappedValue
         guard !observersSnapshot.isEmpty else { return }
         let observable = Observable<Any>(

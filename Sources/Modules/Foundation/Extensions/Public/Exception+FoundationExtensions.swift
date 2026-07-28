@@ -76,6 +76,20 @@ public extension Exception {
         )
     }
 
+    /// Returns a non-reportable exception indicating the operation
+    /// was abandoned because the calling task was cancelled.
+    ///
+    /// Cancellation is a control-flow signal rather than a failure;
+    /// exceptions created with this factory method should be
+    /// handled silently and never surfaced to the user.
+    static func cancelled(metadata: ExceptionMetadata) -> Exception {
+        .init(
+            "The operation was cancelled.",
+            isReportable: false,
+            metadata: metadata
+        )
+    }
+
     /// Returns a non-reportable exception indicating the internet
     /// connection is offline.
     static func internetConnectionOffline(metadata: ExceptionMetadata) -> Exception {

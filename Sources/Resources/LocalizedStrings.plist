@@ -9,7 +9,7 @@
 		<key>ar</key>
 		<string>Arabic (العربية)</string>
 		<key>az</key>
-		<string>Azerbaijan (Azərbaycan)</string>
+		<string>Azerbaijani (Azərbaycanca)</string>
 		<key>be</key>
 		<string>Belarusian (Беларуская)</string>
 		<key>bg</key>
@@ -17,13 +17,13 @@
 		<key>bn</key>
 		<string>Bengali (বাংলা)</string>
 		<key>bs</key>
-		<string>Bosnian (Bosanskih)</string>
+		<string>Bosnian (Bosanski)</string>
 		<key>ca</key>
 		<string>Catalan (Català)</string>
 		<key>cs</key>
 		<string>Czech (Čeština)</string>
 		<key>cy</key>
-		<string>Welsh (Cymru)</string>
+		<string>Welsh (Cymraeg)</string>
 		<key>da</key>
 		<string>Danish (Dansk)</string>
 		<key>de</key>
@@ -39,17 +39,17 @@
 		<key>et</key>
 		<string>Estonian (Eesti)</string>
 		<key>eu</key>
-		<string>Basque (Euskal)</string>
+		<string>Basque (Euskara)</string>
 		<key>fa</key>
 		<string>Persian (فارسی)</string>
 		<key>fi</key>
-		<string>Finnish (Suomalainen)</string>
+		<string>Finnish (Suomi)</string>
 		<key>fr</key>
 		<string>French (Français)</string>
 		<key>ga</key>
 		<string>Irish (Gaeilge)</string>
 		<key>gd</key>
-		<string>Scottish Gaelic (Gàidhlig Na H-Alba)</string>
+		<string>Scottish Gaelic (Gàidhlig)</string>
 		<key>gl</key>
 		<string>Galician (Galego)</string>
 		<key>gu</key>
@@ -61,15 +61,15 @@
 		<key>hr</key>
 		<string>Croatian (Hrvatski)</string>
 		<key>ht</key>
-		<string>Haitian Creole (Ayisyen Kreyòl)</string>
+		<string>Haitian Creole (Kreyòl Ayisyen)</string>
 		<key>hu</key>
 		<string>Hungarian (Magyar)</string>
 		<key>hy</key>
-		<string>Armenian (Հայ)</string>
+		<string>Armenian (Հայերեն)</string>
 		<key>id</key>
 		<string>Indonesian (Bahasa Indonesia)</string>
 		<key>is</key>
-		<string>Icelandic (Íslensk)</string>
+		<string>Icelandic (Íslenska)</string>
 		<key>it</key>
 		<string>Italian (Italiano)</string>
 		<key>ja</key>
@@ -77,13 +77,13 @@
 		<key>ka</key>
 		<string>Georgian (ქართული)</string>
 		<key>kk</key>
-		<string>Kazakh (Қазақ)</string>
+		<string>Kazakh (Қазақша)</string>
 		<key>kn</key>
 		<string>Kannada (ಕನ್ನಡ)</string>
 		<key>ko</key>
 		<string>Korean (한국어)</string>
 		<key>ky</key>
-		<string>Kyrgyz (Киргизский)</string>
+		<string>Kyrgyz (Кыргызча)</string>
 		<key>lt</key>
 		<string>Lithuanian (Lietuvių)</string>
 		<key>mg</key>
@@ -95,7 +95,7 @@
 		<key>ml</key>
 		<string>Malayalam (മലയാളം)</string>
 		<key>mn</key>
-		<string>Mongolian (Монгол улсын)</string>
+		<string>Mongolian (Монгол)</string>
 		<key>mt</key>
 		<string>Maltese (Malti)</string>
 		<key>ne</key>
@@ -117,15 +117,15 @@
 		<key>si</key>
 		<string>Sinhala (සිංහල)</string>
 		<key>sk</key>
-		<string>Slovakian (Slovenský)</string>
+		<string>Slovak (Slovenčina)</string>
 		<key>sl</key>
-		<string>Slovenian (Slovenski)</string>
+		<string>Slovenian (Slovenščina)</string>
 		<key>sq</key>
-		<string>Albanian (Shqiptare)</string>
+		<string>Albanian (Shqip)</string>
 		<key>sr</key>
 		<string>Serbian (Српски)</string>
 		<key>su</key>
-		<string>Sundanese (Basa sunda)</string>
+		<string>Sundanese (Basa Sunda)</string>
 		<key>sv</key>
 		<string>Swedish (Svenska)</string>
 		<key>sw</key>
@@ -135,7 +135,7 @@
 		<key>te</key>
 		<string>Telugu (తెలుగు)</string>
 		<key>tg</key>
-		<string>Tajik (Тоҷик)</string>
+		<string>Tajik (Тоҷикӣ)</string>
 		<key>th</key>
 		<string>Thai (ภาษาไทย)</string>
 		<key>tl</key>
@@ -143,13 +143,13 @@
 		<key>tr</key>
 		<string>Turkish (Türkçe)</string>
 		<key>tt</key>
-		<string>Tatar (Татар)</string>
+		<string>Tatar (Татарча)</string>
 		<key>uk</key>
 		<string>Ukrainian (Українська)</string>
 		<key>ur</key>
 		<string>Urdu (اردو)</string>
 		<key>uz</key>
-		<string>Uzbek (O&apos;zbek)</string>
+		<string>Uzbek (O'zbek)</string>
 		<key>vi</key>
 		<string>Vietnamese (Tiếng Việt)</string>
 		<key>yi</key>
@@ -174,17 +174,17 @@
 		<key>bs</key>
 		<string>Otkaži</string>
 		<key>ca</key>
-		<string>Cancel · lar</string>
+		<string>Cancel·la</string>
 		<key>cs</key>
 		<string>Zrušit</string>
 		<key>cy</key>
 		<string>Canslo</string>
 		<key>da</key>
-		<string>Ophæve</string>
+		<string>Annuller</string>
 		<key>de</key>
-		<string>Stornieren</string>
+		<string>Abbrechen</string>
 		<key>el</key>
-		<string>Ματαίωση</string>
+		<string>Ακύρωση</string>
 		<key>en</key>
 		<string>Cancel</string>
 		<key>eo</key>
@@ -198,7 +198,7 @@
 		<key>fa</key>
 		<string>لغو</string>
 		<key>fi</key>
-		<string>Peruuttaa</string>
+		<string>Kumoa</string>
 		<key>fr</key>
 		<string>Annuler</string>
 		<key>ga</key>
@@ -210,11 +210,11 @@
 		<key>gu</key>
 		<string>રદ કરો</string>
 		<key>he</key>
-		<string>לְבַטֵל</string>
+		<string>ביטול</string>
 		<key>hi</key>
-		<string>रद्द करना</string>
+		<string>रद्द करें</string>
 		<key>hr</key>
-		<string>Otkazati</string>
+		<string>Poništi</string>
 		<key>ht</key>
 		<string>Anile</string>
 		<key>hu</key>
@@ -222,15 +222,15 @@
 		<key>hy</key>
 		<string>Չեղարկել</string>
 		<key>id</key>
-		<string>Membatalkan</string>
+		<string>Batalkan</string>
 		<key>is</key>
 		<string>Hætta við</string>
 		<key>it</key>
-		<string>Cancellare</string>
+		<string>Annulla</string>
 		<key>ja</key>
 		<string>キャンセル</string>
 		<key>ka</key>
-		<string>Გაუქმება</string>
+		<string>გაუქმება</string>
 		<key>kk</key>
 		<string>Бас тарту</string>
 		<key>kn</key>
@@ -256,19 +256,19 @@
 		<key>ne</key>
 		<string>रद्द गर्नुहोस्</string>
 		<key>nl</key>
-		<string>Annuleren</string>
+		<string>Annuleer</string>
 		<key>no</key>
-		<string>Kansellere</string>
+		<string>Avbryt</string>
 		<key>pa</key>
 		<string>ਰੱਦ ਕਰੋ</string>
 		<key>pl</key>
-		<string>Anulować</string>
+		<string>Anuluj</string>
 		<key>pt</key>
 		<string>Cancelar</string>
 		<key>ro</key>
-		<string>Anulează</string>
+		<string>Anulați</string>
 		<key>ru</key>
-		<string>Отмена</string>
+		<string>Отменить</string>
 		<key>si</key>
 		<string>අවලංගු කරන්න</string>
 		<key>sk</key>
@@ -282,7 +282,7 @@
 		<key>su</key>
 		<string>Batalkeun</string>
 		<key>sv</key>
-		<string>Avboka</string>
+		<string>Avbryt</string>
 		<key>sw</key>
 		<string>Ghairi</string>
 		<key>ta</key>
@@ -296,19 +296,19 @@
 		<key>tl</key>
 		<string>Kanselahin</string>
 		<key>tr</key>
-		<string>İptal etmek</string>
+		<string>Vazgeç</string>
 		<key>tt</key>
 		<string>Юкка чыгару</string>
 		<key>uk</key>
 		<string>Скасувати</string>
 		<key>ur</key>
-		<string>منسوخ کریں۔</string>
+		<string>منسوخ کریں</string>
 		<key>uz</key>
 		<string>Bekor qilish</string>
 		<key>vi</key>
-		<string>Hủy bỏ</string>
+		<string>Hủy</string>
 		<key>yi</key>
-		<string>אָפּרופן</string>
+		<string>אַנולירן</string>
 		<key>zh</key>
 		<string>取消</string>
 	</dict>
@@ -317,89 +317,89 @@
 		<key>af</key>
 		<string>Maak toe</string>
 		<key>ar</key>
-		<string>رفض</string>
+		<string>استبعاد</string>
 		<key>az</key>
-		<string>Ləğv et</string>
+		<string>Bağla</string>
 		<key>be</key>
-		<string>Адхіліць</string>
+		<string>Закрыць</string>
 		<key>bg</key>
-		<string>Отхвърляне</string>
+		<string>Затвори</string>
 		<key>bn</key>
 		<string>খারিজ করুন</string>
 		<key>bs</key>
 		<string>Odbaci</string>
 		<key>ca</key>
-		<string>Ignora</string>
+		<string>Tanca</string>
 		<key>cs</key>
-		<string>Propustit</string>
+		<string>Zavřít</string>
 		<key>cy</key>
 		<string>Diystyru</string>
 		<key>da</key>
-		<string>Afskedige</string>
+		<string>Luk</string>
 		<key>de</key>
-		<string>Zurückweisen</string>
+		<string>Schließen</string>
 		<key>el</key>
-		<string>Απολύω</string>
+		<string>Απόρριψη</string>
 		<key>en</key>
 		<string>Dismiss</string>
 		<key>eo</key>
-		<string>Malakcepti</string>
+		<string>Fermi</string>
 		<key>es</key>
-		<string>Despedir</string>
+		<string>Cerrar</string>
 		<key>et</key>
-		<string>Jäta vahele</string>
+		<string>Sule</string>
 		<key>eu</key>
 		<string>Baztertu</string>
 		<key>fa</key>
 		<string>رد کردن</string>
 		<key>fi</key>
-		<string>Hylkää</string>
+		<string>Sulje</string>
 		<key>fr</key>
-		<string>Rejeter</string>
+		<string>Fermer</string>
 		<key>ga</key>
-		<string>Díbhe</string>
+		<string>Dún</string>
 		<key>gd</key>
 		<string>Cuir às</string>
 		<key>gl</key>
-		<string>Rexeitar</string>
+		<string>Descartar</string>
 		<key>gu</key>
 		<string>કાઢી નાખો</string>
 		<key>he</key>
-		<string>לְפַטֵר</string>
+		<string>סגירה</string>
 		<key>hi</key>
-		<string>खारिज करें</string>
+		<string>ख़ारिज करें</string>
 		<key>hr</key>
-		<string>Odbaciti</string>
+		<string>Odbaci</string>
 		<key>ht</key>
-		<string>Rejte</string>
+		<string>Fèmen</string>
 		<key>hu</key>
-		<string>Elvetés</string>
+		<string>Bezárás</string>
 		<key>hy</key>
 		<string>Փակել</string>
 		<key>id</key>
-		<string>Membubarkan</string>
+		<string>Tutup</string>
 		<key>is</key>
 		<string>Hafna</string>
 		<key>it</key>
-		<string>Congedare</string>
+		<string>Chiudi</string>
 		<key>ja</key>
-		<string>却下する</string>
+		<string>閉じる</string>
 		<key>ka</key>
-		<string>Დახურვა</string>
+		<string>დახურვა</string>
 		<key>kk</key>
-		<string>Босату</string>
+		<string>Жабу</string>
 		<key>kn</key>
 		<string>ವಜಾಗೊಳಿಸಿ</string>
 		<key>ko</key>
-		<string>해고하다</string>
+		<string>닫기</string>
 		<key>ky</key>
-		<string>Жокко чыгаруу</string>
+		<string>Жабуу</string>
 		<key>lt</key>
 		<string>Atmesti</string>
 		<key>mg</key>
-		<string>Handroaka</string>
+		<string>Akatony</string>
 		<key>mi</key>
-		<string>Whakakorehia</string>
+		<string>Katia</string>
 		<key>mk</key>
 		<string>Отфрли</string>
 		<key>ml</key>
@@ -407,29 +407,29 @@
 		<key>mn</key>
 		<string>Хаах</string>
 		<key>mt</key>
-		<string>Ċaħad</string>
+		<string>Agħlaq</string>
 		<key>ne</key>
 		<string>खारेज गर्नुहोस्</string>
 		<key>nl</key>
-		<string>Afwijzen</string>
+		<string>Sluit</string>
 		<key>no</key>
-		<string>Avskjedige</string>
+		<string>Lukk</string>
 		<key>pa</key>
 		<string>ਖਾਰਜ ਕਰੋ</string>
 		<key>pl</key>
-		<string>Odrzucać</string>
+		<string>Odrzuć</string>
 		<key>pt</key>
-		<string>Dispensar</string>
+		<string>Descartar</string>
 		<key>ro</key>
-		<string>Închide</string>
+		<string>Închideți</string>
 		<key>ru</key>
-		<string>Отклонить</string>
+		<string>Закрыть</string>
 		<key>si</key>
-		<string>අස් කරන්න</string>
+		<string>වසන්න</string>
 		<key>sk</key>
 		<string>Zavrieť</string>
 		<key>sl</key>
-		<string>Zavrzi</string>
+		<string>Opusti</string>
 		<key>sq</key>
 		<string>Hiq</string>
 		<key>sr</key>
@@ -443,36 +443,36 @@
 		<key>ta</key>
 		<string>நிராகரி</string>
 		<key>te</key>
-		<string>కొట్టివేయు</string>
+		<string>మూసివేయండి</string>
 		<key>tg</key>
 		<string>Рад кардан</string>
 		<key>th</key>
-		<string>อนุญาตให้ออกไป</string>
+		<string>ปิดทิ้ง</string>
 		<key>tl</key>
 		<string>I-dismiss</string>
 		<key>tr</key>
-		<string>Azletmek</string>
+		<string>Kapat</string>
 		<key>tt</key>
-		<string>Баш тарту</string>
+		<string>Ябу</string>
 		<key>uk</key>
-		<string>Відхилити</string>
+		<string>Прибрати</string>
 		<key>ur</key>
-		<string>برطرف کرنا</string>
+		<string>بند کریں</string>
 		<key>uz</key>
-		<string>Bekor qilish</string>
+		<string>Yopish</string>
 		<key>vi</key>
-		<string>Miễn nhiệm</string>
+		<string>Bỏ qua</string>
 		<key>yi</key>
-		<string>אָפּזאָגן</string>
+		<string>פֿאַרמאַכן</string>
 		<key>zh</key>
-		<string>解雇</string>
+		<string>关闭</string>
 	</dict>
 	<key>done</key>
 	<dict>
 		<key>af</key>
 		<string>Klaar</string>
 		<key>ar</key>
-		<string>منتهي</string>
+		<string>تم</string>
 		<key>az</key>
 		<string>Hazırdır</string>
 		<key>be</key>
@@ -488,19 +488,19 @@
 		<key>cs</key>
 		<string>Hotovo</string>
 		<key>cy</key>
-		<string>Wedi&apos;i wneud</string>
+		<string>Gorffen</string>
 		<key>da</key>
-		<string>Færdig</string>
+		<string>OK</string>
 		<key>de</key>
-		<string>Erledigt</string>
+		<string>Fertig</string>
 		<key>el</key>
-		<string>Ολοκληρώθηκε</string>
+		<string>Τέλος</string>
 		<key>en</key>
 		<string>Done</string>
 		<key>eo</key>
 		<string>Finita</string>
 		<key>es</key>
-		<string>Hecho</string>
+		<string>Aceptar</string>
 		<key>et</key>
 		<string>Valmis</string>
 		<key>eu</key>
@@ -508,9 +508,9 @@
 		<key>fa</key>
 		<string>انجام شد</string>
 		<key>fi</key>
-		<string>Tehty</string>
+		<string>Valmis</string>
 		<key>fr</key>
-		<string>Fait</string>
+		<string>OK</string>
 		<key>ga</key>
 		<string>Déanta</string>
 		<key>gd</key>
@@ -520,11 +520,11 @@
 		<key>gu</key>
 		<string>થઈ ગયું</string>
 		<key>he</key>
-		<string>נַעֲשָׂה</string>
+		<string>סיום</string>
 		<key>hi</key>
-		<string>हो गया</string>
+		<string>पूर्ण</string>
 		<key>hr</key>
-		<string>Gotovo</string>
+		<string>U redu</string>
 		<key>ht</key>
 		<string>Fini</string>
 		<key>hu</key>
@@ -536,11 +536,11 @@
 		<key>is</key>
 		<string>Lokið</string>
 		<key>it</key>
-		<string>Fatto</string>
+		<string>Fine</string>
 		<key>ja</key>
-		<string>終わり</string>
+		<string>完了</string>
 		<key>ka</key>
-		<string>Დასრულებულია</string>
+		<string>დასრულებულია</string>
 		<key>kk</key>
 		<string>Дайын</string>
 		<key>kn</key>
@@ -552,7 +552,7 @@
 		<key>lt</key>
 		<string>Atlikta</string>
 		<key>mg</key>
-		<string>Hatao</string>
+		<string>Vita</string>
 		<key>mi</key>
 		<string>Kua oti</string>
 		<key>mk</key>
@@ -562,29 +562,29 @@
 		<key>mn</key>
 		<string>Дууссан</string>
 		<key>mt</key>
-		<string>Magħmul</string>
+		<string>Lest</string>
 		<key>ne</key>
 		<string>भयो</string>
 		<key>nl</key>
-		<string>Klaar</string>
+		<string>Gereed</string>
 		<key>no</key>
 		<string>Ferdig</string>
 		<key>pa</key>
 		<string>ਹੋ ਗਿਆ</string>
 		<key>pl</key>
-		<string>Zrobione</string>
+		<string>Gotowe</string>
 		<key>pt</key>
-		<string>Feito</string>
+		<string>OK</string>
 		<key>ro</key>
-		<string>Făcut</string>
+		<string>OK</string>
 		<key>ru</key>
-		<string>Сделанный</string>
+		<string>Готово</string>
 		<key>si</key>
 		<string>කළා</string>
 		<key>sk</key>
 		<string>Hotovo</string>
 		<key>sl</key>
-		<string>Končano</string>
+		<string>Dokončano</string>
 		<key>sq</key>
 		<string>U krye</string>
 		<key>sr</key>
@@ -592,7 +592,7 @@
 		<key>su</key>
 		<string>Rengse</string>
 		<key>sv</key>
-		<string>Gjort</string>
+		<string>Klar</string>
 		<key>sw</key>
 		<string>Imekamilika</string>
 		<key>ta</key>
@@ -602,11 +602,11 @@
 		<key>tg</key>
 		<string>Анҷом ёфт</string>
 		<key>th</key>
-		<string>เสร็จแล้ว</string>
+		<string>เสร็จสิ้น</string>
 		<key>tl</key>
 		<string>Tapos na</string>
 		<key>tr</key>
-		<string>Tamamlamak</string>
+		<string>Bitti</string>
 		<key>tt</key>
 		<string>Тәмамланды</string>
 		<key>uk</key>
@@ -618,9 +618,9 @@
 		<key>vi</key>
 		<string>Xong</string>
 		<key>yi</key>
-		<string>געטאָן</string>
+		<string>פֿאַרטיק</string>
 		<key>zh</key>
-		<string>完毕</string>
+		<string>完成</string>
 	</dict>
 	<key>error_reported</key>
 	<dict>
@@ -639,11 +639,11 @@
 		<key>bs</key>
 		<string>Ova greška je prijavljena.</string>
 		<key>ca</key>
-		<string>S&apos;ha informat d&apos;aquest error.</string>
+		<string>S'ha informat d'aquest error.</string>
 		<key>cs</key>
 		<string>Tato chyba byla nahlášena.</string>
 		<key>cy</key>
-		<string>Mae&apos;r gwall hwn wedi cael ei adrodd.</string>
+		<string>Mae'r gwall hwn wedi cael ei adrodd.</string>
 		<key>da</key>
 		<string>Denne fejl er blevet rapporteret.</string>
 		<key>de</key>
@@ -695,7 +695,7 @@
 		<key>ja</key>
 		<string>このエラーは報告されています。</string>
 		<key>ka</key>
-		<string>Ეს შეცდომა დაფიქსირდა.</string>
+		<string>ეს შეცდომა დაფიქსირდა.</string>
 		<key>kk</key>
 		<string>Бұл қате туралы хабарланды.</string>
 		<key>kn</key>
@@ -729,7 +729,7 @@
 		<key>pl</key>
 		<string>Ten błąd został zgłoszony.</string>
 		<key>pt</key>
-		<string>Este erro já foi comunicado.</string>
+		<string>Este erro já foi relatado.</string>
 		<key>ro</key>
 		<string>Această eroare a fost semnalată.</string>
 		<key>ru</key>
@@ -798,7 +798,7 @@
 		<key>cs</key>
 		<string>Připojení k internetu je offline.</string>
 		<key>cy</key>
-		<string>Mae&apos;r cysylltiad rhyngrwyd all-lein.</string>
+		<string>Mae'r cysylltiad rhyngrwyd yn all-lein.</string>
 		<key>da</key>
 		<string>Internetforbindelsen er offline.</string>
 		<key>de</key>
@@ -808,7 +808,7 @@
 		<key>en</key>
 		<string>Internet connection is offline.</string>
 		<key>eo</key>
-		<string>La interreta konekto estas senkonekte.</string>
+		<string>La interreta konekto estas senkonekta.</string>
 		<key>es</key>
 		<string>La conexión a Internet está desconectada.</string>
 		<key>et</key>
@@ -850,7 +850,7 @@
 		<key>ja</key>
 		<string>インターネット接続が切断されています。</string>
 		<key>ka</key>
-		<string>Ინტერნეტ კავშირი ოფლაინშია.</string>
+		<string>ინტერნეტ კავშირი ოფლაინშია.</string>
 		<key>kk</key>
 		<string>Интернет байланысы офлайн режимде.</string>
 		<key>kn</key>
@@ -862,7 +862,7 @@
 		<key>lt</key>
 		<string>Interneto ryšys neprisijungęs.</string>
 		<key>mg</key>
-		<string>Tsy afaka mifandray amin&apos;ny Internet.</string>
+		<string>Tsy afaka mifandray amin'ny Internet.</string>
 		<key>mi</key>
 		<string>Kei te tuimotu te hononga ipurangi.</string>
 		<key>mk</key>
@@ -971,9 +971,9 @@ Verifiqueu que el vostre client de correu electrònic estigui configurat i torne
 
 Ověřte prosím, zda je váš e-mailový klient nastaven, a zkuste to znovu.</string>
 		<key>cy</key>
-		<string>Mae&apos;n ymddangos nad yw eich dyfais yn gallu anfon e-bost.
+		<string>Mae'n ymddangos nad yw eich dyfais yn gallu anfon e-bost.
 
-Gwiriwch fod eich cleient e-bost wedi&apos;i sefydlu a cheisiwch eto.</string>
+Gwiriwch fod eich cleient e-bost wedi'i sefydlu a cheisiwch eto.</string>
 		<key>da</key>
 		<string>Det ser ud til, at din enhed ikke kan sende e-mails.
 
@@ -1011,7 +1011,7 @@ Egiaztatu zure posta elektroniko bezeroa konfiguratuta dagoela eta saiatu berrir
 
 لطفاً بررسی کنید که سرویس ایمیل شما تنظیم شده باشد و دوباره امتحان کنید.</string>
 		<key>fi</key>
-		<string>Näyttää siltä, ​​että laitteesi ei pysty lähettämään sähköpostia.
+		<string>Näyttää siltä, että laitteesi ei pysty lähettämään sähköpostia.
 
 Varmista, että sähköpostiohjelmasi on määritetty, ja yritä uudelleen.</string>
 		<key>fr</key>
@@ -1035,9 +1035,9 @@ Verifica que o teu cliente de correo electrónico estea configurado e inténtao 
 
 કૃપા કરીને ચકાસો કે તમારું ઈ-મેલ ક્લાયંટ સેટઅપ થયેલ છે અને ફરી પ્રયાસ કરો.</string>
 		<key>he</key>
-		<string>נראה שהמכשיר שלך אינו מסוגל לשלוח דוא&quot;ל.
+		<string>נראה שהמכשיר שלך אינו מסוגל לשלוח דוא"ל.
 
-אנא ודא שתוקן הדוא&quot;ל שלך מוגדר ונסה שוב.</string>
+אנא ודא שתוכנת הדוא"ל שלך מוגדרת ונסה שוב.</string>
 		<key>hi</key>
 		<string>ऐसा लगता है कि आपका डिवाइस ईमेल भेजने में असमर्थ है।
 
@@ -1049,7 +1049,7 @@ Molimo provjerite je li vaš klijent e-pošte postavljen i pokušajte ponovno.</
 		<key>ht</key>
 		<string>Sanble aparèy ou an pa kapab voye imèl.
 
-Tanpri verifye si kliyan imèl ou an byen configuré epi eseye ankò.</string>
+Tanpri verifye si kliyan imèl ou an byen konfigire epi eseye ankò.</string>
 		<key>hu</key>
 		<string>Úgy tűnik, hogy az eszköze nem tud e-mailt küldeni.
 
@@ -1057,7 +1057,7 @@ Kérjük, ellenőrizze, hogy az e-mail kliens be van-e állítva, és próbálja
 		<key>hy</key>
 		<string>Ձեր սարքը, կարծես թե, չի կարողանում էլեկտրոնային նամակ ուղարկել։
 
-Խնդրում ենք ստուգել, ​​որ ձեր էլեկտրոնային փոստի հաճախորդը կարգավորված է և կրկին փորձել։</string>
+Խնդրում ենք ստուգել, որ ձեր էլեկտրոնային փոստի հաճախորդը կարգավորված է և կրկին փորձել։</string>
 		<key>id</key>
 		<string>Tampaknya perangkat Anda tidak dapat mengirim email.
 
@@ -1075,7 +1075,7 @@ Verifica che il tuo client di posta elettronica sia configurato correttamente e 
 
 メールクライアントが正しく設定されていることを確認してから、もう一度お試しください。</string>
 		<key>ka</key>
-		<string>Როგორც ჩანს, თქვენს მოწყობილობას ელფოსტის გაგზავნა არ შეუძლია.
+		<string>როგორც ჩანს, თქვენს მოწყობილობას ელფოსტის გაგზავნა არ შეუძლია.
 
 გთხოვთ, დაადასტუროთ, რომ თქვენი ელფოსტის კლიენტი დაყენებულია და ხელახლა სცადოთ.</string>
 		<key>kk</key>
@@ -1121,7 +1121,7 @@ Me manatoko kua whakaritea tō kiritaki īmēra, ka ngana anō.</string>
 		<key>mt</key>
 		<string>Jidher li l-apparat tiegħek mhux kapaċi jibgħat email.
 
-Jekk jogħġbok ivverifika li l-klijent tal-email tiegħek huwa ssettjat u erġa&apos; pprova.</string>
+Jekk jogħġbok ivverifika li l-klijent tal-email tiegħek huwa ssettjat u erġa' pprova.</string>
 		<key>ne</key>
 		<string>तपाईंको उपकरणले इमेल पठाउन नसकेको जस्तो देखिन्छ।
 
@@ -1157,7 +1157,7 @@ Verificați dacă clientul dvs. de e-mail este configurat și încercați din no
 		<key>si</key>
 		<string>ඔබගේ උපාංගයට විද්‍යුත් තැපෑල යැවීමට නොහැකි බව පෙනේ.
 
-කරුණාකර ඔබගේ විද්‍යුත් තැපැල් සේවාදායකයා සකසා ඇති බව තහවුරු කර නැවත උත්සාහ කරන්න.</string>
+කරුණාකර ඔබගේ විද්‍යුත් තැපැල් යෙදුම සකසා ඇති බව තහවුරු කර නැවත උත්සාහ කරන්න.</string>
 		<key>sk</key>
 		<string>Zdá sa, že vaše zariadenie nedokáže odosielať e-maily.
 
@@ -1223,9 +1223,9 @@ Lütfen e-posta istemcinizin yapılandırılmış olduğunu doğrulayın ve tekr
 
 براہ کرم تصدیق کریں کہ آپ کا ای میل کلائنٹ سیٹ اپ ہے اور دوبارہ کوشش کریں۔</string>
 		<key>uz</key>
-		<string>Qurilmangiz elektron pochta xabarlarini yubora olmayotganga o&apos;xshaydi.
+		<string>Qurilmangiz elektron pochta xabarlarini yubora olmayotganga o'xshaydi.
 
-Iltimos, elektron pochta mijozingiz sozlanganligini tekshiring va qaytadan urinib ko&apos;ring.</string>
+Iltimos, elektron pochta mijozingiz sozlanganligini tekshiring va qaytadan urinib ko'ring.</string>
 		<key>vi</key>
 		<string>Có vẻ như thiết bị của bạn không thể gửi email.
 
@@ -1246,7 +1246,7 @@ Vui lòng kiểm tra xem ứng dụng email của bạn đã được thiết l�
 
 Koppel asseblief aan die internet en probeer weer.</string>
 		<key>ar</key>
-		<string>يبدو أن الاتصال بالإنترنت غير متاح.
+		<string>يبدو أنه لا يوجد اتصال بالإنترنت.
 
 يرجى الاتصال بالإنترنت والمحاولة مرة أخرى.</string>
 		<key>az</key>
@@ -1270,27 +1270,27 @@ Zəhmət olmasa, internetə qoşulun və yenidən cəhd edin.</string>
 
 Molimo vas da se povežete na internet i pokušate ponovo.</string>
 		<key>ca</key>
-		<string>Sembla que la connexió a Internet està fora de línia.
+		<string>La connexió a internet sembla desactivada.
 
 Connecteu-vos a Internet i torneu-ho a intentar.</string>
 		<key>cs</key>
-		<string>Zdá se, že je připojení k internetu offline.
+		<string>Připojení k internetu je zřejmě neaktivní.
 
 Připojte se k internetu a zkuste to znovu.</string>
 		<key>cy</key>
-		<string>Mae&apos;n ymddangos bod y cysylltiad rhyngrwyd all-lein.
+		<string>Mae'n ymddangos bod y cysylltiad rhyngrwyd yn all-lein.
 
-Cysylltwch â&apos;r rhyngrwyd a cheisiwch eto.</string>
+Cysylltwch â'r rhyngrwyd a cheisiwch eto.</string>
 		<key>da</key>
-		<string>Internetforbindelsen ser ud til at være offline.
+		<string>Internetforbindelsen synes at være passiv.
 
 Opret forbindelse til internettet, og prøv igen.</string>
 		<key>de</key>
-		<string>Die Internetverbindung scheint unterbrochen zu sein.
+		<string>Es besteht anscheinend keine Verbindung zum Internet.
 
 Bitte stellen Sie eine Internetverbindung her und versuchen Sie es erneut.</string>
 		<key>el</key>
-		<string>Η σύνδεση στο διαδίκτυο φαίνεται να είναι εκτός σύνδεσης.
+		<string>Η σύνδεση στο Διαδίκτυο φαίνεται ότι έχει διακοπεί.
 
 Συνδεθείτε στο διαδίκτυο και δοκιμάστε ξανά.</string>
 		<key>en</key>
@@ -1302,9 +1302,9 @@ Please connect to the internet and try again.</string>
 
 Bonvolu konekti al la interreto kaj provi denove.</string>
 		<key>es</key>
-		<string>Parece que la conexión a internet está caída.
+		<string>La conexión a internet parece estar desactivada.
 
-Por favor, conéctese a internet e inténtelo de nuevo.</string>
+Por favor, conéctate a internet e inténtalo de nuevo.</string>
 		<key>et</key>
 		<string>Internetiühendus näib olevat võrguühenduseta.
 
@@ -1318,11 +1318,11 @@ Konektatu internetera eta saiatu berriro.</string>
 
 لطفاً به اینترنت متصل شوید و دوباره امتحان کنید.</string>
 		<key>fi</key>
-		<string>Internet-yhteys näyttää olevan poikki.
+		<string>Internet-yhteys on pois päältä.
 
 Yhdistä internetiin ja yritä uudelleen.</string>
 		<key>fr</key>
-		<string>Votre connexion Internet semble être indisponible.
+		<string>La connexion Internet semble interrompue.
 
 Veuillez vous connecter à Internet et réessayer.</string>
 		<key>ga</key>
@@ -1342,15 +1342,15 @@ Conéctate a internet e téntao de novo.</string>
 
 કૃપા કરીને ઇન્ટરનેટથી કનેક્ટ થાઓ અને ફરી પ્રયાસ કરો.</string>
 		<key>he</key>
-		<string>נראה שחיבור האינטרנט אינו מקוון.
+		<string>נראה כי אין חיבור לאינטרנט.
 
 אנא התחבר לאינטרנט ונסה שוב.</string>
 		<key>hi</key>
-		<string>इंटरनेट कनेक्शन ऑफ़लाइन लग रहा है।
+		<string>इंटरनेट कनेक्शन ऑफ़लाइन प्रतीत होता है।
 
 कृपया इंटरनेट से कनेक्ट करें और फिर से कोशिश करें।</string>
 		<key>hr</key>
-		<string>Čini se da je internetska veza izvan mreže.
+		<string>Čini se da je internetska veza odspojena.
 
 Molimo vas da se povežete s internetom i pokušate ponovno.</string>
 		<key>ht</key>
@@ -1366,7 +1366,7 @@ Kérjük, csatlakozzon az internethez, és próbálja újra.</string>
 
 Խնդրում ենք միանալ ինտերնետին և կրկին փորձել։</string>
 		<key>id</key>
-		<string>Koneksi internet tampaknya sedang offline.
+		<string>Koneksi internet tampaknya offline.
 
 Silakan sambungkan ke internet dan coba lagi.</string>
 		<key>is</key>
@@ -1378,11 +1378,11 @@ Vinsamlegast tengstu við internetið og reyndu aftur.</string>
 
 Connettiti a Internet e riprova.</string>
 		<key>ja</key>
-		<string>インターネット接続が切断されているようです。
+		<string>インターネット接続がオフラインのようです。
 
 インターネットに接続してから、もう一度お試しください。</string>
 		<key>ka</key>
-		<string>Როგორც ჩანს, ინტერნეტ კავშირი გათიშულია.
+		<string>როგორც ჩანს, ინტერნეტ კავშირი გათიშულია.
 
 გთხოვთ, დაუკავშირდეთ ინტერნეტს და ხელახლა სცადოთ.</string>
 		<key>kk</key>
@@ -1394,7 +1394,7 @@ Connettiti a Internet e riprova.</string>
 
 ದಯವಿಟ್ಟು ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
 		<key>ko</key>
-		<string>인터넷 연결이 끊어진 것 같습니다.
+		<string>인터넷 연결이 오프라인 상태입니다.
 
 인터넷에 연결한 후 다시 시도해 주세요.</string>
 		<key>ky</key>
@@ -1406,9 +1406,9 @@ Connettiti a Internet e riprova.</string>
 
 Prisijunkite prie interneto ir bandykite dar kartą.</string>
 		<key>mg</key>
-		<string>Toa tsy mifandray amin&apos;ny aterineto ny fifandraisana.
+		<string>Toa tsy mifandray amin'ny aterineto ny fifandraisana.
 
-Mifandraisa amin&apos;ny aterineto ary andramo indray.</string>
+Mifandraisa amin'ny aterineto ary andramo indray.</string>
 		<key>mi</key>
 		<string>Te āhua nei kāore te hononga ipurangi i te hono atu.
 
@@ -1428,17 +1428,17 @@ Tūhono atu ki te ipurangi, ka ngana anō.</string>
 		<key>mt</key>
 		<string>Il-konnessjoni tal-internet tidher li hija offline.
 
-Jekk jogħġbok qabbad mal-internet u erġa&apos; pprova.</string>
+Jekk jogħġbok qabbad mal-internet u erġa' pprova.</string>
 		<key>ne</key>
 		<string>इन्टरनेट जडान अफलाइन देखिन्छ।
 
 कृपया इन्टरनेटमा जडान गर्नुहोस् र फेरि प्रयास गर्नुहोस्।</string>
 		<key>nl</key>
-		<string>De internetverbinding lijkt verbroken te zijn.
+		<string>De internetverbinding is offline.
 
 Maak opnieuw verbinding met internet en probeer het nogmaals.</string>
 		<key>no</key>
-		<string>Internettforbindelsen ser ut til å være frakoblet.
+		<string>Internett ser ut til å være frakoblet.
 
 Koble til internett og prøv på nytt.</string>
 		<key>pa</key>
@@ -1446,19 +1446,19 @@ Koble til internett og prøv på nytt.</string>
 
 ਕਿਰਪਾ ਕਰਕੇ ਇੰਟਰਨੈੱਟ ਨਾਲ ਕਨੈਕਟ ਕਰੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
 		<key>pl</key>
-		<string>Wygląda na to, że połączenie internetowe jest niedostępne.
+		<string>Połączenie z Internetem jest prawdopodobnie rozłączone.
 
 Połącz się z internetem i spróbuj ponownie.</string>
 		<key>pt</key>
-		<string>A sua ligação à internet parece estar inativa.
+		<string>A conexão com a internet parece estar offline.
 
-Por favor, ligue-se à internet e tente novamente.</string>
+Por favor, conecte-se à internet e tente novamente.</string>
 		<key>ro</key>
 		<string>Conexiunea la internet pare să fie offline.
 
 Vă rugăm să vă conectați la internet și să încercați din nou.</string>
 		<key>ru</key>
-		<string>Похоже, интернет-соединение прервано.
+		<string>Вероятно, соединение с интернетом прервано.
 
 Пожалуйста, подключитесь к интернету и попробуйте снова.</string>
 		<key>si</key>
@@ -1466,11 +1466,11 @@ Vă rugăm să vă conectați la internet și să încercați din nou.</string>
 
 කරුණාකර අන්තර්ජාලයට සම්බන්ධ වී නැවත උත්සාහ කරන්න.</string>
 		<key>sk</key>
-		<string>Zdá sa, že internetové pripojenie je offline.
+		<string>Nemáte pripojenie na internet.
 
 Pripojte sa k internetu a skúste to znova.</string>
 		<key>sl</key>
-		<string>Zdi se, da internetna povezava ni vzpostavljena.
+		<string>Kaže, da povezava z internetom ni vzpostavljena.
 
 Vzpostavite povezavo z internetom in poskusite znova.</string>
 		<key>sq</key>
@@ -1486,7 +1486,7 @@ Ju lutemi lidheni me internetin dhe provoni përsëri.</string>
 
 Mangga sambungkeun ka internét teras cobian deui.</string>
 		<key>sv</key>
-		<string>Internetanslutningen verkar vara offline.
+		<string>Internetanslutningen verkar vara nedkopplad.
 
 Anslut till internet och försök igen.</string>
 		<key>sw</key>
@@ -1506,7 +1506,7 @@ Tafadhali unganisha kwenye intaneti na ujaribu tena.</string>
 
 Лутфан, ба интернет пайваст шавед ва дубора кӯшиш кунед.</string>
 		<key>th</key>
-		<string>ดูเหมือนว่าการเชื่อมต่ออินเทอร์เน็ตจะไม่อยู่ในสถานะออฟไลน์
+		<string>ดูเหมือนว่าคุณไม่ได้เชื่อมต่อกับอินเทอร์เน็ต
 
 โปรดเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง</string>
 		<key>tl</key>
@@ -1514,7 +1514,7 @@ Tafadhali unganisha kwenye intaneti na ujaribu tena.</string>
 
 Kumonekta sa internet at subukang muli.</string>
 		<key>tr</key>
-		<string>İnternet bağlantısı çevrimdışı görünüyor.
+		<string>İnternet bağlantısı çevrimdışı gözüküyor.
 
 Lütfen internete bağlanıp tekrar deneyin.</string>
 		<key>tt</key>
@@ -1522,7 +1522,7 @@ Lütfen internete bağlanıp tekrar deneyin.</string>
 
 Зинһар, интернетка тоташыгыз һәм кабатлап карагыз.</string>
 		<key>uk</key>
-		<string>Здається, інтернет-з’єднання відключене.
+		<string>Схоже, що немає інтернет-зʼєднання.
 
 Будь ласка, підключіться до інтернету та спробуйте ще раз.</string>
 		<key>ur</key>
@@ -1530,11 +1530,11 @@ Lütfen internete bağlanıp tekrar deneyin.</string>
 
 براہ کرم انٹرنیٹ سے جڑیں اور دوبارہ کوشش کریں۔</string>
 		<key>uz</key>
-		<string>Internet aloqasi oflayn ko&apos;rinadi.
+		<string>Internet aloqasi oflayn ko'rinadi.
 
-Iltimos, internetga ulaning va qaytadan urinib ko&apos;ring.</string>
+Iltimos, internetga ulaning va qaytadan urinib ko'ring.</string>
 		<key>vi</key>
-		<string>Kết nối internet hiện đang bị gián đoạn.
+		<string>Kết nối internet có vẻ như không hoạt động.
 
 Vui lòng kết nối lại internet và thử lại.</string>
 		<key>yi</key>
@@ -1542,14 +1542,14 @@ Vui lòng kết nối lại internet và thử lại.</string>
 
 ביטע פֿאַרבינדט זיך צום אינטערנעט און פּרוּווט ווידער.</string>
 		<key>zh</key>
-		<string>网络连接似乎已断开。
+		<string>似乎已断开与互联网的连接。
 
 请重新连接互联网并重试。</string>
 	</dict>
 	<key>report_bug</key>
 	<dict>
 		<key>af</key>
-		<string>Rapporteer n Fout</string>
+		<string>Rapporteer 'n Fout</string>
 		<key>ar</key>
 		<string>الإبلاغ عن خطأ</string>
 		<key>az</key>
@@ -1563,15 +1563,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bs</key>
 		<string>Prijavi Grešku</string>
 		<key>ca</key>
-		<string>Informar d&apos;un Error</string>
+		<string>Informar d'un Error</string>
 		<key>cs</key>
 		<string>Nahlásit Chybu</string>
 		<key>cy</key>
-		<string>Adrodd am Gwall</string>
+		<string>Adrodd am Wall</string>
 		<key>da</key>
 		<string>Rapportér en Fejl</string>
 		<key>de</key>
-		<string>Einen Fehler Melden</string>
+		<string>Fehler melden</string>
 		<key>el</key>
 		<string>Αναφορά Σφάλματος</string>
 		<key>en</key>
@@ -1593,7 +1593,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ga</key>
 		<string>Tuairiscigh Earráid</string>
 		<key>gd</key>
-		<string>Aithisg Mearachd</string>
+		<string>Aithris Mearachd</string>
 		<key>gl</key>
 		<string>Informar dun Erro</string>
 		<key>gu</key>
@@ -1619,7 +1619,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ja</key>
 		<string>エラーを報告</string>
 		<key>ka</key>
-		<string>Შეცდომის Შესახებ Შეტყობინება</string>
+		<string>შეცდომის შესახებ შეტყობინება</string>
 		<key>kk</key>
 		<string>Қате Туралы Хабарлау</string>
 		<key>kn</key>
@@ -1706,7 +1706,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>af</key>
 		<string>Die verslag is gestuur</string>
 		<key>ar</key>
-		<string>أُرسِلَ التقرير</string>
+		<string>تم إرسال التقرير</string>
 		<key>az</key>
 		<string>Hesabat göndərildi</string>
 		<key>be</key>
@@ -1714,11 +1714,11 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bg</key>
 		<string>Докладът беше изпратен</string>
 		<key>bn</key>
-		<string>প্রতিবেদনটি পাঠানো হয়েছিল।</string>
+		<string>প্রতিবেদন পাঠানো হয়েছে</string>
 		<key>bs</key>
 		<string>Izvještaj je poslan</string>
 		<key>ca</key>
-		<string>L&apos;informe va ser enviat</string>
+		<string>S'ha enviat l'informe</string>
 		<key>cs</key>
 		<string>Zpráva byla odeslána</string>
 		<key>cy</key>
@@ -1734,11 +1734,11 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>eo</key>
 		<string>La raporto estis sendita</string>
 		<key>es</key>
-		<string>El informe fue enviado</string>
+		<string>Informe enviado</string>
 		<key>et</key>
 		<string>Aruanne saadeti ära</string>
 		<key>eu</key>
-		<string>Txostena bidali zen</string>
+		<string>Txostena bidali da</string>
 		<key>fa</key>
 		<string>گزارش ارسال شد</string>
 		<key>fi</key>
@@ -1752,21 +1752,21 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gl</key>
 		<string>O informe foi enviado</string>
 		<key>gu</key>
-		<string>રિપોર્ટ મોકલવામાં આવ્યો હતો</string>
+		<string>રિપોર્ટ મોકલવામાં આવ્યો છે</string>
 		<key>he</key>
 		<string>הדוח נשלח</string>
 		<key>hi</key>
-		<string>रिपोर्ट भेज दी गई थी।</string>
+		<string>रिपोर्ट भेज दी गई है</string>
 		<key>hr</key>
 		<string>Izvješće je poslano</string>
 		<key>ht</key>
 		<string>Yo te voye rapò a</string>
 		<key>hu</key>
-		<string>A jelentést elküldték</string>
+		<string>Jelentés elküldve</string>
 		<key>hy</key>
 		<string>Հաշվետվությունն ուղարկվել է</string>
 		<key>id</key>
-		<string>Laporan itu telah dikirim</string>
+		<string>Laporan telah dikirim</string>
 		<key>is</key>
 		<string>Skýrslan var send</string>
 		<key>it</key>
@@ -1774,7 +1774,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ja</key>
 		<string>報告書が送付されました</string>
 		<key>ka</key>
-		<string>Ანგარიში გაიგზავნა</string>
+		<string>ანგარიში გაიგზავნა</string>
 		<key>kk</key>
 		<string>Есеп жіберілді</string>
 		<key>kn</key>
@@ -1798,13 +1798,13 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>mt</key>
 		<string>Ir-rapport intbagħat</string>
 		<key>ne</key>
-		<string>रिपोर्ट पठाइएको थियो</string>
+		<string>रिपोर्ट पठाइएको छ</string>
 		<key>nl</key>
 		<string>Het rapport is verzonden</string>
 		<key>no</key>
 		<string>Rapporten ble sendt</string>
 		<key>pa</key>
-		<string>ਰਿਪੋਰਟ ਭੇਜ ਦਿੱਤੀ ਗਈ।</string>
+		<string>ਰਿਪੋਰਟ ਭੇਜ ਦਿੱਤੀ ਗਈ ਹੈ</string>
 		<key>pl</key>
 		<string>Raport został wysłany</string>
 		<key>pt</key>
@@ -1824,7 +1824,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>sr</key>
 		<string>Извештај је послат</string>
 		<key>su</key>
-		<string>Laporan éta dikirim</string>
+		<string>Laporan parantos dikirim</string>
 		<key>sv</key>
 		<string>Rapporten skickades</string>
 		<key>sw</key>
@@ -1846,7 +1846,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>uk</key>
 		<string>Звіт було надіслано</string>
 		<key>ur</key>
-		<string>رپورٹ بھیجی گئی تھی</string>
+		<string>رپورٹ بھیج دی گئی ہے</string>
 		<key>uz</key>
 		<string>Hisobot yuborildi</string>
 		<key>vi</key>
@@ -1861,7 +1861,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>af</key>
 		<string>Stuur Kommentaar</string>
 		<key>ar</key>
-		<string>إرسال التعليقات</string>
+		<string>إرسال ملاحظات</string>
 		<key>az</key>
 		<string>Şərhlər Göndərin</string>
 		<key>be</key>
@@ -1873,15 +1873,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bs</key>
 		<string>Pošalji Komentare</string>
 		<key>ca</key>
-		<string>Enviar Comentaris</string>
+		<string>Envia el comentari</string>
 		<key>cs</key>
-		<string>Odeslat Komentáře</string>
+		<string>Váš názor</string>
 		<key>cy</key>
 		<string>Anfon Sylwadau</string>
 		<key>da</key>
-		<string>Send Kommentarer</string>
+		<string>Send feedback</string>
 		<key>de</key>
-		<string>Kommentare Senden</string>
+		<string>Feedback senden</string>
 		<key>el</key>
 		<string>Αποστολή Σχολίων</string>
 		<key>en</key>
@@ -1897,9 +1897,9 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>fa</key>
 		<string>ارسال نظرات</string>
 		<key>fi</key>
-		<string>Lähetä Kommentteja</string>
+		<string>Lähetä palautetta</string>
 		<key>fr</key>
-		<string>Envoyer des Commentaires</string>
+		<string>Envoyer une éval.</string>
 		<key>ga</key>
 		<string>Seol Tráchtanna</string>
 		<key>gd</key>
@@ -1909,33 +1909,33 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gu</key>
 		<string>ટિપ્પણીઓ મોકલો</string>
 		<key>he</key>
-		<string>שלח תגובות</string>
+		<string>שליחת משוב</string>
 		<key>hi</key>
-		<string>टिप्पणियाँ भेजें</string>
+		<string>फ़ीडबैक भेजें</string>
 		<key>hr</key>
-		<string>Pošalji Komentare</string>
+		<string>Povratna informacija</string>
 		<key>ht</key>
 		<string>Voye Kòmantè</string>
 		<key>hu</key>
-		<string>Hozzászólások Küldése</string>
+		<string>Visszajelzés küldése</string>
 		<key>hy</key>
 		<string>Ուղարկել Մեկնաբանություններ</string>
 		<key>id</key>
-		<string>Kirim Komentar</string>
+		<string>Kirim Umpan Balik</string>
 		<key>is</key>
 		<string>Senda Athugasemdir</string>
 		<key>it</key>
-		<string>Inviare Commenti</string>
+		<string>Invia feedback</string>
 		<key>ja</key>
-		<string>コメントを送信</string>
+		<string>フィードバックを送信</string>
 		<key>ka</key>
-		<string>Კომენტარების Გაგზავნა</string>
+		<string>კომენტარების გაგზავნა</string>
 		<key>kk</key>
 		<string>Пікірлер Жіберу</string>
 		<key>kn</key>
 		<string>ಕಾಮೆಂಟ್‌ಗಳನ್ನು ಕಳುಹಿಸಿ</string>
 		<key>ko</key>
-		<string>의견 보내기</string>
+		<string>피드백 보내기</string>
 		<key>ky</key>
 		<string>Комментарийлерди Жөнөтүү</string>
 		<key>lt</key>
@@ -1955,25 +1955,25 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ne</key>
 		<string>टिप्पणीहरू पठाउनुहोस्</string>
 		<key>nl</key>
-		<string>Stuur Opmerkingen</string>
+		<string>Stuur feedback</string>
 		<key>no</key>
-		<string>Send Kommentarer</string>
+		<string>Gi oss tilbakemelding</string>
 		<key>pa</key>
 		<string>ਟਿੱਪਣੀਆਂ ਭੇਜੋ</string>
 		<key>pl</key>
-		<string>Wyślij Komentarze</string>
+		<string>Wyślij opinię</string>
 		<key>pt</key>
 		<string>Enviar Comentários</string>
 		<key>ro</key>
-		<string>Trimite Comentarii</string>
+		<string>Trimiteți comentarii</string>
 		<key>ru</key>
-		<string>Отправить Комментарии</string>
+		<string>Отправка отзыва</string>
 		<key>si</key>
 		<string>අදහස් යවන්න</string>
 		<key>sk</key>
-		<string>Odoslať Komentáre</string>
+		<string>Odoslať názor</string>
 		<key>sl</key>
-		<string>Pošlji Komentarje</string>
+		<string>Pošlji povratne informacije</string>
 		<key>sq</key>
 		<string>Dërgo Komente</string>
 		<key>sr</key>
@@ -1981,7 +1981,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>su</key>
 		<string>Kirim Koméntar</string>
 		<key>sv</key>
-		<string>Skicka Kommentarer</string>
+		<string>Skicka dina synpunkter</string>
 		<key>sw</key>
 		<string>Tuma Maoni</string>
 		<key>ta</key>
@@ -1995,28 +1995,28 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>tl</key>
 		<string>Magpadala ng mga Komento</string>
 		<key>tr</key>
-		<string>Yorum Gönder</string>
+		<string>Geri Bildirim Gönder</string>
 		<key>tt</key>
 		<string>Фикерләр Җибәрегез</string>
 		<key>uk</key>
-		<string>Надіслати Коментарі</string>
+		<string>Надіслати відгук</string>
 		<key>ur</key>
 		<string>تبصرے بھیجیں</string>
 		<key>uz</key>
 		<string>Fikr-mulohazalarni Yuboring</string>
 		<key>vi</key>
-		<string>Gửi ý Kiến</string>
+		<string>Gửi phản hồi</string>
 		<key>yi</key>
 		<string>שיקן באַמערקונגען</string>
 		<key>zh</key>
-		<string>发送评论</string>
+		<string>发送反馈</string>
 	</dict>
 	<key>settings</key>
 	<dict>
 		<key>af</key>
 		<string>Instellings…</string>
 		<key>ar</key>
-		<string>إعدادات…</string>
+		<string>الإعدادات…</string>
 		<key>az</key>
 		<string>Parametrlər…</string>
 		<key>be</key>
@@ -2036,7 +2036,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>da</key>
 		<string>Indstillinger…</string>
 		<key>de</key>
-		<string>Einstellungen…</string>
+		<string>Einstellungen …</string>
 		<key>el</key>
 		<string>Ρυθμίσεις…</string>
 		<key>en</key>
@@ -2054,7 +2054,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>fi</key>
 		<string>Asetukset…</string>
 		<key>fr</key>
-		<string>Paramètres…</string>
+		<string>Réglages…</string>
 		<key>ga</key>
 		<string>Socruithe…</string>
 		<key>gd</key>
@@ -2066,11 +2066,11 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>he</key>
 		<string>הגדרות…</string>
 		<key>hi</key>
-		<string>सेटिंग्स…</string>
+		<string>सेटिंग…</string>
 		<key>hr</key>
 		<string>Postavke…</string>
 		<key>ht</key>
-		<string>Anviwònman…</string>
+		<string>Paramèt…</string>
 		<key>hu</key>
 		<string>Beállítások…</string>
 		<key>hy</key>
@@ -2084,7 +2084,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ja</key>
 		<string>設定…</string>
 		<key>ka</key>
-		<string>Პარამეტრები…</string>
+		<string>პარამეტრები…</string>
 		<key>kk</key>
 		<string>Параметрлер…</string>
 		<key>kn</key>
@@ -2096,7 +2096,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>lt</key>
 		<string>Nustatymai…</string>
 		<key>mg</key>
-		<string>Fikirana…</string>
+		<string>Fandrindrana…</string>
 		<key>mi</key>
 		<string>Ngā Tautuhinga…</string>
 		<key>mk</key>
@@ -2118,9 +2118,9 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>pl</key>
 		<string>Ustawienia…</string>
 		<key>pt</key>
-		<string>Configurações…</string>
+		<string>Ajustes…</string>
 		<key>ro</key>
-		<string>Setări…</string>
+		<string>Configurări…</string>
 		<key>ru</key>
 		<string>Настройки…</string>
 		<key>si</key>
@@ -2128,7 +2128,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>sk</key>
 		<string>Nastavenia…</string>
 		<key>sl</key>
-		<string>Nastavitve…</string>
+		<string>Nastavitve …</string>
 		<key>sq</key>
 		<string>Cilësimet…</string>
 		<key>sr</key>
@@ -2154,7 +2154,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>tt</key>
 		<string>Көйләүләр…</string>
 		<key>uk</key>
-		<string>Налаштування…</string>
+		<string>Параметри…</string>
 		<key>ur</key>
 		<string>ترتیبات…</string>
 		<key>uz</key>
@@ -2162,7 +2162,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>vi</key>
 		<string>Cài đặt…</string>
 		<key>yi</key>
-		<string>סעטטינגס…</string>
+		<string>אײַנשטעלונגען…</string>
 		<key>zh</key>
 		<string>设置…</string>
 	</dict>
@@ -2171,7 +2171,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>af</key>
 		<string>Iets het verkeerd geloop. Probeer asseblief later weer.</string>
 		<key>ar</key>
-		<string>حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.</string>
+		<string>حدث خطأ. يرجى المحاولة مرة أخرى لاحقًا.</string>
 		<key>az</key>
 		<string>Xəta baş verdi. Zəhmət olmasa, daha sonra yenidən cəhd edin.</string>
 		<key>be</key>
@@ -2183,15 +2183,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bs</key>
 		<string>Nešto nije u redu. Pokušajte ponovo kasnije.</string>
 		<key>ca</key>
-		<string>S&apos;ha produït un error. Torna-ho a provar més tard.</string>
+		<string>Ha fallat alguna cosa. Torna-ho a provar més tard.</string>
 		<key>cs</key>
-		<string>Něco se pokazilo. Zkuste to prosím znovu později.</string>
+		<string>Došlo k chybě. Zkuste to znovu později.</string>
 		<key>cy</key>
-		<string>Aeth rhywbeth o&apos;i le. Rhowch gynnig arall arni yn nes ymlaen.</string>
+		<string>Aeth rhywbeth o'i le. Rhowch gynnig arall arni yn nes ymlaen.</string>
 		<key>da</key>
-		<string>Noget gik galt. Prøv igen senere.</string>
+		<string>Der gik noget galt. Prøv igen senere.</string>
 		<key>de</key>
-		<string>Etwas ist schiefgegangen. Bitte versuchen Sie es später erneut.</string>
+		<string>Ein Fehler ist aufgetreten. Bitte versuche es später erneut.</string>
 		<key>el</key>
 		<string>Κάτι πήγε στραβά. Δοκιμάστε ξανά αργότερα.</string>
 		<key>en</key>
@@ -2199,7 +2199,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>eo</key>
 		<string>Io misfunkciis. Bonvolu reprovi poste.</string>
 		<key>es</key>
-		<string>Algo salió mal. Inténtalo de nuevo más tarde.</string>
+		<string>Ha habido un problema. Inténtalo de nuevo más tarde.</string>
 		<key>et</key>
 		<string>Midagi läks valesti. Palun proovige hiljem uuesti.</string>
 		<key>eu</key>
@@ -2207,9 +2207,9 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>fa</key>
 		<string>مشکلی پیش آمد. لطفاً بعداً دوباره امتحان کنید.</string>
 		<key>fi</key>
-		<string>Jotain meni pieleen. Yritä myöhemmin uudelleen.</string>
+		<string>Jotain meni vikaan. Yritä myöhemmin uudelleen.</string>
 		<key>fr</key>
-		<string>Une erreur s&apos;est produite. Veuillez réessayer plus tard.</string>
+		<string>Une erreur s’est produite. Réessayez plus tard.</string>
 		<key>ga</key>
 		<string>Chuaigh rud éigin mícheart. Déan iarracht arís ar ball.</string>
 		<key>gd</key>
@@ -2219,33 +2219,33 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gu</key>
 		<string>કંઈક ખોટું થયું. કૃપા કરીને પછીથી ફરી પ્રયાસ કરો.</string>
 		<key>he</key>
-		<string>משהו השתבש. אנא נסה שוב מאוחר יותר.</string>
+		<string>משהו השתבש. נא לנסות שוב מאוחר יותר.</string>
 		<key>hi</key>
-		<string>कुछ गलत हो गया है। कृपया बाद में दोबारा प्रयास करें।</string>
+		<string>कोई समस्या हुई। कृपया बाद में फिर कोशिश करें।</string>
 		<key>hr</key>
-		<string>Nešto je pošlo po zlu. Pokušajte ponovno kasnije.</string>
+		<string>Nešto je pošlo ukrivo. Pokušajte kasnije.</string>
 		<key>ht</key>
 		<string>Yon bagay pa mache byen. Tanpri eseye ankò pita.</string>
 		<key>hu</key>
-		<string>Valami hiba történt. Kérjük, próbáld újra később.</string>
+		<string>Hiba történt. Kérjük, próbálkozzon újra később.</string>
 		<key>hy</key>
 		<string>Ինչ-որ բան սխալ է գնացել։ Խնդրում ենք փորձել կրկին ավելի ուշ։</string>
 		<key>id</key>
-		<string>Terjadi kesalahan. Silakan coba lagi nanti.</string>
+		<string>Ada yang salah. Coba lagi nanti.</string>
 		<key>is</key>
 		<string>Eitthvað fór úrskeiðis. Reyndu aftur síðar.</string>
 		<key>it</key>
-		<string>Si è verificato un errore. Riprova più tardi.</string>
+		<string>Si è verificato un problema, riprova più tardi.</string>
 		<key>ja</key>
-		<string>エラーが発生しました。後でもう一度お試しください。</string>
+		<string>問題が発生しました。あとでもう一度お試しください。</string>
 		<key>ka</key>
-		<string>Რაღაც შეცდომა მოხდა. გთხოვთ, სცადოთ მოგვიანებით.</string>
+		<string>რაღაც შეცდომა მოხდა. გთხოვთ, სცადოთ მოგვიანებით.</string>
 		<key>kk</key>
 		<string>Бірдеңе дұрыс болмады. Кейінірек қайталап көріңіз.</string>
 		<key>kn</key>
 		<string>ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
 		<key>ko</key>
-		<string>문제가 발생했습니다. 잠시 후 다시 시도해 주세요.</string>
+		<string>문제가 발생했습니다. 나중에 다시 시도하십시오.</string>
 		<key>ky</key>
 		<string>Бир нерсе туура эмес кетти. Кийинчерээк кайра аракет кылыңыз.</string>
 		<key>lt</key>
@@ -2261,7 +2261,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>mn</key>
 		<string>Алдаа гарлаа. Дараа дахин оролдоно уу.</string>
 		<key>mt</key>
-		<string>Xi ħaġa marret ħażin. Jekk jogħġbok erġa&apos; pprova aktar tard.</string>
+		<string>Xi ħaġa marret ħażin. Jekk jogħġbok erġa' pprova aktar tard.</string>
 		<key>ne</key>
 		<string>केही गडबड भयो। कृपया पछि फेरि प्रयास गर्नुहोस्।</string>
 		<key>nl</key>
@@ -2271,19 +2271,19 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>pa</key>
 		<string>ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
 		<key>pl</key>
-		<string>Coś poszło nie tak. Spróbuj ponownie później.</string>
+		<string>Wystąpił błąd. Spróbuj ponownie później.</string>
 		<key>pt</key>
 		<string>Algo deu errado. Por favor, tente novamente mais tarde.</string>
 		<key>ro</key>
-		<string>Ceva nu a mers bine. Vă rugăm să încercați din nou mai târziu.</string>
+		<string>Ceva nu a funcționat. Reîncercați mai târziu.</string>
 		<key>ru</key>
-		<string>Что-то пошло не так. Пожалуйста, попробуйте позже.</string>
+		<string>Произошла ошибка. Повторите попытку позже.</string>
 		<key>si</key>
 		<string>යමක් වැරදී ඇත. කරුණාකර පසුව නැවත උත්සාහ කරන්න.</string>
 		<key>sk</key>
-		<string>Vyskytla sa chyba. Skúste to znova neskôr.</string>
+		<string>Došlo k chybe. Skúste to znovu neskôr.</string>
 		<key>sl</key>
-		<string>Prišlo je do napake. Poskusite znova pozneje.</string>
+		<string>Nekaj je šlo narobe. Poskusite znova pozneje.</string>
 		<key>sq</key>
 		<string>Diçka shkoi keq. Ju lutemi provoni përsëri më vonë.</string>
 		<key>sr</key>
@@ -2291,7 +2291,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>su</key>
 		<string>Aya anu lepat. Mangga cobian deui engké.</string>
 		<key>sv</key>
-		<string>Något gick fel. Försök igen senare.</string>
+		<string>Något blev fel. Försök igen senare.</string>
 		<key>sw</key>
 		<string>Kuna kitu kimeenda vibaya. Tafadhali jaribu tena baadaye.</string>
 		<key>ta</key>
@@ -2301,185 +2301,185 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>tg</key>
 		<string>Чизе хато рафт. Лутфан, баъдтар дубора кӯшиш кунед.</string>
 		<key>th</key>
-		<string>เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้งในภายหลัง</string>
+		<string>มีบางอย่างผิดพลาด โปรดลองอีกครั้งในภายหลัง</string>
 		<key>tl</key>
 		<string>May nangyaring mali. Pakisubukang muli mamaya.</string>
 		<key>tr</key>
-		<string>Bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</string>
+		<string>Bir sorun oluştu. Lütfen daha sonra yeniden deneyin.</string>
 		<key>tt</key>
 		<string>Нәрсәдер хата китте. Зинһар, соңрак кабатлап карагыз.</string>
 		<key>uk</key>
-		<string>Щось пішло не так. Спробуйте ще раз пізніше.</string>
+		<string>Сталася помилка. Спробуйте пізніше.</string>
 		<key>ur</key>
 		<string>کچھ غلط ہو گیا۔ براہ کرم بعد میں دوبارہ کوشش کریں۔</string>
 		<key>uz</key>
-		<string>Nimadir noto&apos;g&apos;ri ketdi. Iltimos, keyinroq qayta urinib ko&apos;ring.</string>
+		<string>Nimadir noto'g'ri ketdi. Iltimos, keyinroq qayta urinib ko'ring.</string>
 		<key>vi</key>
-		<string>Đã xảy ra lỗi. Vui lòng thử lại sau.</string>
+		<string>Đã xảy ra sự cố. Vui lòng thử lại sau.</string>
 		<key>yi</key>
 		<string>עפּעס איז שלעכט געגאַנגען. ביטע פּרוּווט ווידער שפּעטער.</string>
 		<key>zh</key>
-		<string>出错了。请稍后重试。</string>
+		<string>出错了。请稍后再试。</string>
 	</dict>
-    <key>tap_to_report</key>
-    <dict>
-        <key>af</key>
-        <string>Tik om hierdie fout te rapporteer.</string>
-        <key>ar</key>
-        <string>انقر للإبلاغ عن هذا الخطأ.</string>
-        <key>az</key>
-        <string>Bu xətanı bildirmək üçün toxunun.</string>
-        <key>be</key>
-        <string>Націсніце, каб паведаміць пра гэтую памылку.</string>
-        <key>bg</key>
-        <string>Докоснете, за да съобщите за тази грешка.</string>
-        <key>bn</key>
-        <string>এই ত্রুটিটি রিপোর্ট করতে ট্যাপ করুন।</string>
-        <key>bs</key>
-        <string>Dodirnite da prijavite ovu grešku.</string>
-        <key>ca</key>
-        <string>Toca per informar d&apos;aquest error.</string>
-        <key>cs</key>
-        <string>Klepnutím nahlásíte tuto chybu.</string>
-        <key>cy</key>
-        <string>Tapiwch i roi gwybod am y gwall hwn.</string>
-        <key>da</key>
-        <string>Tryk for at rapportere denne fejl.</string>
-        <key>de</key>
-        <string>Tippen Sie hier, um diesen Fehler zu melden.</string>
-        <key>el</key>
-        <string>Πατήστε για να αναφέρετε αυτό το σφάλμα.</string>
-        <key>en</key>
-        <string>Tap to report this error.</string>
-        <key>eo</key>
-        <string>Tuŝu por raporti ĉi tiun eraron.</string>
-        <key>es</key>
-        <string>Toca para reportar este error.</string>
-        <key>et</key>
-        <string>Puudutage selle vea teatamiseks.</string>
-        <key>eu</key>
-        <string>Sakatu errore hau salatzeko.</string>
-        <key>fa</key>
-        <string>برای گزارش این خطا، ضربه بزنید.</string>
-        <key>fi</key>
-        <string>Ilmoita tästä virheestä napauttamalla.</string>
-        <key>fr</key>
-        <string>Appuyez pour signaler cette erreur.</string>
-        <key>ga</key>
-        <string>Tapáil chun an earráid seo a thuairisciú.</string>
-        <key>gd</key>
-        <string>Tap gus an mearachd seo aithris.</string>
-        <key>gl</key>
-        <string>Toca para informar deste erro.</string>
-        <key>gu</key>
-        <string>આ ભૂલની જાણ કરવા માટે ટૅપ કરો.</string>
-        <key>he</key>
-        <string>הקש כדי לדווח על שגיאה זו.</string>
-        <key>hi</key>
-        <string>इस त्रुटि की रिपोर्ट करने के लिए टैप करें।</string>
-        <key>hr</key>
-        <string>Dodirnite za prijavu ove pogreške.</string>
-        <key>ht</key>
-        <string>Tape pou rapòte erè sa a.</string>
-        <key>hu</key>
-        <string>Koppintson a hiba jelentéséhez.</string>
-        <key>hy</key>
-        <string>Հպեք՝ այս սխալի մասին հաղորդելու համար։</string>
-        <key>id</key>
-        <string>Ketuk untuk melaporkan kesalahan ini.</string>
-        <key>is</key>
-        <string>Ýttu til að tilkynna þessa villu.</string>
-        <key>it</key>
-        <string>Tocca per segnalare questo errore.</string>
-        <key>ja</key>
-        <string>タップしてこのエラーを報告</string>
-        <key>ka</key>
-        <string>Შეეხეთ ამ შეცდომის შესატყობინებლად.</string>
-        <key>kk</key>
-        <string>Бұл қате туралы хабарлау үшін түртіңіз.</string>
-        <key>kn</key>
-        <string>ಈ ದೋಷವನ್ನು ವರದಿ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
-        <key>ko</key>
-        <string>탭하여 이 오류를 신고하세요.</string>
-        <key>ky</key>
-        <string>Бул ката жөнүндө кабарлоо үчүн таптаңыз.</string>
-        <key>lt</key>
-        <string>Palieskite, kad praneštumėte apie šią klaidą.</string>
-        <key>mg</key>
-        <string>Tsindrio raha hitatitra ity hadisoana ity.</string>
-        <key>mi</key>
-        <string>Patohia hei ripoata i tēnei hapa.</string>
-        <key>mk</key>
-        <string>Допрете за да ја пријавите оваа грешка.</string>
-        <key>ml</key>
-        <string>ഈ പിശക് റിപ്പോർട്ട് ചെയ്യാൻ ടാപ്പ് ചെയ്യുക.</string>
-        <key>mn</key>
-        <string>Энэ алдааг мэдээлэхийн тулд товшино уу.</string>
-        <key>mt</key>
-        <string>Tektek biex tirrapporta dan l-iżball.</string>
-        <key>ne</key>
-        <string>यो त्रुटि रिपोर्ट गर्न ट्याप गर्नुहोस्।</string>
-        <key>nl</key>
-        <string>Tik om deze fout te melden.</string>
-        <key>no</key>
-        <string>Trykk for å rapportere denne feilen.</string>
-        <key>pa</key>
-        <string>ਇਸ ਗਲਤੀ ਦੀ ਰਿਪੋਰਟ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ।</string>
-        <key>pl</key>
-        <string>Stuknij, aby zgłosić ten błąd.</string>
-        <key>pt</key>
-        <string>Toque para relatar este erro.</string>
-        <key>ro</key>
-        <string>Atingeți pentru a raporta această eroare.</string>
-        <key>ru</key>
-        <string>Нажмите, чтобы сообщить об этой ошибке.</string>
-        <key>si</key>
-        <string>මෙම දෝෂය වාර්තා කිරීමට තට්ටු කරන්න.</string>
-        <key>sk</key>
-        <string>Klepnutím nahláste túto chybu.</string>
-        <key>sl</key>
-        <string>Dotaknite se, da prijavite to napako.</string>
-        <key>sq</key>
-        <string>Trokit për të raportuar këtë gabim.</string>
-        <key>sr</key>
-        <string>Додирните да бисте пријавили ову грешку.</string>
-        <key>su</key>
-        <string>Ketok pikeun ngalaporkeun kasalahan ieu.</string>
-        <key>sv</key>
-        <string>Tryck för att rapportera det här felet.</string>
-        <key>sw</key>
-        <string>Gusa ili kuripoti hitilafu hii.</string>
-        <key>ta</key>
-        <string>இந்தப் பிழையைப் புகாரளிக்கத் தட்டவும்.</string>
-        <key>te</key>
-        <string>ఈ లోపాన్ని నివేదించడానికి నొక్కండి.</string>
-        <key>tg</key>
-        <string>Барои гузориш додани ин хатогӣ клик кунед.</string>
-        <key>th</key>
-        <string>แตะเพื่อรายงานข้อผิดพลาดนี้</string>
-        <key>tl</key>
-        <string>I-tap para iulat ang error na ito.</string>
-        <key>tr</key>
-        <string>Bu hatayı bildirmek için dokunun.</string>
-        <key>tt</key>
-        <string>Бу хата турында хәбәр итү өчен басыгыз.</string>
-        <key>uk</key>
-        <string>Натисніть, щоб повідомити про цю помилку.</string>
-        <key>ur</key>
-        <string>اس خرابی کی اطلاع دینے کے لیے تھپتھپائیں۔</string>
-        <key>uz</key>
-        <string>Bu xato haqida xabar berish uchun bosing.</string>
-        <key>vi</key>
-        <string>Chạm để báo cáo lỗi này.</string>
-        <key>yi</key>
-        <string>צאַפּן צו מעלדן דעם טעות.</string>
-        <key>zh</key>
-        <string>点击报告此错误。</string>
-    </dict>
+	<key>tap_to_report</key>
+	<dict>
+		<key>af</key>
+		<string>Tik om hierdie fout te rapporteer.</string>
+		<key>ar</key>
+		<string>انقر للإبلاغ عن هذا الخطأ.</string>
+		<key>az</key>
+		<string>Bu xətanı bildirmək üçün toxunun.</string>
+		<key>be</key>
+		<string>Націсніце, каб паведаміць пра гэтую памылку.</string>
+		<key>bg</key>
+		<string>Докоснете, за да съобщите за тази грешка.</string>
+		<key>bn</key>
+		<string>এই ত্রুটিটি রিপোর্ট করতে ট্যাপ করুন।</string>
+		<key>bs</key>
+		<string>Dodirnite da prijavite ovu grešku.</string>
+		<key>ca</key>
+		<string>Toca per informar d'aquest error.</string>
+		<key>cs</key>
+		<string>Klepnutím nahlásíte tuto chybu.</string>
+		<key>cy</key>
+		<string>Tapiwch i roi gwybod am y gwall hwn.</string>
+		<key>da</key>
+		<string>Tryk for at rapportere denne fejl.</string>
+		<key>de</key>
+		<string>Tippen Sie hier, um diesen Fehler zu melden.</string>
+		<key>el</key>
+		<string>Πατήστε για να αναφέρετε αυτό το σφάλμα.</string>
+		<key>en</key>
+		<string>Tap to report this error.</string>
+		<key>eo</key>
+		<string>Tuŝu por raporti ĉi tiun eraron.</string>
+		<key>es</key>
+		<string>Toca para reportar este error.</string>
+		<key>et</key>
+		<string>Puudutage selle vea teatamiseks.</string>
+		<key>eu</key>
+		<string>Sakatu errore hau salatzeko.</string>
+		<key>fa</key>
+		<string>برای گزارش این خطا، ضربه بزنید.</string>
+		<key>fi</key>
+		<string>Ilmoita tästä virheestä napauttamalla.</string>
+		<key>fr</key>
+		<string>Appuyez pour signaler cette erreur.</string>
+		<key>ga</key>
+		<string>Tapáil chun an earráid seo a thuairisciú.</string>
+		<key>gd</key>
+		<string>Thoir gnogag gus aithris a dhèanamh air a' mhearachd seo.</string>
+		<key>gl</key>
+		<string>Toca para informar deste erro.</string>
+		<key>gu</key>
+		<string>આ ભૂલની જાણ કરવા માટે ટૅપ કરો.</string>
+		<key>he</key>
+		<string>הקש כדי לדווח על שגיאה זו.</string>
+		<key>hi</key>
+		<string>इस त्रुटि की रिपोर्ट करने के लिए टैप करें।</string>
+		<key>hr</key>
+		<string>Dodirnite za prijavu ove pogreške.</string>
+		<key>ht</key>
+		<string>Tape pou rapòte erè sa a.</string>
+		<key>hu</key>
+		<string>Koppintson a hiba jelentéséhez.</string>
+		<key>hy</key>
+		<string>Հպեք՝ այս սխալի մասին հաղորդելու համար։</string>
+		<key>id</key>
+		<string>Ketuk untuk melaporkan kesalahan ini.</string>
+		<key>is</key>
+		<string>Ýttu til að tilkynna þessa villu.</string>
+		<key>it</key>
+		<string>Tocca per segnalare questo errore.</string>
+		<key>ja</key>
+		<string>タップしてこのエラーを報告</string>
+		<key>ka</key>
+		<string>შეეხეთ ამ შეცდომის შესატყობინებლად.</string>
+		<key>kk</key>
+		<string>Бұл қате туралы хабарлау үшін түртіңіз.</string>
+		<key>kn</key>
+		<string>ಈ ದೋಷವನ್ನು ವರದಿ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+		<key>ko</key>
+		<string>탭하여 이 오류를 신고하세요.</string>
+		<key>ky</key>
+		<string>Бул ката жөнүндө кабарлоо үчүн таптаңыз.</string>
+		<key>lt</key>
+		<string>Palieskite, kad praneštumėte apie šią klaidą.</string>
+		<key>mg</key>
+		<string>Tsindrio raha hitatitra ity hadisoana ity.</string>
+		<key>mi</key>
+		<string>Patohia hei ripoata i tēnei hapa.</string>
+		<key>mk</key>
+		<string>Допрете за да ја пријавите оваа грешка.</string>
+		<key>ml</key>
+		<string>ഈ പിശക് റിപ്പോർട്ട് ചെയ്യാൻ ടാപ്പ് ചെയ്യുക.</string>
+		<key>mn</key>
+		<string>Энэ алдааг мэдээлэхийн тулд товшино уу.</string>
+		<key>mt</key>
+		<string>Tektek biex tirrapporta dan l-iżball.</string>
+		<key>ne</key>
+		<string>यो त्रुटि रिपोर्ट गर्न ट्याप गर्नुहोस्।</string>
+		<key>nl</key>
+		<string>Tik om deze fout te melden.</string>
+		<key>no</key>
+		<string>Trykk for å rapportere denne feilen.</string>
+		<key>pa</key>
+		<string>ਇਸ ਗਲਤੀ ਦੀ ਰਿਪੋਰਟ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ।</string>
+		<key>pl</key>
+		<string>Stuknij, aby zgłosić ten błąd.</string>
+		<key>pt</key>
+		<string>Toque para relatar este erro.</string>
+		<key>ro</key>
+		<string>Atingeți pentru a raporta această eroare.</string>
+		<key>ru</key>
+		<string>Нажмите, чтобы сообщить об этой ошибке.</string>
+		<key>si</key>
+		<string>මෙම දෝෂය වාර්තා කිරීමට තට්ටු කරන්න.</string>
+		<key>sk</key>
+		<string>Klepnutím nahláste túto chybu.</string>
+		<key>sl</key>
+		<string>Dotaknite se, da prijavite to napako.</string>
+		<key>sq</key>
+		<string>Trokit për të raportuar këtë gabim.</string>
+		<key>sr</key>
+		<string>Додирните да бисте пријавили ову грешку.</string>
+		<key>su</key>
+		<string>Ketok pikeun ngalaporkeun kasalahan ieu.</string>
+		<key>sv</key>
+		<string>Tryck för att rapportera det här felet.</string>
+		<key>sw</key>
+		<string>Gusa ili kuripoti hitilafu hii.</string>
+		<key>ta</key>
+		<string>இந்தப் பிழையைப் புகாரளிக்கத் தட்டவும்.</string>
+		<key>te</key>
+		<string>ఈ లోపాన్ని నివేదించడానికి నొక్కండి.</string>
+		<key>tg</key>
+		<string>Барои гузориш додани ин хатогӣ ламс кунед.</string>
+		<key>th</key>
+		<string>แตะเพื่อรายงานข้อผิดพลาดนี้</string>
+		<key>tl</key>
+		<string>I-tap para iulat ang error na ito.</string>
+		<key>tr</key>
+		<string>Bu hatayı bildirmek için dokunun.</string>
+		<key>tt</key>
+		<string>Бу хата турында хәбәр итү өчен басыгыз.</string>
+		<key>uk</key>
+		<string>Натисніть, щоб повідомити про цю помилку.</string>
+		<key>ur</key>
+		<string>اس خرابی کی اطلاع دینے کے لیے تھپتھپائیں۔</string>
+		<key>uz</key>
+		<string>Bu xato haqida xabar berish uchun bosing.</string>
+		<key>vi</key>
+		<string>Chạm để báo cáo lỗi này.</string>
+		<key>yi</key>
+		<string>צאַפּן צו מעלדן דעם טעות.</string>
+		<key>zh</key>
+		<string>点击报告此错误。</string>
+	</dict>
 	<key>timed_out</key>
 	<dict>
 		<key>af</key>
-		<string>Die operasie het &apos;n tydsduur gehad. Probeer asseblief later weer.</string>
+		<string>Die bewerking se tyd het verstryk. Probeer asseblief later weer.</string>
 		<key>ar</key>
 		<string>انتهت مهلة العملية. يرجى المحاولة مرة أخرى لاحقاً.</string>
 		<key>az</key>
@@ -2493,7 +2493,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bs</key>
 		<string>Vremensko ograničenje operacije je isteklo. Pokušajte ponovo kasnije.</string>
 		<key>ca</key>
-		<string>L&apos;operació s&apos;ha esgotat. Torna-ho a provar més tard.</string>
+		<string>S'ha esgotat el temps d'espera de l'operació. Torna-ho a provar més tard.</string>
 		<key>cs</key>
 		<string>Časový limit operace vypršel. Zkuste to prosím znovu později.</string>
 		<key>cy</key>
@@ -2507,9 +2507,9 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>en</key>
 		<string>The operation timed out. Please try again later.</string>
 		<key>eo</key>
-		<string>La operacio eksvalidiĝis. Bonvolu reprovi poste.</string>
+		<string>La tempolimo de la operacio pasis. Bonvolu reprovi poste.</string>
 		<key>es</key>
-		<string>La operación ha caducado. Por favor, inténtelo de nuevo más tarde.</string>
+		<string>Se agotó el tiempo de espera de la operación. Por favor, inténtalo de nuevo más tarde.</string>
 		<key>et</key>
 		<string>Toiming aegus. Palun proovige hiljem uuesti.</string>
 		<key>eu</key>
@@ -2519,7 +2519,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>fi</key>
 		<string>Toiminto aikakatkaistiin. Yritä myöhemmin uudelleen.</string>
 		<key>fr</key>
-		<string>L&apos;opération a expiré. Veuillez réessayer plus tard.</string>
+		<string>L'opération a expiré. Veuillez réessayer plus tard.</string>
 		<key>ga</key>
 		<string>Chuaigh an t-am thart don oibríocht. Déan iarracht arís ar ball.</string>
 		<key>gd</key>
@@ -2529,7 +2529,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gu</key>
 		<string>ઓપરેશનનો સમય સમાપ્ત થયો. કૃપા કરીને પછીથી ફરી પ્રયાસ કરો.</string>
 		<key>he</key>
-		<string>הזמן שנגמר לפעולה הסתיים. אנא נסה שוב מאוחר יותר.</string>
+		<string>פג הזמן הקצוב לפעולה. אנא נסה שוב מאוחר יותר.</string>
 		<key>hi</key>
 		<string>ऑपरेशन का समय समाप्त हो गया। कृपया बाद में फिर से प्रयास करें।</string>
 		<key>hr</key>
@@ -2537,19 +2537,19 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ht</key>
 		<string>Operasyon an te pran twòp tan. Tanpri eseye ankò pita.</string>
 		<key>hu</key>
-		<string>A művelet időtúllépést okozott. Kérjük, próbálja meg később.</string>
+		<string>A művelet túllépte az időkorlátot. Kérjük, próbálja újra később.</string>
 		<key>hy</key>
 		<string>Գործողության ժամանակը սպառվեց։ Խնդրում ենք փորձել կրկին ավելի ուշ։</string>
 		<key>id</key>
-		<string>Operasi habis waktu. Silakan coba lagi nanti.</string>
+		<string>Waktu operasi telah habis. Silakan coba lagi nanti.</string>
 		<key>is</key>
 		<string>Aðgerðin rann út á tíma. Vinsamlegast reyndu aftur síðar.</string>
 		<key>it</key>
-		<string>L&apos;operazione è scaduta. Riprova più tardi.</string>
+		<string>L'operazione è scaduta. Riprova più tardi.</string>
 		<key>ja</key>
 		<string>操作がタイムアウトしました。後でもう一度お試しください。</string>
 		<key>ka</key>
-		<string>Ოპერაციის დრო ამოიწურა. გთხოვთ, სცადოთ მოგვიანებით.</string>
+		<string>ოპერაციის დრო ამოიწურა. გთხოვთ, სცადოთ მოგვიანებით.</string>
 		<key>kk</key>
 		<string>Операция уақыты аяқталды. Кейінірек қайталап көріңіз.</string>
 		<key>kn</key>
@@ -2571,7 +2571,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>mn</key>
 		<string>Үйлдэл хугацаа дууссан. Дараа дахин оролдоно уу.</string>
 		<key>mt</key>
-		<string>L-operazzjoni skadiet. Jekk jogħġbok erġa&apos; pprova aktar tard.</string>
+		<string>L-operazzjoni skadiet. Jekk jogħġbok erġa' pprova aktar tard.</string>
 		<key>ne</key>
 		<string>सञ्चालनको समय सकियो। कृपया पछि फेरि प्रयास गर्नुहोस्।</string>
 		<key>nl</key>
@@ -2583,7 +2583,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>pl</key>
 		<string>Operacja przekroczyła limit czasu. Proszę spróbować ponownie później.</string>
 		<key>pt</key>
-		<string>A operação expirou. Tentar novamente mais tarde</string>
+		<string>A operação expirou. Por favor, tente novamente mais tarde.</string>
 		<key>ro</key>
 		<string>Operațiunea a expirat. Vă rugăm să încercați din nou mai târziu.</string>
 		<key>ru</key>
@@ -2623,7 +2623,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ur</key>
 		<string>آپریشن کا وقت ختم ہو گیا۔ براہ کرم بعد میں دوبارہ کوشش کریں۔</string>
 		<key>uz</key>
-		<string>Amaliyot vaqti tugadi. Iltimos, keyinroq qayta urinib ko&apos;ring.</string>
+		<string>Amaliyot vaqti tugadi. Iltimos, keyinroq qayta urinib ko'ring.</string>
 		<key>vi</key>
 		<string>Thao tác đã hết thời gian chờ. Vui lòng thử lại sau.</string>
 		<key>yi</key>
@@ -2636,7 +2636,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>af</key>
 		<string>Probeer Weer</string>
 		<key>ar</key>
-		<string>حاول ثانية</string>
+		<string>حاول مرة أخرى</string>
 		<key>az</key>
 		<string>Yenidən Cəhd Edin</string>
 		<key>be</key>
@@ -2648,7 +2648,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>bs</key>
 		<string>Pokušajte Ponovo</string>
 		<key>ca</key>
-		<string>Torna-ho a Intentar</string>
+		<string>Reintenta</string>
 		<key>cs</key>
 		<string>Zkuste to Znovu</string>
 		<key>cy</key>
@@ -2656,15 +2656,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>da</key>
 		<string>Prøv Igen</string>
 		<key>de</key>
-		<string>Versuchen Sie es Erneut</string>
+		<string>Erneut versuchen</string>
 		<key>el</key>
-		<string>Δοκιμάστε Ξανά</string>
+		<string>Νέα δοκιμή</string>
 		<key>en</key>
 		<string>Try Again</string>
 		<key>eo</key>
 		<string>Provu Denove</string>
 		<key>es</key>
-		<string>Intentar Otra Vez</string>
+		<string>Reintentar</string>
 		<key>et</key>
 		<string>Proovi Uuesti</string>
 		<key>eu</key>
@@ -2674,7 +2674,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>fi</key>
 		<string>Yritä Uudelleen</string>
 		<key>fr</key>
-		<string>Essayer à Nouveau</string>
+		<string>Réessayer</string>
 		<key>ga</key>
 		<string>Bain Triail Arís</string>
 		<key>gd</key>
@@ -2684,15 +2684,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gu</key>
 		<string>ફરી પ્રયાસ કરો</string>
 		<key>he</key>
-		<string>נסה שוב</string>
+		<string>ניסיון נוסף</string>
 		<key>hi</key>
-		<string>पुनः प्रयास करें</string>
+		<string>फिर कोशिश करें</string>
 		<key>hr</key>
 		<string>Pokušaj Ponovno</string>
 		<key>ht</key>
 		<string>Eseye Ankò</string>
 		<key>hu</key>
-		<string>Próbáld Újra</string>
+		<string>Újrapróbálkozás</string>
 		<key>hy</key>
 		<string>Փորձեք Կրկին</string>
 		<key>id</key>
@@ -2702,19 +2702,19 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>it</key>
 		<string>Riprova</string>
 		<key>ja</key>
-		<string>もう一度やり直してください</string>
+		<string>やり直す</string>
 		<key>ka</key>
-		<string>Ხელახლა Სცადეთ</string>
+		<string>ხელახლა სცადეთ</string>
 		<key>kk</key>
 		<string>Қайтадан Байқап Көріңіз</string>
 		<key>kn</key>
 		<string>ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
 		<key>ko</key>
-		<string>다시 시도하세요</string>
+		<string>다시 시도</string>
 		<key>ky</key>
 		<string>Кайра Аракет Кыл</string>
 		<key>lt</key>
-		<string>Bandykite dar Kartą</string>
+		<string>Bandykite dar kartą</string>
 		<key>mg</key>
 		<string>Andramo Indray Mandeha</string>
 		<key>mi</key>
@@ -2726,7 +2726,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>mn</key>
 		<string>Дахин Оролдоно Уу</string>
 		<key>mt</key>
-		<string>Erġa Pprova</string>
+		<string>Erġa' pprova</string>
 		<key>ne</key>
 		<string>फेरि प्रयास गर्नुहोस्</string>
 		<key>nl</key>
@@ -2738,15 +2738,15 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>pl</key>
 		<string>Spróbuj Ponownie</string>
 		<key>pt</key>
-		<string>Tente Novamente</string>
+		<string>Tentar Novamente</string>
 		<key>ro</key>
-		<string>Încearcă din Nou</string>
+		<string>Reîncercați</string>
 		<key>ru</key>
-		<string>Попробуйте еще Раз</string>
+		<string>Повторить</string>
 		<key>si</key>
 		<string>නැවත උත්සාහ කරන්න</string>
 		<key>sk</key>
-		<string>Skúste to Znova</string>
+		<string>Skúsiť znovu</string>
 		<key>sl</key>
 		<string>Poskusi Znova</string>
 		<key>sq</key>
@@ -2770,19 +2770,19 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>tl</key>
 		<string>Subukan Muli</string>
 		<key>tr</key>
-		<string>Tekrar Deneyin</string>
+		<string>Yeniden Dene</string>
 		<key>tt</key>
-		<string>Тагын бер кат Тырышып Карагыз</string>
+		<string>Тагын бер кат тырышып карагыз</string>
 		<key>uk</key>
-		<string>Спробуйте ще Раз</string>
+		<string>Спробувати ще раз</string>
 		<key>ur</key>
 		<string>دوبارہ کوشش کریں</string>
 		<key>uz</key>
-		<string>Qayta Urinib Ko&apos;ring</string>
+		<string>Qayta Urinib Ko'ring</string>
 		<key>vi</key>
 		<string>Thử Lại</string>
 		<key>yi</key>
-		<string>פרוביר נאכאמאל</string>
+		<string>פּרוּווט ווידער</string>
 		<key>zh</key>
 		<string>重试</string>
 	</dict>
@@ -2813,7 +2813,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>de</key>
 		<string>Gestern</string>
 		<key>el</key>
-		<string>Εχθές</string>
+		<string>Χθες</string>
 		<key>en</key>
 		<string>Yesterday</string>
 		<key>eo</key>
@@ -2839,9 +2839,9 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>gu</key>
 		<string>ગઈકાલે</string>
 		<key>he</key>
-		<string>אֶתמוֹל</string>
+		<string>אתמול</string>
 		<key>hi</key>
-		<string>कल</string>
+		<string>बीता कल</string>
 		<key>hr</key>
 		<string>Jučer</string>
 		<key>ht</key>
@@ -2859,7 +2859,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>ja</key>
 		<string>昨日</string>
 		<key>ka</key>
-		<string>Გუშინ</string>
+		<string>გუშინ</string>
 		<key>kk</key>
 		<string>Кеше</string>
 		<key>kn</key>
@@ -2911,7 +2911,7 @@ Vui lòng kết nối lại internet và thử lại.</string>
 		<key>su</key>
 		<string>Kamari</string>
 		<key>sv</key>
-		<string>I går</string>
+		<string>Igår</string>
 		<key>sw</key>
 		<string>Jana</string>
 		<key>ta</key>

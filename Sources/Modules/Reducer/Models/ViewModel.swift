@@ -81,6 +81,14 @@ public typealias ViewModel<R> = ViewModelOf<R.State, R.Action> where R: Reducer
 ///
 ///     await viewModel.send(.refresh, while: \.isLoading)
 ///
+/// ## Observing Shared Values
+///
+/// Use ``observing(_:_:)`` to subscribe the view model to an
+/// asynchronous sequence, such as a ``SharedState/changes`` or
+/// ``SharedEvent/events`` stream, mapping each element to an
+/// action. Subscriptions are cancelled automatically when the view
+/// model deinitializes.
+///
 /// - Important: `ViewModelOf` is confined to the main actor. Always
 ///   access ``state`` and call ``send(_:)`` from the main actor.
 ///   A runtime assertion will be triggered if this invariant is violated.
@@ -113,8 +121,9 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     private let reducer: any Reducer<State, Action>
 
     private var internalState: State
+    private var observationTasks = [Task<Void, Never>]()
 
-    // MARK: - Init
+    // MARK: - Object Lifecycle
 
     /// Creates a view model with the given initial state and
     /// reducer.
@@ -134,6 +143,10 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
         self.state = initialState
         self.internalState = initialState
         self.reducer = reducer
+    }
+
+    deinit {
+        observationTasks.forEach { $0.cancel() }
     }
 
     // MARK: - Send
@@ -456,6 +469,61 @@ public extension ViewModelOf {
         for await state in $state.values {
             if !predicate(state) { break }
         }
+    }
+}
+
+@MainActor
+public extension ViewModelOf {
+    /// Subscribes this view model to an asynchronous sequence,
+    /// mapping each element to an action.
+    ///
+    /// Each element the sequence produces is passed to `toAction`,
+    /// and the resulting action is dispatched to the reducer on the
+    /// main actor. Return `nil` from `toAction` to skip an element.
+    ///
+    /// Because this method returns `self`, subscriptions can be
+    /// chained directly after the initializer:
+    ///
+    /// ```swift
+    /// @StateObject private var viewModel = ViewModel<SettingsReducer>(
+    ///     initialState: .init(),
+    ///     reducer: SettingsReducer()
+    /// )
+    /// .observing(Shared.isLoggedIn.changes) { .isLoggedInChanged($0) }
+    /// .observing(Shared.sessionDidExpire.events) { _ in .sessionExpired }
+    /// ```
+    ///
+    /// The subscription task is retained by the view model and
+    /// cancelled when the view model deinitializes – subscriptions
+    /// live exactly as long as the view model.
+    ///
+    /// - Note: A ``SharedState/changes`` stream yields the current
+    ///   value immediately upon subscription, so its mapped action
+    ///   is dispatched once at creation time.
+    ///
+    /// - Parameters:
+    ///   - source: The asynchronous sequence to observe.
+    ///   - toAction: A closure that converts each element into an
+    ///     action. Return `nil` to skip the element.
+    ///
+    /// - Returns: This view model, enabling chained `observing`
+    ///   calls.
+    @discardableResult
+    func observing<S: AsyncSequence & Sendable>(
+        _ source: S,
+        _ toAction: @escaping @Sendable (S.Element) -> Action?
+    ) -> Self where S.Element: Sendable, S.Failure == Never {
+        observationTasks.append(
+            Task { [weak self] in
+                for await element in source {
+                    guard let self else { return }
+                    guard let action = toAction(element) else { continue }
+                    send(action)
+                }
+            }
+        )
+
+        return self
     }
 }
 

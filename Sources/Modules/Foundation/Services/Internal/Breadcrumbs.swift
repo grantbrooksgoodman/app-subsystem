@@ -122,7 +122,7 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
         self.captureHistory = captureHistory
 
         let filePath = filePath; Task.detached { try? pngData.write(to: filePath) }
-        Observables.breadcrumbsDidCapture.trigger()
+        Shared.breadcrumbsDidCapture.send()
 
         guard savesToPhotos else { return }
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)

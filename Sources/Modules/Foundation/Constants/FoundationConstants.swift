@@ -12,6 +12,23 @@ import SwiftUI
 /* Proprietary */
 import Translator
 
+// MARK: - Shared Value Registry
+
+/// A registry of app-wide ``SharedState`` and ``SharedEvent`` values used
+/// to drive reactive UI updates and cross-component communication.
+public enum Shared {
+    /// A signal that fires after Breadcrumbs captures a
+    /// screenshot.
+    public static let breadcrumbsDidCapture = SharedEvent<Void>()
+
+    static let isBuildInfoOverlayHidden = SharedState<Bool>(true)
+    static let rootViewSheet = SharedState<RootSheet?>(nil)
+    static let rootViewTapped = SharedEvent<Void>()
+    static let rootViewToast = SharedState<Toast?>(nil)
+    static let rootViewToastAction = SharedState<(@Sendable () -> Void)?>(nil)
+    static let themedViewAppearanceChanged = SharedEvent<Void>()
+}
+
 // MARK: - Foundation Constants
 
 enum FoundationConstants {
@@ -26,23 +43,6 @@ enum FoundationConstants {
     /* MARK: String */
 
     enum Strings {}
-}
-
-// MARK: - Observable Registry
-
-/// A registry of app-wide ``Observable`` values used to
-/// drive reactive UI updates and cross-component communication.
-public enum Observables {
-    /// A signal that fires after Breadcrumbs captures a
-    /// screenshot.
-    public static let breadcrumbsDidCapture = Observable<Nil>()
-
-    static let isBuildInfoOverlayHidden = Observable<Bool>(true)
-    static let rootViewSheet = Observable<AnyView?>(nil)
-    static let rootViewTapped = Observable<Nil>()
-    static let rootViewToast = Observable<Toast?>(nil)
-    static let rootViewToastAction: Observable<(@Sendable () -> Void)?> = .init(nil)
-    static let themedViewAppearanceChanged = Observable<Nil>()
 }
 
 // MARK: - Included Keys

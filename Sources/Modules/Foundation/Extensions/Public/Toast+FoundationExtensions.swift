@@ -45,8 +45,8 @@ public extension Toast {
         UIApplication.iOS27IsAvailable ?
             !isHidden :
             (
-                Observables.rootViewToast.value != nil ||
-                    Observables.rootViewToastAction.value != nil
+                Shared.rootViewToast.value != nil ||
+                    Shared.rootViewToastAction.value != nil
             )
     }
 
@@ -142,8 +142,8 @@ public extension Toast {
     /// returns immediately.
     static func hide() {
         guard UIApplication.iOS27IsAvailable else {
-            Observables.rootViewToast.value = nil
-            Observables.rootViewToastAction.value = nil
+            Shared.rootViewToast.value = nil
+            Shared.rootViewToastAction.value = nil
             return
         }
 
@@ -152,8 +152,8 @@ public extension Toast {
         guard !isHidden,
               let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW") else { return }
 
-        Observables.rootViewToast.value = nil
-        Observables.rootViewToastAction.value = nil
+        Shared.rootViewToast.value = nil
+        Shared.rootViewToastAction.value = nil
 
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         if hidesBuildInfoOverlay == false {
@@ -193,7 +193,7 @@ public extension Toast {
         self.keyboardHeight = keyboardHeight
         guard !isHidden,
               let rootOverlayWindow = mainWindow?.firstSubview(for: "ROOT_OVERLAY_WINDOW"),
-              let overlayFrame = frame(Observables.rootViewToast.value?.type.appearanceEdge ?? .top) else { return }
+              let overlayFrame = frame(Shared.rootViewToast.value?.type.appearanceEdge ?? .top) else { return }
 
         rootOverlayWindow.frame = overlayFrame
         rootOverlayWindow.isUserInteractionEnabled = true
@@ -234,8 +234,8 @@ public extension Toast {
     ) {
         // Return early if same toast is already being shown.
         guard !(
-            Observables.rootViewToast.value == toast &&
-                (Observables.rootViewToastAction.value == nil) == (onTap == nil)
+            Shared.rootViewToast.value == toast &&
+                (Shared.rootViewToastAction.value == nil) == (onTap == nil)
         ) else { return }
 
         guard !UIApplication.isBlockingUserInteraction,
@@ -252,8 +252,8 @@ public extension Toast {
         }
 
         guard UIApplication.iOS27IsAvailable else {
-            Observables.rootViewToast.value = toast
-            Observables.rootViewToastAction.value = onTap
+            Shared.rootViewToast.value = toast
+            Shared.rootViewToastAction.value = onTap
             return
         }
 
@@ -263,8 +263,8 @@ public extension Toast {
               let overlayFrame = frame(toast.type.appearanceEdge ?? .top) else { return }
 
         func setUpView() {
-            Observables.rootViewToast.value = toast
-            Observables.rootViewToastAction.value = onTap
+            Shared.rootViewToast.value = toast
+            Shared.rootViewToastAction.value = onTap
 
             rootOverlayWindow.frame = overlayFrame
             rootOverlayWindow.isUserInteractionEnabled = true

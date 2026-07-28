@@ -17,7 +17,6 @@ struct RootOverlayView: View {
 
     // MARK: - Properties
 
-    @StateObject private var observer: ViewObserver<RootOverlayViewObserver>
     @StateObject private var viewModel: ViewModel<RootOverlayReducer>
 
     // MARK: - Computed Properties
@@ -69,8 +68,21 @@ struct RootOverlayView: View {
     // MARK: - Init
 
     init(_ viewModel: ViewModel<RootOverlayReducer>) {
-        _viewModel = .init(wrappedValue: viewModel)
-        _observer = .init(wrappedValue: .init(.init(viewModel)))
+        _viewModel = .init(
+            wrappedValue: viewModel
+                .observing(Shared.isBuildInfoOverlayHidden.changes) {
+                    .isBuildInfoOverlayHiddenChanged($0)
+                }
+                .observing(Shared.rootViewSheet.changes) {
+                    .sheetChanged($0?.view)
+                }
+                .observing(Shared.rootViewToast.changes) {
+                    .toastChanged($0)
+                }
+                .observing(Shared.rootViewToastAction.changes) {
+                    .toastActionChanged($0)
+                }
+        )
     }
 
     // MARK: - View

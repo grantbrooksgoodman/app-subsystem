@@ -174,7 +174,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
     fileprivate func traitCollectionChanged() {
         notificationCenter.post(.init(name: .traitCollectionChangedNotification))
-        Observables.themedViewAppearanceChanged.trigger()
+        Shared.themedViewAppearanceChanged.send()
     }
 
     // MARK: - UIGestureRecognizer
@@ -183,7 +183,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         _ gestureRecognizer: UIGestureRecognizer,
         shouldReceive touch: UITouch
     ) -> Bool {
-        Observables.rootViewTapped.trigger()
+        Shared.rootViewTapped.send()
         return false
     }
 }

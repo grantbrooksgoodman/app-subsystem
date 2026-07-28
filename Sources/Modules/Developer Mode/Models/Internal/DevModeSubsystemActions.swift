@@ -406,14 +406,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         private static var toggleBuildInfoOverlayAction: DevModeAction {
             @Sendable
             func toggleBuildInfoOverlay() {
-                let isHidden = Observables.isBuildInfoOverlayHidden.value
+                let isHidden = Shared.isBuildInfoOverlayHidden.value
                 switch isHidden {
                 case true: BuildInfoOverlay.show()
                 case false: BuildInfoOverlay.hide()
                 }
             }
 
-            let prefix = Observables.isBuildInfoOverlayHidden.value ? "Show" : "Hide"
+            let prefix = Shared.isBuildInfoOverlayHidden.value ? "Show" : "Hide"
             return .init(
                 title: "\(prefix) Build Info Overlay",
                 perform: toggleBuildInfoOverlay

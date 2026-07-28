@@ -22,13 +22,19 @@ struct BuildInfoOverlayView: View {
     // MARK: - Properties
 
     @StateObject private var viewModel: ViewModel<BuildInfoOverlayReducer>
-    @StateObject private var observer: ViewObserver<BuildInfoOverlayViewObserver>
 
     // MARK: - Init
 
     init(_ viewModel: ViewModel<BuildInfoOverlayReducer>) {
-        _viewModel = .init(wrappedValue: viewModel)
-        _observer = .init(wrappedValue: .init(.init(viewModel)))
+        _viewModel = .init(
+            wrappedValue: viewModel
+                .observing(Shared.breadcrumbsDidCapture.events) {
+                    _ in .breadcrumbsDidCapture
+                }
+                .observing(Shared.rootViewTapped.events) {
+                    _ in .rootViewTapped
+                }
+        )
     }
 
     // MARK: - View

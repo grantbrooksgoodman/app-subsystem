@@ -29,8 +29,8 @@ import AlertKit
 /// ```
 ///
 /// When a new theme is applied, the service persists the selection,
-/// updates the interface style, and triggers the
-/// `Observables.themedViewAppearanceChanged` observable so that all
+/// updates the interface style, and sends the
+/// `Shared.themedViewAppearanceChanged` event so that all
 /// ``ThemedView`` instances update with the new colors.
 ///
 /// ## Style Changes
@@ -55,7 +55,7 @@ public enum ThemeService {
             currentThemeID = currentTheme.encodedHash
 
             setStyle()
-            Observables.themedViewAppearanceChanged.trigger()
+            Shared.themedViewAppearanceChanged.send()
         }
     }
 
@@ -74,7 +74,9 @@ public enum ThemeService {
 
     /// A Boolean value that indicates whether the built-in default theme is
     /// currently active.
-    public static var isDefaultThemeApplied: Bool { currentTheme == UITheme.default }
+    public static var isDefaultThemeApplied: Bool {
+        currentTheme == UITheme.default
+    }
 
     // MARK: - Set Theme
 

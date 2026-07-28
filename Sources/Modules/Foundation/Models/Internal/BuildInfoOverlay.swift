@@ -12,20 +12,20 @@ enum BuildInfoOverlay {
     // MARK: - Properties
 
     static var isHidden: Bool {
-        Observables.isBuildInfoOverlayHidden.value
+        Shared.isBuildInfoOverlayHidden.value
     }
 
     // MARK: - Methods
 
     static func hide(persistSetting: Bool = true) {
-        Observables.isBuildInfoOverlayHidden.value = true
+        Shared.isBuildInfoOverlayHidden.value = true
         guard persistSetting else { return }
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         hidesBuildInfoOverlay = true
     }
 
     static func show(persistSetting: Bool = true) {
-        Observables.isBuildInfoOverlayHidden.value = false
+        Shared.isBuildInfoOverlayHidden.value = false
         guard persistSetting else { return }
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         hidesBuildInfoOverlay = false

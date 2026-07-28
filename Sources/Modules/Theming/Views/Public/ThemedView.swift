@@ -90,13 +90,16 @@ private struct Themed: View {
     // MARK: - Properties
 
     @StateObject private var viewModel: ViewModel<ThemedReducer>
-    @StateObject private var observer: ViewObserver<ThemedViewObserver>
 
     // MARK: - Init
 
     init(_ viewModel: ViewModel<ThemedReducer>) {
-        _viewModel = .init(wrappedValue: viewModel)
-        _observer = .init(wrappedValue: .init(.init(viewModel)))
+        _viewModel = .init(
+            wrappedValue: viewModel
+                .observing(Shared.themedViewAppearanceChanged.events) {
+                    _ in .appearanceChanged
+                }
+        )
     }
 
     // MARK: - View

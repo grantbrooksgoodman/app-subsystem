@@ -10,6 +10,12 @@ import Foundation
 import SwiftUI
 
 struct BuildInfoOverlayReducer: Reducer {
+    // MARK: - Types
+
+    private enum CancelIDs {
+        case restoreOpaqueAppearance
+    }
+
     // MARK: - Dependencies
 
     @Dependency(\.build) private var build: Build
@@ -25,6 +31,7 @@ struct BuildInfoOverlayReducer: Reducer {
 
         case breadcrumbsDidCapture
         case restoreIndicatorColor
+        case rootViewTapped
         case shouldUseTranslucentAppearanceChanged(Bool)
         case updateStatsLabelText
     }
@@ -42,8 +49,13 @@ struct BuildInfoOverlayReducer: Reducer {
 
         /* MARK: Computed Properties */
 
-        var backgroundColor: Color { .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1) }
-        var isDeveloperModeEnabled: Bool { Dependency(\.build.isDeveloperModeEnabled).wrappedValue }
+        var backgroundColor: Color {
+            .black.opacity(shouldUseTranslucentAppearance ? 0.35 : 1)
+        }
+
+        var isDeveloperModeEnabled: Bool {
+            Dependency(\.build.isDeveloperModeEnabled).wrappedValue
+        }
 
         @MainActor
         var isUserInteractionDisabled: Bool {
@@ -51,9 +63,11 @@ struct BuildInfoOverlayReducer: Reducer {
                 RootWindowStatus.shared.rootView == .expiryPage
         }
 
-        var sendFeedbackButtonText: String { Localized(SubsystemStringKey.sendFeedback).wrappedValue } // swiftlint:disable:next identifier_name
+        var sendFeedbackButtonText: String {
+            Localized(SubsystemStringKey.sendFeedback).wrappedValue
+        }
 
-        @MainActor
+        @MainActor // swiftlint:disable:next identifier_name
         fileprivate var _statsLabelText: String {
             @Dependency(\.coreKit.utils.appMemoryFootprint) var appMemoryFootprint: Int?
             @Dependency(\.uiApplication.presentedViews.count) var presentedViewsCount: Int
@@ -94,6 +108,16 @@ struct BuildInfoOverlayReducer: Reducer {
 
         case .restoreIndicatorColor:
             state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
+
+        case .rootViewTapped:
+            state.shouldUseTranslucentAppearance = true
+            return .task(delay: .seconds(5)) {
+                .shouldUseTranslucentAppearanceChanged(false)
+            }
+            .cancellable(
+                id: CancelIDs.restoreOpaqueAppearance,
+                cancelInFlight: true
+            )
 
         case .sendFeedbackButtonTapped:
             return .fireAndForget { @MainActor in

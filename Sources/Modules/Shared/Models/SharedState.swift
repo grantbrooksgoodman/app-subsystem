@@ -8,128 +8,86 @@
 /* Native */
 import Foundation
 
-/// A thread-safe container for a value whose changes are shared with
-/// asynchronous subscribers.
+/// A property wrapper that reads and writes a shared value from the
+/// current dependency scope.
 ///
-/// Use `SharedState` for values that cross feature boundaries and have a
-/// meaningful current value at every point in time – authentication state,
-/// visibility flags, or the most recently published configuration. When only
-/// the occurrence of something matters, use ``SharedEvent`` instead.
-///
-/// Declare shared state as static properties on the `Shared` namespace:
+/// Use `@SharedState` in reducers, services, and effects to access a
+/// ``StateStream`` declared on ``SharedStates`` by its key path:
 ///
 /// ```swift
-/// public extension Shared {
-///     static let isLoggedIn = SharedState<Bool>(false)
-/// }
+/// @SharedState(\.isLoggedIn) private var isLoggedIn
+///
+/// isLoggedIn = true                // Writes the shared value.
+/// guard isLoggedIn else { return } // Reads the shared value.
 /// ```
 ///
-/// Read or write the current value through the ``value`` property:
-///
-///     Shared.isLoggedIn.value = true
-///
-/// ## Subscribing to Changes
-///
-/// The ``changes`` property vends an independent `AsyncStream` for each
-/// access. The stream yields the current value immediately upon subscription,
-/// then each subsequently written value:
+/// The projected value (`$`) exposes the underlying ``StateStream``,
+/// providing access to ``StateStream/changes`` and
+/// ``StateStream/withValue(_:)``:
 ///
 /// ```swift
-/// for await isLoggedIn in Shared.isLoggedIn.changes {
-///     // Handle the current value, then each change.
-/// }
+/// viewModel.observing($isLoggedIn.changes) { .loginStateChanged($0) }
 /// ```
 ///
-/// View models subscribe with ``ViewModelOf/observing(_:_:)``, mapping each
-/// value to a reducer action.
+/// Events have their own wrapper – access an ``EventStream`` through
+/// ``SharedEvent`` instead:
 ///
-/// ## Thread Safety
+/// ```swift
+/// @SharedEvent(\.sessionDidExpire) private var sessionDidExpire
+/// ```
 ///
-/// All stored state is protected by ``LockIsolated``. The ``value`` property
-/// can be read and written from any isolation context. Writes are delivered
-/// to every subscriber in write order.
+/// This wrapper is the only way to access a ``StateStream`` – the
+/// ``SharedStates`` container is not resolvable through ``Dependency``.
 ///
-/// - SeeAlso: ``SharedEvent``
-public final class SharedState<Value: Sendable>: Sendable {
-    // MARK: - Types
-
-    private struct Storage {
-        var continuations = [UUID: AsyncStream<Value>.Continuation]()
-        var value: Value
-    }
-
+/// The wrapper resolves its value from ``DependencyValues/current`` each
+/// time you access ``wrappedValue`` or ``projectedValue``, so overrides
+/// applied by ``DependencyScopes/withDependencies(_:operation:)`` are
+/// visible to any access within that scope.
+///
+/// - Important: This wrapper is not a SwiftUI `DynamicProperty`. Reading a
+///   shared value in a view's `body` doesn't invalidate the view when the
+///   value changes. Reactivity flows exclusively through
+///   ``ViewModelOf/observing(_:_:)`` – map each change to a reducer action
+///   and drive view updates from reducer state.
+///
+/// - SeeAlso: ``SharedStates``, ``StateStream``, ``EventStream``
+@propertyWrapper
+public struct SharedState<Value: Sendable>: @unchecked Sendable {
     // MARK: - Properties
 
-    private let storage: LockIsolated<Storage>
+    private let keyPath: KeyPath<SharedStates, StateStream<Value>>
 
-    // MARK: - Computed Properties
+    // MARK: - Init
 
-    /// An asynchronous sequence of the current value and its changes.
+    /// Creates a shared value accessor for the given key path.
     ///
-    /// Each access creates an independent stream. The stream yields the
-    /// current value immediately upon subscription, then each value written
-    /// to ``value``, in write order:
-    ///
-    /// ```swift
-    /// for await isLoggedIn in Shared.isLoggedIn.changes {
-    ///     guard isLoggedIn else { continue }
-    ///     // Handle login
-    /// }
-    /// ```
-    ///
-    /// If the consumer suspends while multiple writes occur, only the most
-    /// recent value is retained; intermediate values are discarded. Values
-    /// that must never be dropped are events, not state – model them with
-    /// ``SharedEvent``.
-    ///
-    /// The stream finishes when the `SharedState` deallocates.
-    public var changes: AsyncStream<Value> {
-        AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
-            let id = UUID()
-
-            continuation.onTermination = { [weak self] _ in
-                self?.storage.projectedValue.withValue { $0.continuations[id] = nil }
-            }
-
-            storage.projectedValue.withValue { storage in
-                storage.continuations[id] = continuation
-                continuation.yield(storage.value)
-            }
-        }
+    /// - Parameter keyPath: A key path to the desired ``StateStream``
+    ///   declaration on ``SharedStates``.
+    public init(_ keyPath: KeyPath<SharedStates, StateStream<Value>>) {
+        self.keyPath = keyPath
     }
 
-    /// The current value.
+    // MARK: - Projected Value
+
+    /// The underlying ``StateStream`` instance.
     ///
-    /// Reading this property returns the latest value. Writing a new value
-    /// stores it and yields it to every active ``changes`` subscriber. The
-    /// store and the yields are performed as a single atomic operation, so
-    /// concurrent writers cannot interleave and every subscriber observes
-    /// writes in the same order.
-    public var value: Value {
-        get { storage.projectedValue.value }
-        set {
-            storage.projectedValue.withValue { storage in
-                storage.value = newValue
-                for continuation in storage.continuations.values {
-                    continuation.yield(newValue)
-                }
-            }
-        }
+    /// Use the projected value to subscribe to ``StateStream/changes`` or
+    /// to perform an atomic read-modify-write with
+    /// ``StateStream/withValue(_:)``.
+    public var projectedValue: StateStream<Value> {
+        DependencyValues.current.sharedStates[keyPath: keyPath]
     }
 
-    // MARK: - Object Lifecycle
+    // MARK: - Wrapped Value
 
-    /// Creates a shared state container with the given initial value.
+    /// The current value of the shared state.
     ///
-    /// - Parameter initialValue: The initial value to store.
-    public init(_ initialValue: Value) {
-        storage = LockIsolated(Storage(value: initialValue))
-    }
-
-    deinit {
-        storage.projectedValue.withValue { storage in
-            storage.continuations.values.forEach { $0.finish() }
-            storage.continuations.removeAll()
-        }
+    /// Reading this property resolves the ``StateStream`` instance from
+    /// the ``DependencyValues`` scope that is active at the point of
+    /// access and returns its current value. Writing stores the new value
+    /// and yields it to every active ``StateStream/changes`` subscriber.
+    public var wrappedValue: Value {
+        get { projectedValue.value }
+        nonmutating set { projectedValue.value = newValue }
     }
 }

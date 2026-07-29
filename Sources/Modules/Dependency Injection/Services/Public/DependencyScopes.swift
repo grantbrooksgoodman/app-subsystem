@@ -48,7 +48,7 @@ import Foundation
 /// ```
 ///
 /// - SeeAlso: ``DependencyValues``, ``CapturedDependencies``
-enum DependencyScopes {
+public enum DependencyScopes {
     // MARK: - Methods
 
     /// Overrides dependencies for the duration of an asynchronous
@@ -66,7 +66,7 @@ enum DependencyScopes {
     ///     dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    static func withDependencies<T>(
+    public static func withDependencies<T>(
         _ modifier: (inout DependencyValues) -> Void,
         operation: () async throws -> T
     ) async rethrows -> T {
@@ -87,7 +87,7 @@ enum DependencyScopes {
     ///     dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    static func withDependencies<T>(
+    public static func withDependencies<T>(
         _ modifier: (inout DependencyValues) -> Void,
         operation: () throws -> T
     ) rethrows -> T {
@@ -105,7 +105,7 @@ enum DependencyScopes {
     ///   dependencies.
     ///
     /// - Returns: The value returned by `operation`.
-    static func withEscapedDependencies<T>(
+    public static func withEscapedDependencies<T>(
         _ operation: (CapturedDependencies) throws -> T
     ) rethrows -> T {
         try operation(CapturedDependencies())

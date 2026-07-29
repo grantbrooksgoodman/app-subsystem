@@ -8,121 +8,61 @@
 /* Native */
 import Foundation
 
-/// A broadcaster for occurrences that carry a typed payload.
+/// A property wrapper that reads a shared event from the current
+/// dependency scope.
 ///
-/// Use `SharedEvent` when only the occurrence of something matters – a
-/// signal to refresh, a captured screenshot, or a delta describing what
-/// changed. A `SharedEvent` stores nothing; subscribers receive only the
-/// events sent after they subscribe. For values with a meaningful current
-/// state, use ``SharedState`` instead.
-///
-/// Declare events as static properties on the `Shared` namespace. Use
-/// `SharedEvent<Void>` when the event carries no payload:
+/// Use `@SharedEvent` in reducers, services, and effects to access an
+/// ``EventStream`` declared on ``SharedEvents`` by its key path:
 ///
 /// ```swift
-/// public extension Shared {
-///     static let sessionDidExpire = SharedEvent<Void>()
-///     static let storeDidChange = SharedEvent<StoreChange>()
-/// }
+/// @SharedEvent(\.sessionDidExpire) private var sessionDidExpire
+///
+/// sessionDidExpire.send()
 /// ```
 ///
-/// Send an event from any isolation context:
-///
-///     Shared.sessionDidExpire.send()
-///     Shared.storeDidChange.send(change)
-///
-/// ## Subscribing to Events
-///
-/// The ``events`` property vends an independent `AsyncStream` for each
-/// access:
+/// View models subscribe with ``ViewModelOf/observing(_:_:)``, mapping
+/// each payload to a reducer action:
 ///
 /// ```swift
-/// for await change in Shared.storeDidChange.events {
-///     // Handle every change.
-/// }
+/// viewModel.observing(sessionDidExpire.events) { _ in .sessionExpired }
 /// ```
 ///
-/// View models subscribe with ``ViewModelOf/observing(_:_:)``, mapping each
-/// payload to a reducer action.
+/// State has its own wrapper – access a ``StateStream`` through
+/// ``SharedState`` instead. This wrapper is the only way to access an
+/// ``EventStream`` – the ``SharedEvents`` container is not resolvable
+/// through ``Dependency``.
 ///
-/// ## Thread Safety
+/// The wrapper resolves its value from ``DependencyValues/current`` each
+/// time you access ``wrappedValue``, so overrides applied by
+/// ``DependencyScopes/withDependencies(_:operation:)`` are visible to any
+/// access within that scope.
 ///
-/// All stored state is protected by ``LockIsolated``. Events can be sent
-/// from any isolation context and are delivered to every subscriber in send
-/// order. Payloads are buffered without bound, so no event is dropped while
-/// a subscriber is suspended.
-///
-/// - SeeAlso: ``SharedState``
-public final class SharedEvent<Payload: Sendable>: Sendable {
+/// - SeeAlso: ``SharedEvents``, ``EventStream``, ``SharedState``
+@propertyWrapper
+public struct SharedEvent<Payload: Sendable>: @unchecked Sendable {
     // MARK: - Properties
 
-    private let continuations = LockIsolated([UUID: AsyncStream<Payload>.Continuation]())
+    private let keyPath: KeyPath<SharedEvents, EventStream<Payload>>
 
-    // MARK: - Computed Properties
+    // MARK: - Init
 
-    /// An asynchronous sequence of event payloads.
+    /// Creates a shared event accessor for the given key path.
     ///
-    /// Each access creates an independent stream that yields the payload of
-    /// each event sent after subscription; events sent beforehand are not
-    /// replayed. Payloads are buffered without bound, so every event is
-    /// delivered even if the consumer suspends while multiple events occur:
-    ///
-    /// ```swift
-    /// for await change in Shared.storeDidChange.events {
-    ///     // Handle every change.
-    /// }
-    /// ```
-    ///
-    /// The stream finishes when the `SharedEvent` deallocates.
-    public var events: AsyncStream<Payload> {
-        AsyncStream { continuation in
-            let id = UUID()
-
-            continuation.onTermination = { [weak self] _ in
-                self?.continuations.projectedValue[id] = nil
-            }
-
-            continuations.projectedValue[id] = continuation
-        }
+    /// - Parameter keyPath: A key path to the desired ``EventStream``
+    ///   declaration on ``SharedEvents``.
+    public init(_ keyPath: KeyPath<SharedEvents, EventStream<Payload>>) {
+        self.keyPath = keyPath
     }
 
-    // MARK: - Object Lifecycle
+    // MARK: - Wrapped Value
 
-    /// Creates a shared event broadcaster.
-    public init() {}
-
-    deinit {
-        continuations.projectedValue.withValue { continuations in
-            continuations.values.forEach { $0.finish() }
-            continuations.removeAll()
-        }
-    }
-
-    // MARK: - Methods
-
-    /// Delivers the given payload to every active ``events`` subscriber.
+    /// The underlying ``EventStream`` instance.
     ///
-    /// The yields to all subscribers are performed as a single atomic
-    /// operation, so concurrent senders cannot interleave and every
-    /// subscriber observes events in the same order.
-    ///
-    /// - Parameter payload: The payload to deliver.
-    public func send(_ payload: Payload) {
-        continuations.projectedValue.withValue { continuations in
-            for continuation in continuations.values {
-                continuation.yield(payload)
-            }
-        }
-    }
-}
-
-public extension SharedEvent where Payload == Void {
-    /// Notifies every active ``events`` subscriber that this event occurred.
-    ///
-    /// Use this convenience for signal-style events that carry no payload:
-    ///
-    ///     Shared.sessionDidExpire.send()
-    func send() {
-        send(())
+    /// Reading this property resolves the instance from the
+    /// ``DependencyValues`` scope that is active at the point of access.
+    /// Send events with ``EventStream/send(_:)`` and subscribe through
+    /// ``EventStream/events``.
+    public var wrappedValue: EventStream<Payload> {
+        DependencyValues.current.sharedEvents[keyPath: keyPath]
     }
 }

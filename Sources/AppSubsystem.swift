@@ -32,7 +32,7 @@ import Translator
 ///
 /// - **Dependency injection.** Services and configuration are provided through the ``@Dependency`` property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
 ///
-/// - **Reactive observation.** Values that cross feature boundaries are expressed as ``SharedState`` and ``SharedEvent`` instances. View models subscribe with ``ViewModelOf/observing(_:_:)``, which maps each element to a reducer action delivered on the main actor.
+/// - **Reactive observation.** Values that cross feature boundaries are expressed as ``StateStream`` and ``EventStream`` instances. View models subscribe with ``ViewModelOf/observing(_:_:)``, which maps each element to a reducer action delivered on the main actor.
 ///
 /// - **Theming.** Appearance is driven by a ``UITheme`` value that can be swapped at runtime. Views that adopt the theming system update automatically when the active theme changes.
 ///

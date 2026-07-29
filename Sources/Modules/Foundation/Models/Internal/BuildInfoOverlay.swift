@@ -12,20 +12,20 @@ enum BuildInfoOverlay {
     // MARK: - Properties
 
     static var isHidden: Bool {
-        Shared.isBuildInfoOverlayHidden.value
+        SharedState(\.isBuildInfoOverlayHidden).wrappedValue
     }
 
     // MARK: - Methods
 
     static func hide(persistSetting: Bool = true) {
-        Shared.isBuildInfoOverlayHidden.value = true
+        SharedState(\.isBuildInfoOverlayHidden).wrappedValue = true
         guard persistSetting else { return }
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         hidesBuildInfoOverlay = true
     }
 
     static func show(persistSetting: Bool = true) {
-        Shared.isBuildInfoOverlayHidden.value = false
+        SharedState(\.isBuildInfoOverlayHidden).wrappedValue = false
         guard persistSetting else { return }
         @Persistent(.hidesBuildInfoOverlay) var hidesBuildInfoOverlay: Bool?
         hidesBuildInfoOverlay = false

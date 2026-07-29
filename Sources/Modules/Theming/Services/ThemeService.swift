@@ -30,7 +30,7 @@ import AlertKit
 ///
 /// When a new theme is applied, the service persists the selection,
 /// updates the interface style, and sends the
-/// `Shared.themedViewAppearanceChanged` event so that all
+/// `themedViewAppearanceChanged` shared event so that all
 /// ``ThemedView`` instances update with the new colors.
 ///
 /// ## Style Changes
@@ -55,7 +55,9 @@ public enum ThemeService {
             currentThemeID = currentTheme.encodedHash
 
             setStyle()
-            Shared.themedViewAppearanceChanged.send()
+
+            @SharedEvent(\.themedViewAppearanceChanged) var themedViewAppearanceChanged
+            themedViewAppearanceChanged.send()
         }
     }
 

@@ -70,18 +70,26 @@ struct RootOverlayView: View {
     init(_ viewModel: ViewModel<RootOverlayReducer>) {
         _viewModel = .init(
             wrappedValue: viewModel
-                .observing(Shared.isBuildInfoOverlayHidden.changes) {
-                    .isBuildInfoOverlayHiddenChanged($0)
-                }
-                .observing(Shared.rootViewSheet.changes) {
-                    .sheetChanged($0?.view)
-                }
-                .observing(Shared.rootViewToast.changes) {
-                    .toastChanged($0)
-                }
-                .observing(Shared.rootViewToastAction.changes) {
-                    .toastActionChanged($0)
-                }
+                .observing(
+                    SharedState(\.isBuildInfoOverlayHidden)
+                        .projectedValue
+                        .changes
+                ) { .isBuildInfoOverlayHiddenChanged($0) }
+                .observing(
+                    SharedState(\.rootViewSheet)
+                        .projectedValue
+                        .changes
+                ) { .sheetChanged($0?.view) }
+                .observing(
+                    SharedState(\.rootViewToast)
+                        .projectedValue
+                        .changes
+                ) { .toastChanged($0) }
+                .observing(
+                    SharedState(\.rootViewToastAction)
+                        .projectedValue
+                        .changes
+                ) { .toastActionChanged($0) }
         )
     }
 

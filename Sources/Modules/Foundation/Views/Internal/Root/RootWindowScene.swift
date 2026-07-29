@@ -93,6 +93,11 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
     @Dependency(\.coreKit.ui) private var coreUI: CoreKit.UI
     @Dependency(\.notificationCenter) private var notificationCenter: NotificationCenter
 
+    // MARK: - Properties
+
+    @SharedEvent(\.rootViewTapped) private var rootViewTapped
+    @SharedEvent(\.themedViewAppearanceChanged) private var themedViewAppearanceChanged
+
     // MARK: - Instantiate
 
     fileprivate func instantiate(
@@ -174,7 +179,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
 
     fileprivate func traitCollectionChanged() {
         notificationCenter.post(.init(name: .traitCollectionChangedNotification))
-        Shared.themedViewAppearanceChanged.send()
+        themedViewAppearanceChanged.send()
     }
 
     // MARK: - UIGestureRecognizer
@@ -183,7 +188,7 @@ private final class _RootWindowScene: NSObject, UIGestureRecognizerDelegate {
         _ gestureRecognizer: UIGestureRecognizer,
         shouldReceive touch: UITouch
     ) -> Bool {
-        Shared.rootViewTapped.send()
+        rootViewTapped.send()
         return false
     }
 }

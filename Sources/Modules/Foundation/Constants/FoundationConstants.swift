@@ -12,23 +12,6 @@ import SwiftUI
 /* Proprietary */
 import Translator
 
-// MARK: - Shared Value Registry
-
-/// A registry of app-wide ``SharedState`` and ``SharedEvent`` values used
-/// to drive reactive UI updates and cross-component communication.
-public enum Shared {
-    /// A signal that fires after Breadcrumbs captures a
-    /// screenshot.
-    public static let breadcrumbsDidCapture = SharedEvent<Void>()
-
-    static let isBuildInfoOverlayHidden = SharedState<Bool>(true)
-    static let rootViewSheet = SharedState<RootSheet?>(nil)
-    static let rootViewTapped = SharedEvent<Void>()
-    static let rootViewToast = SharedState<Toast?>(nil)
-    static let rootViewToastAction = SharedState<(@Sendable () -> Void)?>(nil)
-    static let themedViewAppearanceChanged = SharedEvent<Void>()
-}
-
 // MARK: - Foundation Constants
 
 enum FoundationConstants {
@@ -150,6 +133,14 @@ public extension LoggerDomain {
     static let translation: LoggerDomain = .init("translation")
 }
 
+public extension SharedEvents {
+    /// A signal that fires after Breadcrumbs captures a
+    /// screenshot.
+    var breadcrumbsDidCapture: EventStream<Void> {
+        event()
+    }
+}
+
 public extension StoredItemKey {
     /// The active language code for the current session.
     static let languageCode: StoredItemKey = .init("languageCode")
@@ -186,4 +177,32 @@ extension PersistentStorageKey {
     static let isTimebombActive: PersistentStorageKey = .init("isTimebombActive")
     static let pendingThemeID: PersistentStorageKey = .init("pendingThemeID")
     static let translationArchive: PersistentStorageKey = .init("translationArchive")
+}
+
+extension SharedEvents {
+    var rootViewTapped: EventStream<Void> {
+        event()
+    }
+
+    var themedViewAppearanceChanged: EventStream<Void> {
+        event()
+    }
+}
+
+extension SharedStates {
+    var isBuildInfoOverlayHidden: StateStream<Bool> {
+        state(true)
+    }
+
+    var rootViewSheet: StateStream<RootSheet?> {
+        state(nil)
+    }
+
+    var rootViewToast: StateStream<Toast?> {
+        state(nil)
+    }
+
+    var rootViewToastAction: StateStream<(@Sendable () -> Void)?> {
+        state(nil)
+    }
 }

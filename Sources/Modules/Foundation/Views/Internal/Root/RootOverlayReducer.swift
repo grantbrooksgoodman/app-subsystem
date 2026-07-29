@@ -33,7 +33,7 @@ struct RootOverlayReducer: Reducer {
     struct State: Equatable {
         /* MARK: Properties */
 
-        var isBuildInfoOverlayHidden = Shared.isBuildInfoOverlayHidden.value
+        var isBuildInfoOverlayHidden: Bool
         var isPresentingSheet = false
         var sheet: AnyView = .init(EmptyView())
         var toast: Toast?
@@ -49,7 +49,11 @@ struct RootOverlayReducer: Reducer {
 
         /* MARK: Init */
 
-        init() {}
+        init() {
+            isBuildInfoOverlayHidden = SharedState(
+                \.isBuildInfoOverlayHidden
+            ).wrappedValue
+        }
 
         /* MARK: Equatable Conformance */
 

@@ -28,12 +28,16 @@ struct BuildInfoOverlayView: View {
     init(_ viewModel: ViewModel<BuildInfoOverlayReducer>) {
         _viewModel = .init(
             wrappedValue: viewModel
-                .observing(Shared.breadcrumbsDidCapture.events) {
-                    _ in .breadcrumbsDidCapture
-                }
-                .observing(Shared.rootViewTapped.events) {
-                    _ in .rootViewTapped
-                }
+                .observing(
+                    SharedEvent(\.breadcrumbsDidCapture)
+                        .wrappedValue
+                        .events
+                ) { _ in .breadcrumbsDidCapture }
+                .observing(
+                    SharedEvent(\.rootViewTapped)
+                        .wrappedValue
+                        .events
+                ) { _ in .rootViewTapped }
         )
     }
 

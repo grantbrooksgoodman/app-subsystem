@@ -84,8 +84,8 @@ public typealias ViewModel<R> = ViewModelOf<R.State, R.Action> where R: Reducer
 /// ## Observing Shared Values
 ///
 /// Use ``observing(_:_:)`` to subscribe the view model to an
-/// asynchronous sequence, such as a ``SharedState/changes`` or
-/// ``SharedEvent/events`` stream, mapping each element to an
+/// asynchronous sequence, such as a ``StateStream/changes`` or
+/// ``EventStream/events`` stream, mapping each element to an
 /// action. Subscriptions are cancelled automatically when the view
 /// model deinitializes.
 ///
@@ -485,19 +485,23 @@ public extension ViewModelOf {
     /// chained directly after the initializer:
     ///
     /// ```swift
-    /// @StateObject private var viewModel = ViewModel<SettingsReducer>(
-    ///     initialState: .init(),
-    ///     reducer: SettingsReducer()
-    /// )
-    /// .observing(Shared.isLoggedIn.changes) { .isLoggedInChanged($0) }
-    /// .observing(Shared.sessionDidExpire.events) { _ in .sessionExpired }
+    /// init(_ viewModel: ViewModel<SettingsReducer>) {
+    ///     @SharedState(\.isLoggedIn) var isLoggedIn
+    ///     @SharedEvent(\.sessionDidExpire) var sessionDidExpire
+    ///
+    ///     _viewModel = .init(
+    ///         wrappedValue: viewModel
+    ///             .observing($isLoggedIn.changes) { .isLoggedInChanged($0) }
+    ///             .observing(sessionDidExpire.events) { _ in .sessionExpired }
+    ///     )
+    /// }
     /// ```
     ///
     /// The subscription task is retained by the view model and
     /// cancelled when the view model deinitializes – subscriptions
     /// live exactly as long as the view model.
     ///
-    /// - Note: A ``SharedState/changes`` stream yields the current
+    /// - Note: A ``StateStream/changes`` stream yields the current
     ///   value immediately upon subscription, so its mapped action
     ///   is dispatched once at creation time.
     ///

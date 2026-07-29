@@ -26,6 +26,8 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
 
     private var captureTask: Task<Void, Never>?
 
+    @SharedEvent(\.breadcrumbsDidCapture) private var breadcrumbsDidCapture
+
     // MARK: - Computed Properties
 
     var isCapturing: Bool {
@@ -122,7 +124,7 @@ final class Breadcrumbs: AppSubsystem.Delegates.BreadcrumbsCaptureDelegate {
         self.captureHistory = captureHistory
 
         let filePath = filePath; Task.detached { try? pngData.write(to: filePath) }
-        Shared.breadcrumbsDidCapture.send()
+        breadcrumbsDidCapture.send()
 
         guard savesToPhotos else { return }
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)

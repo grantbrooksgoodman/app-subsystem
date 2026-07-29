@@ -75,7 +75,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Dependency injection.** Services and configuration are provided through the [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
 
-- **Reactive observation.** Values that cross feature boundaries are expressed as [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) and [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) instances. View models subscribe with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), which maps each element to a reducer action delivered on the main actor. Consumers without a view lifetime, such as services, iterate the underlying asynchronous streams directly.
+- **Reactive observation.** Values that cross feature boundaries are expressed as [`StateStream`](Sources/Modules/Shared/Models/StateStream.swift) and [`EventStream`](Sources/Modules/Shared/Models/EventStream.swift) instances. View models subscribe with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), which maps each element to a reducer action delivered on the main actor. Consumers without a view lifetime, such as services, iterate the underlying asynchronous streams directly.
 
 - **Theming.** Appearance is driven by a [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) value that can be swapped at runtime. Views that adopt the theming system update automatically when the active theme changes.
 
@@ -323,7 +323,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
-| **Shared** | The [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) container for values that emit changes and the [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) broadcaster for typed occurrences, used for reactive cross-feature communication. |
+| **Shared** | The [`StateStream`](Sources/Modules/Shared/Models/StateStream.swift) container for values that emit changes and the [`EventStream`](Sources/Modules/Shared/Models/EventStream.swift) broadcaster for typed occurrences, declared on and resolved through the [`SaredEvents`](Sources/Modules/Shared/Models/SharedEvents.swift) and [`SharedStates`](Sources/Modules/Shared/Models/SharedStates.swift) containers for reactive cross-feature communication. |
 | **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
 | **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol, and the [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) property list generation service. |
 | **Navigation** | The [`Navigating`](Sources/Modules/Navigation/Protocols/NavigatingProtocol.swift) and [`NavigatorState`](Sources/Modules/Navigation/Protocols/NavigatorStateProtocol.swift) protocols, [`NavigationCoordinator`](Sources/Modules/Navigation/Services/NavigationCoordinator.swift), and the [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) / [`@ObservedNavigator`](Sources/Modules/Navigation/Models/ObservedNavigator.swift) property wrappers for coordinated presentation. |
@@ -506,42 +506,81 @@ Each access to a [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/D
 
 Values that need to be shared across feature boundaries are expressed with two primitives, chosen by whether a current value is meaningful:
 
-- [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) holds a value – such as authentication state or a visibility flag – and shares its changes with subscribers.
-- [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) broadcasts occurrences that carry a typed payload – such as a refresh signal or a change delta – and stores nothing.
+- [`EventStream`](Sources/Modules/Shared/Models/EventStream.swift) broadcasts occurrences that carry a typed payload – such as a refresh signal or a change delta – and stores nothing.
+- [`StateStream`](Sources/Modules/Shared/Models/StateStream.swift) holds a value – such as authentication state or a visibility flag – and shares its changes with subscribers.
 
 #### Declaring Shared Values
 
-Declare shared values as static properties on the `Shared` namespace. Use `SharedEvent<Void>` for signals that carry no payload:
+Declare events as computed properties on [`SharedEvents`](Sources/Modules/Shared/Models/SharedEvents.swift) using `event()`, and state as computed properties on [`SharedStates`](Sources/Modules/Shared/Models/SharedStates.swift) using `state(_:)`. Use `EventStream<Void>` for signals that carry no payload:
 
 ```swift
-public extension Shared {
-    static let isLoggedIn = SharedState<Bool>(false)
-    static let sessionDidExpire = SharedEvent<Void>()
-    static let storeDidChange = SharedEvent<StoreChange>()
+public extension SharedEvents {
+    var sessionDidExpire: EventStream<Void> { event() }
+    var storeDidChange: EventStream<StoreChange> { event() }
+}
+
+public extension SharedStates {
+    var isLoggedIn: StateStream<Bool> { state(false) }
+}
+```
+
+Each declaration resolves its instance lazily from its container, keyed by the declaring property. Both containers are scoped dependencies, so tests can call `resetSharedValues()` to isolate shared state:
+
+```swift
+try await DependencyScopes.withDependencies {
+    $0.resetSharedValues()
+} operation: {
+    // Shared values resolved here are isolated to this scope.
 }
 ```
 
 #### Writing Values and Sending Events
 
-Write to a `SharedState` through its `value` property, and send events with `send(_:)`. Both are safe from any isolation context, and every subscriber observes writes and events in the same order:
+Access a `StateStream` through the [`@SharedState`](Sources/Modules/Shared/Models/SharedState.swift) property wrapper. Reads and writes go through the wrapped value; the projected value (`$`) exposes the underlying `StateStream`:
 
 ```swift
-Shared.isLoggedIn.value = true
-Shared.sessionDidExpire.send()
-Shared.storeDidChange.send(change)
+@SharedState(\.isLoggedIn) private var isLoggedIn
+
+isLoggedIn = true
 ```
+
+When a new value depends on the old one, mutate atomically with `withValue(_:)` instead of separate reads and writes:
+
+```swift
+$isLoggedIn.withValue { $0.toggle() }
+```
+
+Events have their own wrapper – access an `EventStream` through the [`@SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) property wrapper and send with `send(_:)`:
+
+```swift
+@SharedEvent(\.sessionDidExpire) private var sessionDidExpire
+@SharedEvent(\.storeDidChange) private var storeDidChange
+
+sessionDidExpire.send()
+storeDidChange.send(change)
+```
+
+All accesses are safe from any isolation context, and every subscriber observes writes and events in the same order.
+
+Each kind has exactly one access path: `@SharedEvent` is the only way to reach an `EventStream`, and `@SharedEvent` is the only way to reach a `StateStream` – neither container is resolvable through `@Dependency`.
+
+> **Note:** `@SharedState` is not a SwiftUI `DynamicProperty`. Reading a shared value in a view's `body` does not invalidate the view when the value changes – reactivity flows exclusively through `observing(_:_:)` subscriptions and reducer state.
 
 #### Subscribing from View Models
 
-Subscribe a view model with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), mapping each element to a reducer action. Each call returns the view model, so subscriptions chain directly after the initializer:
+Subscribe a view model with [`observing(_:_:)`](Sources/Modules/Reducer/Models/ViewModel.swift), mapping each element to a reducer action. Each call returns the view model, so subscriptions chain directly after the initializer. In a view initializer, declare the wrappers as locals – a stored property cannot be referenced within the `wrappedValue:` autoclosure:
 
 ```swift
-@StateObject private var viewModel = ViewModel<SettingsReducer>(
-    initialState: .init(),
-    reducer: SettingsReducer()
-)
-.observing(Shared.isLoggedIn.changes) { .isLoggedInChanged($0) }
-.observing(Shared.sessionDidExpire.events) { _ in .sessionExpired }
+init(_ viewModel: ViewModel<SettingsReducer>) {
+    @SharedState(\.isLoggedIn) var isLoggedIn
+    @SharedEvent(\.sessionDidExpire) var sessionDidExpire
+
+    _viewModel = .init(
+        wrappedValue: viewModel
+            .observing($isLoggedIn.changes) { .isLoggedInChanged($0) }
+            .observing(sessionDidExpire.events) { _ in .sessionExpired }
+    )
+}
 ```
 
 Mapped actions are dispatched on the main actor with the element's payload delivered in the stream – there is no need to re-read the shared value. Return `nil` from the mapping closure to skip an element. The subscription tasks are retained by the view model and cancelled when it deinitializes, so subscriptions live exactly as long as the view model.
@@ -550,26 +589,26 @@ Mapped actions are dispatched on the main actor with the element's payload deliv
 
 Consumers without a view lifetime – a service that reacts to changing network conditions, for example – iterate the underlying streams directly. Each access creates an independent `AsyncStream`.
 
-A `SharedState`'s `changes` stream yields the current value immediately upon subscription, then each subsequent write. If the consumer suspends while multiple writes occur, only the most recent value is retained:
+A `StateStream`'s `changes` stream yields the current value immediately upon subscription, then each subsequent write. If the consumer suspends while multiple writes occur, only the most recent value is retained:
 
 ```swift
-for await isLoggedIn in Shared.isLoggedIn.changes {
+for await isLoggedIn in $isLoggedIn.changes {
     guard isLoggedIn else { continue }
     // Handle login
 }
 ```
 
-A `SharedEvent`'s `events` stream yields only the payloads sent after subscription. Delivery is buffered without bound, so no event is dropped while the consumer is suspended:
+A `EventStream`'s `events` stream yields only the payloads sent after subscription. Delivery is buffered without bound, so no event is dropped while the consumer is suspended:
 
 ```swift
-for await change in Shared.storeDidChange.events {
+for await change in storeDidChange.events {
     // Handle every change.
 }
 ```
 
 Both streams finish when the shared value they belong to deallocates.
 
-> **Note:** [`SharedState`](Sources/Modules/Shared/Models/SharedState.swift) and [`SharedEvent`](Sources/Modules/Shared/Models/SharedEvent.swift) are thread-safe. Values can be read, written, and sent from any isolation context. Subscribers receive elements on whatever isolation they iterate from.
+> **Note:** [`EventStream`](Sources/Modules/Shared/Models/EventStream.swift) and [`StateStream`](Sources/Modules/Shared/Models/StateStream.swift) are thread-safe. Values can be read, written, and sent from any isolation context. Subscribers receive elements on whatever isolation they iterate from.
 
 ### Theming
 

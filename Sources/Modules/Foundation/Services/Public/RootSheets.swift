@@ -44,7 +44,7 @@ public enum RootSheets {
         _ sheet: RootSheet,
         onDismiss: (@MainActor () -> Void)? = nil
     ) {
-        Shared.rootViewSheet.value = sheet
+        SharedState(\.rootViewSheet).wrappedValue = sheet
         self.onDismiss = onDismiss
     }
 
@@ -55,7 +55,7 @@ public enum RootSheets {
     /// If an `onDismiss` closure was provided at presentation time,
     /// it is executed and then cleared.
     public static func dismiss() {
-        Shared.rootViewSheet.value = nil
+        SharedState(\.rootViewSheet).wrappedValue = nil
         onDismiss?()
         onDismiss = nil
     }

@@ -96,9 +96,11 @@ private struct Themed: View {
     init(_ viewModel: ViewModel<ThemedReducer>) {
         _viewModel = .init(
             wrappedValue: viewModel
-                .observing(Shared.themedViewAppearanceChanged.events) {
-                    _ in .appearanceChanged
-                }
+                .observing(
+                    SharedEvent(\.themedViewAppearanceChanged)
+                        .wrappedValue
+                        .events
+                ) { _ in .appearanceChanged }
         )
     }
 

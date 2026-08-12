@@ -141,6 +141,27 @@ public extension SharedEvents {
     }
 }
 
+public extension SharedStates {
+    /// Whether a forced update is currently required.
+    ///
+    /// Set this value to `true` when a newer version of the app is
+    /// required – for example, because the server no longer
+    /// supports the running version. The subsystem observes this
+    /// value and presents the forced-update modal on its first
+    /// `true` emission:
+    ///
+    /// ```swift
+    /// SharedState(\.isForcedUpdateRequired).wrappedValue = true
+    /// ```
+    ///
+    /// - Important: Setting this value has no effect unless a
+    ///   ``AppSubsystem/Delegates/ForcedUpdateModalDelegate`` is
+    ///   registered.
+    var isForcedUpdateRequired: StateStream<Bool> {
+        state(false)
+    }
+}
+
 public extension StoredItemKey {
     /// The active language code for the current session.
     static let languageCode: StoredItemKey = .init("languageCode")

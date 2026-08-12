@@ -407,8 +407,8 @@ public extension AppSubsystem {
             set { _exceptionMetadata.wrappedValue = newValue }
         }
 
-        /// The delegate that drives the presentation of a
-        /// full-screen modal requiring the user to update the app.
+        /// The delegate that configures the full-screen modal
+        /// requiring the user to update the app.
         ///
         /// When this property is `nil`, forced-update
         /// functionality is disabled.
@@ -465,8 +465,8 @@ public extension AppSubsystem {
         ///     Developer Mode actions.
         ///   - exceptionMetadataDelegate: A delegate that provides
         ///     exception metadata.
-        ///   - forcedUpdateModalDelegate: A delegate that drives
-        ///     forced-update presentation.
+        ///   - forcedUpdateModalDelegate: A delegate that configures
+        ///     the forced-update modal.
         ///   - loggerDomainSubscriptionDelegate: A delegate that
         ///     specifies subscribed logger domains.
         ///   - permanentPersistentStorageKeyDelegate: A delegate that

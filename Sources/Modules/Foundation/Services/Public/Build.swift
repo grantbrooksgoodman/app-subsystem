@@ -6,7 +6,6 @@
 //
 
 /* Native */
-import Combine
 import Foundation
 
 /// The build configuration for the current app, including
@@ -125,8 +124,6 @@ public final class Build: @unchecked Sendable {
     /// The release cycle stage of this build.
     public let milestone: Milestone
 
-    private let _cancellables = LockIsolated(Set<AnyCancellable>())
-
     // MARK: - Computed Properties
 
     /// The major version number extracted from the bundle version
@@ -237,11 +234,6 @@ public final class Build: @unchecked Sendable {
         getBuildDateUnixDouble()
     }
 
-    private var cancellables: Set<AnyCancellable> {
-        get { _cancellables.wrappedValue }
-        set { _cancellables.wrappedValue = newValue }
-    }
-
     private var firstCompileDate: Date {
         getFirstCompileDate()
     }
@@ -266,7 +258,7 @@ public final class Build: @unchecked Sendable {
         self.milestone = milestone
 
         Task.background { @MainActor in
-            listenForForcedUpdateStatusChanges()
+            await listenForForcedUpdateStatusChanges()
         }
     }
 
@@ -489,18 +481,15 @@ public final class Build: @unchecked Sendable {
     // MARK: - Forced Update Modal Listener
 
     @MainActor
-    private func listenForForcedUpdateStatusChanges() {
-        guard let forcedUpdateModalDelegate = AppSubsystem.delegates.forcedUpdateModal else { return }
-        forcedUpdateModalDelegate
-            .forcedUpdateRequiredPublisher
-            .filter(\.self) // Only pass through `true`
-            .prefix(1) // Automatically cancel after the first `true`
-            .receive(on: DispatchQueue.main)
-            .sink { _ in
-                BuildExpiryAlert.shared.dismiss(triggerBuildExpiryOverride: false)
-                RootWindowStatus.shared.rootView = .forcedUpdateModalPage
-            }
-            .store(in: &cancellables)
+    private func listenForForcedUpdateStatusChanges() async {
+        guard AppSubsystem.delegates.forcedUpdateModal != nil else { return }
+        for await isForcedUpdateRequired in SharedState(\.isForcedUpdateRequired)
+            .projectedValue
+            .changes where isForcedUpdateRequired {
+            BuildExpiryAlert.shared.dismiss(triggerBuildExpiryOverride: false)
+            RootWindowStatus.shared.rootView = .forcedUpdateModalPage
+            break
+        }
     }
 }
 

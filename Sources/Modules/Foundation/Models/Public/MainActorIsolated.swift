@@ -59,10 +59,42 @@ import Foundation
 ///   introduces an unnecessary suspension point. On the main actor,
 ///   access the wrapped value directly.
 ///
-/// - Warning: Accessing ``wrappedValue`` from outside the main actor
-///   is a concurrency violation. If you are not already on the main
-///   actor, use ``read(_:)`` or ``withValue(_:)`` through the
-///   projected value instead.
+/// - Warning: The main-actor isolation of ``wrappedValue`` is a runtime
+///   requirement, not a compile-time guarantee. Applied to a local
+///   variable, the wrapper does not require you to `await` a read of
+///   ``wrappedValue``, and a read from outside the main actor is not
+///   diagnosed. Accessing the wrapped value off the main actor is a
+///   concurrency violation that can corrupt state or trap at runtime.
+///
+///   In debug builds, the wrapper asserts that access occurs on the main
+///   actor and traps on violation. This check is compiled out of release
+///   builds, so it does not protect production; the guarantee remains
+///   yours to uphold.
+///
+///   Keep these pitfalls in mind:
+///
+///   - The value is created lazily, the first time ``wrappedValue`` is
+///     read. If that first read occurs off the main actor, the
+///     initializer runs off the main actor. Constructing or touching
+///     main-actor-only state there – a UIKit view or view controller,
+///     `UIApplication.shared`, or any `@MainActor`-isolated type – is
+///     undefined behavior and traps.
+///
+///   - Reading ``wrappedValue`` in the same nonisolated scope in which
+///     you declare the wrapper – for example, returning it directly
+///     from a nonisolated dependency `resolve(_:)` method – evaluates
+///     the initializer synchronously on the calling thread. Used this
+///     way, the wrapper only silences the diagnostic; it does not defer
+///     work to the main actor.
+///
+///   - From a non-main-actor context, prefer ``read(_:)`` or
+///     ``withValue(_:)`` through the projected value. Both dispatch to
+///     the main actor and are safe from any isolation context.
+///
+///   - When you must read ``wrappedValue`` synchronously from a
+///     nonisolated context, guarantee that the surrounding call runs on
+///     the main actor, and resolve the value eagerly there so the
+///     wrapper's debug assertion cannot trip later.
 ///
 /// - SeeAlso: ``LockIsolated``
 @dynamicMemberLookup
@@ -70,7 +102,7 @@ import Foundation
 public struct MainActorIsolated<Value>: Sendable {
     // MARK: - Types
 
-    // Box holds the actual storage and the lazy initializer.
+    /// Box holds the actual storage and the lazy initializer.
     private final class Box: Sendable {
         /* MARK: Properties */
 
@@ -84,12 +116,24 @@ public struct MainActorIsolated<Value>: Sendable {
         @MainActor
         var value: Value {
             get {
+                assert(
+                    Thread.isMainThread,
+                    "MainActorIsolated value accessed off the main actor."
+                )
+
                 if let value = storage { return value }
                 let value = initial()
                 storage = value
                 return value
             }
-            set { storage = newValue }
+            set {
+                assert(
+                    Thread.isMainThread,
+                    "MainActorIsolated value mutated off the main actor."
+                )
+
+                storage = newValue
+            }
         }
 
         /* MARK: Init */
@@ -124,7 +168,9 @@ public struct MainActorIsolated<Value>: Sendable {
     ///
     /// Use the projected value to call ``read(_:)`` or
     /// ``withValue(_:)`` from a non-main-actor context.
-    public var projectedValue: MainActorIsolated<Value> { self }
+    public var projectedValue: MainActorIsolated<Value> {
+        self
+    }
 
     /// The underlying value.
     ///

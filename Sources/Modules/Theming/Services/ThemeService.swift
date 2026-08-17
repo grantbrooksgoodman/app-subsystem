@@ -55,9 +55,7 @@ public enum ThemeService {
             currentThemeID = currentTheme.encodedHash
 
             setStyle()
-
-            @SharedEvent(\.themedViewAppearanceChanged) var themedViewAppearanceChanged
-            themedViewAppearanceChanged.send()
+            SharedEvent(\.themedViewAppearanceChanged).wrappedValue.send()
         }
     }
 

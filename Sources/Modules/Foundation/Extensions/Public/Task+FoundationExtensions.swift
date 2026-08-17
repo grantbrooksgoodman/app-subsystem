@@ -165,19 +165,22 @@ public extension Task where Success == Void, Failure == Never {
             }
 
             await operation()
-            await TaskRegistry.shared.clearIfTokenMatches(
+            TaskRegistry.shared.clearIfTokenMatches(
                 token,
                 for: key
             )
         }
 
-        Task {
-            await TaskRegistry.shared.set(
-                task,
-                token: token,
-                for: key
-            )
-        }
+        // Registered synchronously – before returning – so that a burst of
+        // calls cannot race their registrations. Were registration deferred
+        // to a detached task, a later call's registration could land before
+        // an earlier call's, after which the earlier registration would cancel
+        // the later task and install itself, inverting latest-call-wins.
+        TaskRegistry.shared.set(
+            task,
+            token: token,
+            for: key
+        )
 
         return task
     }
@@ -265,7 +268,7 @@ private final class AbandonableAwait<Value: Sendable>: Sendable {
     }
 }
 
-private actor TaskRegistry {
+private struct TaskRegistry {
     // MARK: - Types
 
     private struct Entry {
@@ -289,7 +292,7 @@ private actor TaskRegistry {
 
     fileprivate static let shared = TaskRegistry()
 
-    private var tasks: [AnyHashable: Entry] = [:]
+    private let tasks = LockIsolated<[AnyHashable: Entry]>([:])
 
     // MARK: - Methods
 
@@ -298,9 +301,11 @@ private actor TaskRegistry {
         for key: some Hashable & Sendable
     ) {
         let key = AnyHashable(key)
-        // Clear only if we are still the latest task registered for this key.
-        guard tasks[key]?.token == token else { return }
-        tasks[key] = nil
+        tasks.projectedValue.withValue { tasks in
+            // Clear only if we are still the latest task registered for this key.
+            guard tasks[key]?.token == token else { return }
+            tasks[key] = nil
+        }
     }
 
     fileprivate func set(
@@ -309,10 +314,12 @@ private actor TaskRegistry {
         for key: some Hashable & Sendable
     ) {
         let key = AnyHashable(key)
-        tasks[key]?.task.cancel()
-        tasks[key] = .init(
-            token,
-            task: task
-        )
+        tasks.projectedValue.withValue { tasks in
+            tasks[key]?.task.cancel()
+            tasks[key] = .init(
+                token,
+                task: task
+            )
+        }
     }
 }

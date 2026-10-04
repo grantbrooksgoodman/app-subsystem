@@ -223,7 +223,7 @@ extension SharedStates {
         state(nil)
     }
 
-    var rootViewToastAction: StateStream<(@Sendable () -> Void)?> {
+    var rootViewToastAction: StateStream<(@MainActor @Sendable () -> Void)?> {
         state(nil)
     }
 }

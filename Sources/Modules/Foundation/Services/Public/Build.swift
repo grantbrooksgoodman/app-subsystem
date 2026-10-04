@@ -151,6 +151,16 @@ public final class Build: @unchecked Sendable {
 
     /// An alphabetic revision identifier derived from the number of
     /// builds since the last App Store release.
+    ///
+    /// Each group of 150 builds past ``appStoreBuildNumber``
+    /// advances the identifier by one letter: `A` through `Z`, then
+    /// `AA` through `AZ`, `BA` through `BZ`, and so on. The first
+    /// 150 builds after a release produce `A`.
+    ///
+    /// The build-info overlay, the forced-update modal, and the
+    /// metadata attachment that ``ReportDelegate`` composes include
+    /// this value. Keep ``appStoreBuildNumber`` current with each
+    /// App Store release so that the identifier starts over at `A`.
     public var bundleRevision: String {
         getBundleRevision()
     }
@@ -226,6 +236,10 @@ public final class Build: @unchecked Sendable {
     }
 
     /// The number of builds since the last App Store release.
+    ///
+    /// This value is ``buildNumber`` minus ``appStoreBuildNumber``,
+    /// or `0` if ``buildNumber`` is less than
+    /// ``appStoreBuildNumber``.
     public var revisionBuildNumber: Int {
         getRevisionBuildNumber()
     }
@@ -318,32 +332,19 @@ public final class Build: @unchecked Sendable {
 
     private func getBundleRevision() -> String {
         let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        let revisionMilestone = getRevisionBuildNumber() / 150
+        var remainder = getRevisionBuildNumber() / 150
+        var revisionLetters = ""
 
-        func letterRepresentation(_ index: Int) -> String {
-            guard let letter = alphabet.itemAt(index) else { return "A" }
-            return .init(letter)
-        }
+        repeat {
+            revisionLetters.insert(
+                alphabet[remainder % alphabet.count],
+                at: revisionLetters.startIndex
+            )
 
-        if revisionMilestone >= alphabet.count {
-            var remainder = revisionMilestone
-            var revisionLetters = "Z"
+            remainder = remainder / alphabet.count - 1
+        } while remainder >= 0
 
-            while remainder >= alphabet.count {
-                remainder -= alphabet.count
-                guard remainder < alphabet.count else {
-                    revisionLetters += "Z"
-                    continue
-                }
-
-                revisionLetters += letterRepresentation(remainder)
-            }
-
-            let zCount = revisionLetters.components.count(of: "Z")
-            return zCount > 3 ? "Z\(zCount)\(revisionLetters.filter { $0 != "Z" })" : revisionLetters
-        } else {
-            return letterRepresentation(revisionMilestone)
-        }
+        return revisionLetters
     }
 
     private func getExpirationOverrideCode() -> String {

@@ -1025,7 +1025,10 @@ public enum Logger {
                         : Localized(SubsystemStringKey.tapToReport).wrappedValue
                 }
 
-                var reportAction: (@Sendable () -> Void)? {
+                /// Local `func` on purpose: closures inside a local computed `var`'s getter lose
+                /// their `@MainActor` isolation at codegen (Swift 6.0–6.3.3, no diagnostic) and
+                /// run on the cooperative pool.
+                func reportAction() -> (@Sendable () -> Void)? {
                     guard let exception,
                           exception.isReportable,
                           !Logger._reportsErrorsAutomatically.wrappedValue else { return nil }
@@ -1045,7 +1048,7 @@ public enum Logger {
                         perpetuation: isPersistent ? .persistent : .ephemeral(.seconds(10))
                     ),
                     translating: shouldTranslate ? [.message, .title] : [],
-                    onTap: reportAction
+                    onTap: reportAction()
                 )
             }
         }

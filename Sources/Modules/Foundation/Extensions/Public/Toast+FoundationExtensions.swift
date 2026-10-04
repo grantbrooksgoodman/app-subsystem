@@ -84,7 +84,7 @@ public extension Toast {
         _ toast: Toast,
         translating keys: [TranslationOptionKey] = [],
         languagePair: LanguagePair = .system,
-        onTap: (@Sendable () -> Void)? = nil
+        onTap: (@MainActor @Sendable () -> Void)? = nil
     ) {
         @Dependency(\.alertKitConfig) var alertKitConfig: AlertKit.Config
         guard let translationDelegate = alertKitConfig.translationDelegate,
@@ -239,7 +239,7 @@ public extension Toast {
 
     private static func _show(
         _ toast: Toast,
-        onTap: (@Sendable () -> Void)? = nil
+        onTap: (@MainActor @Sendable () -> Void)? = nil
     ) {
         @SharedState(\.rootViewToast) var rootViewToast
         @SharedState(\.rootViewToastAction) var rootViewToastAction

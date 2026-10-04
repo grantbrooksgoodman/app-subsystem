@@ -24,7 +24,7 @@ struct RootOverlayReducer: Reducer {
         case isBuildInfoOverlayHiddenChanged(Bool)
         case isPresentingSheetChanged(Bool)
         case sheetChanged(AnyView?)
-        case toastActionChanged((@Sendable () -> Void)?)
+        case toastActionChanged((@MainActor @Sendable () -> Void)?)
         case toastChanged(Toast?)
     }
 

@@ -19,7 +19,7 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
     /// Serializes disk writes off the calling thread; lookups and mutations
     /// operate on the in-memory archive and never wait for the disk.
     private let persistenceQueue = DispatchQueue(
-        label: "com.neotechnica.app-subsystem.translation-archiver-persistence",
+        label: "us.neotechnica.app-subsystem.translation-archiver-persistence",
         qos: .utility
     )
 

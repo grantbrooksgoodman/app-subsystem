@@ -51,7 +51,7 @@ AppSubsystem provides the core architecture that apps build on. It manages the b
     - [Storage Strategy](#storage-strategy)
     - [In-Memory Cache](#in-memory-cache)
   - [Async Work Coalescing](#async-work-coalescing)
-    - [KeyedCoalescer](#keyedcoalescer)
+    - [Coalescer](#coalescer)
     - [SingleSlotCoalescer](#singleslotcoalescer)
   - [Developer Tools](#developer-tools)
     - [Build-Info Overlay](#build-info-overlay)
@@ -319,7 +319,7 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 
 | Module | Purpose |
 |---|---|
-| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), async work coalescing ([`KeyedCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/KeyedCoalescer.swift), [`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
+| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), async work coalescing ([`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), [`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
 | **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
@@ -908,16 +908,22 @@ The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundat
 
 ### Async Work Coalescing
 
-When multiple callers request the same asynchronous work concurrently, coalescers deduplicate the requests so that only one operation runs at a time. All callers share the result – or the error – of the single in-flight task.
+When multiple callers request the same asynchronous work concurrently, a coalescer resolves the overlap so that only one operation runs per key at a time. Callers share the result – or the error – of the operation they ultimately await.
 
-AppSubsystem provides two coalescer types. Both are actors, so all slot management is concurrency-safe without external synchronization. Both throwing and non-throwing operations are supported – use the throwing overload when the operation can fail with an [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift), or the non-throwing overload when it cannot.
+AppSubsystem provides one coalescer actor, [`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), and a single-slot alias of it. All slot management is concurrency-safe without external synchronization. Both throwing and non-throwing operations are supported and share the same slot – use the throwing overload when the operation can fail with an [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift), or the non-throwing overload when it cannot.
 
-#### KeyedCoalescer
+#### Coalescer
 
-[`KeyedCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/KeyedCoalescer.swift) maintains at most one in-flight task per key. Callers with the same key share a result; callers with different keys run independently:
+[`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift) maintains at most one in-flight operation per key. A `Policy`, fixed when the coalescer is created, determines how a call whose key already has work in flight is resolved:
+
+| Policy | Behavior |
+|---|---|
+| `coalesce` | The caller joins the in-flight operation and receives its result. The default. |
+| `replace` | The in-flight operation is cancelled and the caller's operation starts in its place. Every caller already waiting on that key receives the replacement's result. |
+| `rerun` | The in-flight operation finishes undisturbed, then the caller's operation runs once more. Calls that arrive during a run collapse into one rerun, using the most recent caller's operation, and receive the rerun's result. |
 
 ```swift
-let coalescer = KeyedCoalescer<UserID, Profile>()
+let coalescer = Coalescer<UserID, Profile>()
 
 // Non-throwing: callers share the result without try.
 async let a = coalescer(userID) { await fetchProfile(userID) }
@@ -928,9 +934,9 @@ let (profileA, profileB) = await (a, b) // identical result
 let profile = try await coalescer(userID) { try await loadProfile(userID) }
 ```
 
-The slot for a given key is cleared automatically when its in-flight task completes, whether it succeeds or throws.
+The slot for a key is cleared by the operation itself, as its final step, in the same actor turn that delivers the result to every waiting caller. A finished operation is never left in place for a later caller to join.
 
-By default, callers wait for the in-flight task to settle even when their own task is cancelled. When abandoning the wait is preferable – racing network work against a fallback, for example – use `submitUnlessCancelled(_:_:)` instead. The non-throwing variant returns `nil` if the calling task is cancelled before the operation settles; the throwing variant throws a cancellation [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift). If the calling task is already cancelled on entry, no operation is started. In every case, the shared operation itself is never cancelled – other coalesced callers still receive its result, and the slot is still cleared on completion:
+By default, callers wait for the in-flight operation to settle even when their own task is cancelled. When abandoning the wait is preferable – racing network work against a fallback, for example – use `submitUnlessCancelled(_:_:)` instead. The non-throwing variant returns `nil` if the calling task is cancelled before the operation settles; the throwing variant throws a cancellation [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift). If the calling task is already cancelled on entry, no operation is started. In every case, the operation itself is never cancelled by an abandoned wait – other waiting callers still receive its result, and the slot is still cleared on completion:
 
 ```swift
 // nil when the calling task is cancelled; the operation continues
@@ -938,28 +944,31 @@ By default, callers wait for the in-flight task to settle even when their own ta
 let profile = await coalescer.submitUnlessCancelled(userID) { await fetchProfile(userID) }
 ```
 
+> **Note:** `replace` relies on cooperative cancellation. The cancelled operation must check `Task.isCancelled` or call cancellation-aware APIs to stop promptly. An operation that ignores cancellation keeps running; its result is discarded, but its side effects are not undone.
+
 #### SingleSlotCoalescer
 
-[`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift) maintains a single slot. A `Mode` parameter determines how concurrent calls are resolved:
-
-| Mode | Behavior |
-|---|---|
-| `coalesce` | Subsequent callers share the in-flight task's result. |
-| `lastCallerWins` | The in-flight task is cancelled and replaced by a new one. |
+[`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift) is `Coalescer` specialized to a single lane. It is a type alias over a unit key, with the key argument removed from each call, and takes the same `Policy`:
 
 ```swift
 let coalescer = SingleSlotCoalescer<Profile>()
 
 // Non-throwing usage.
-async let a = coalescer(mode: .coalesce) { await fetchProfile() }
-async let b = coalescer(mode: .coalesce) { await fetchProfile() }
+async let a = coalescer { await fetchProfile() }
+async let b = coalescer { await fetchProfile() }
 let (profileA, profileB) = await (a, b) // identical result
 
 // Throwing usage.
 let profile = try await coalescer { try await loadProfile() }
-```
 
-> **Note:** `lastCallerWins` relies on cooperative cancellation. The cancelled operation must check `Task.isCancelled` or call cancellation-aware APIs to stop promptly.
+// Replacing: a newer query cancels the running one, and every
+// caller still waiting receives the newer query's result.
+let search = SingleSlotCoalescer<[Match]>(policy: .replace)
+
+// Rerunning: a refresh requested mid-refresh lets the current one
+// finish, then runs once more so no request is served stale state.
+let refresh = SingleSlotCoalescer<Void>(policy: .rerun)
+```
 
 ### Developer Tools
 

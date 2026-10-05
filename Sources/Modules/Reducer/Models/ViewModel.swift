@@ -84,8 +84,8 @@ public typealias ViewModel<R> = ViewModelOf<R.State, R.Action> where R: Reducer
 /// ## Observing Shared Values
 ///
 /// Use ``observing(_:_:)`` to subscribe the view model to an
-/// asynchronous sequence, such as a ``StateStream/changes`` or
-/// ``EventStream/events`` stream, mapping each element to an
+/// asynchronous sequence, such as an ``EventStream/events`` or
+/// ``StateStream/changes`` stream, mapping each element to an
 /// action. Subscriptions are cancelled automatically when the view
 /// model deinitializes.
 ///

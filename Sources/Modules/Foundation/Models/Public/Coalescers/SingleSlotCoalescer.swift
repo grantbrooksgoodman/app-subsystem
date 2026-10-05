@@ -21,51 +21,31 @@ public struct SingleSlotKey: Hashable, Sendable {
 ///
 /// Use a single-slot coalescer when every caller requests the same
 /// work and there is nothing to key on. It is the same actor as
-/// ``Coalescer`` – one slot, one ``Coalescer/Policy``, the same
-/// throwing and non-throwing overloads – with the key argument removed
-/// from each call:
+/// ``Coalescer`` – one slot, one ``Coalescer/Policy``, one
+/// `Failure` – with the key argument removed from each call:
 ///
 /// ```swift
-/// let coalescer = SingleSlotCoalescer<Profile>()
+/// // Throwing: callers share the result or the error.
+/// let profile = SingleSlotCoalescer<Profile, Exception>()
+/// let current = try await profile { try await loadProfile() }
 ///
-/// // Non-throwing usage.
-/// async let a = coalescer { await fetchProfile() }
-/// async let b = coalescer { await fetchProfile() }
-/// let (profileA, profileB) = await (a, b) // identical result
-///
-/// // Throwing usage.
-/// let profile = try await coalescer { try await loadProfile() }
+/// // Non-throwing: the operation cannot fail, so neither can the call.
+/// let count = SingleSlotCoalescer<Int, Never>()
+/// async let a = count { await countMessages() }
+/// async let b = count { await countMessages() }
+/// let (countA, countB) = await (a, b) // identical result
 ///
 /// // Replacing: a newer query cancels the running one, and every
 /// // caller still waiting receives the newer query's result.
-/// let search = SingleSlotCoalescer<[Match]>(policy: .replace)
+/// let search = SingleSlotCoalescer<[Match], Exception>(policy: .replace)
 /// ```
-public typealias SingleSlotCoalescer<Output> = Coalescer<SingleSlotKey, Output>
+public typealias SingleSlotCoalescer<Output: Sendable, Failure: Error> = Coalescer<SingleSlotKey, Output, Failure>
 
 public extension Coalescer where Key == SingleSlotKey {
     // MARK: - Call as Function
 
-    /// Submits a non-throwing operation to the single slot, resolving
-    /// overlapping calls according to the coalescer's ``policy``.
-    ///
-    /// See the keyed `callAsFunction(_:_:)` overload for the full
-    /// contract.
-    ///
-    /// - Parameter operation: The asynchronous work to perform.
-    ///
-    /// - Returns: The output of the operation the caller ultimately
-    ///   awaits.
-    func callAsFunction(
-        _ operation: @escaping @Sendable () async -> Output
-    ) async -> Output {
-        await callAsFunction(
-            SingleSlotKey(),
-            operation
-        )
-    }
-
-    /// Submits a throwing operation to the single slot, resolving
-    /// overlapping calls according to the coalescer's ``policy``.
+    /// Submits an operation to the single slot, resolving overlapping
+    /// calls according to the coalescer's ``policy``.
     ///
     /// See the keyed `callAsFunction(_:_:)` overload for the full
     /// contract.
@@ -75,10 +55,10 @@ public extension Coalescer where Key == SingleSlotKey {
     /// - Returns: The output of the operation the caller ultimately
     ///   awaits.
     ///
-    /// - Throws: The ``Exception`` thrown by that operation, if any.
+    /// - Throws: The `Failure` thrown by that operation, if any.
     func callAsFunction(
         _ operation: @escaping Operation
-    ) async throws(Exception) -> Output {
+    ) async throws(Failure) -> Output {
         try await callAsFunction(
             SingleSlotKey(),
             operation
@@ -87,8 +67,8 @@ public extension Coalescer where Key == SingleSlotKey {
 
     // MARK: - Submit Unless Cancelled
 
-    /// Submits a non-throwing operation to the single slot, abandoning
-    /// the wait if the calling task is cancelled.
+    /// Submits an operation to the single slot, abandoning the wait if
+    /// the calling task is cancelled.
     ///
     /// See the keyed `submitUnlessCancelled(_:_:)` overload for the
     /// full contract.
@@ -98,32 +78,12 @@ public extension Coalescer where Key == SingleSlotKey {
     /// - Returns: The output of the operation the caller ultimately
     ///   awaits, or `nil` if the calling task was cancelled before it
     ///   settled.
-    func submitUnlessCancelled(
-        _ operation: @escaping @Sendable () async -> Output
-    ) async -> Output? {
-        await submitUnlessCancelled(
-            SingleSlotKey(),
-            operation
-        )
-    }
-
-    /// Submits a throwing operation to the single slot, abandoning the
-    /// wait if the calling task is cancelled.
     ///
-    /// See the keyed `submitUnlessCancelled(_:_:)` overload for the
-    /// full contract.
-    ///
-    /// - Parameter operation: The asynchronous work to perform.
-    ///
-    /// - Returns: The output of the operation the caller ultimately
-    ///   awaits.
-    ///
-    /// - Throws: The ``Exception`` thrown by that operation, or a
-    ///   cancellation ``Exception`` if the calling task was cancelled
-    ///   before it settled.
+    /// - Throws: The `Failure` thrown by that operation, if it settles
+    ///   before the calling task is cancelled.
     func submitUnlessCancelled(
         _ operation: @escaping Operation
-    ) async throws(Exception) -> Output {
+    ) async throws(Failure) -> Output? {
         try await submitUnlessCancelled(
             SingleSlotKey(),
             operation

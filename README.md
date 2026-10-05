@@ -910,7 +910,7 @@ The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundat
 
 When multiple callers request the same asynchronous work concurrently, a coalescer resolves the overlap so that only one operation runs per key at a time. Callers share the result – or the error – of the operation they ultimately await.
 
-AppSubsystem provides one coalescer actor, [`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), and a single-slot alias of it. All slot management is concurrency-safe without external synchronization. Both throwing and non-throwing operations are supported and share the same slot – use the throwing overload when the operation can fail with an [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift), or the non-throwing overload when it cannot.
+AppSubsystem provides one coalescer actor, [`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), and a single-slot alias of it. All slot management is concurrency-safe without external synchronization. The error an operation can throw is fixed per coalescer by its `Failure` type parameter – typically [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift) – so every caller waiting on a key receives the same settlement, and a joined caller only ever receives an error its own signature can throw. Use `Never` for work that cannot fail: such a coalescer's calls need no `try`.
 
 #### Coalescer
 
@@ -923,51 +923,51 @@ AppSubsystem provides one coalescer actor, [`Coalescer`](Sources/Modules/Foundat
 | `rerun` | The in-flight operation finishes undisturbed, then the caller's operation runs once more. Calls that arrive during a run collapse into one rerun, using the most recent caller's operation, and receive the rerun's result. |
 
 ```swift
-let coalescer = Coalescer<UserID, Profile>()
-
-// Non-throwing: callers share the result without try.
-async let a = coalescer(userID) { await fetchProfile(userID) }
-async let b = coalescer(userID) { await fetchProfile(userID) }
-let (profileA, profileB) = await (a, b) // identical result
-
 // Throwing: callers share the result or the error.
-let profile = try await coalescer(userID) { try await loadProfile(userID) }
+let profiles = Coalescer<UserID, Profile, Exception>()
+let profile = try await profiles(userID) { try await loadProfile(userID) }
+
+// Non-throwing: the operation cannot fail, so neither can the call.
+let counts = Coalescer<UserID, Int, Never>()
+async let a = counts(userID) { await countMessages(userID) }
+async let b = counts(userID) { await countMessages(userID) }
+let (countA, countB) = await (a, b) // identical result
 ```
 
-The slot for a key is cleared by the operation itself, as its final step, in the same actor turn that delivers the result to every waiting caller. A finished operation is never left in place for a later caller to join.
+A caller is attached to the lane for its key in the same synchronous step that installs or updates that lane, so no operation can settle, be replaced, or be rerun between the two. The slot for a key is cleared by the operation itself, as its final step, in the same actor turn that delivers the result to every waiting caller. A finished operation is never left in place for a later caller to join.
 
-By default, callers wait for the in-flight operation to settle even when their own task is cancelled. When abandoning the wait is preferable – racing network work against a fallback, for example – use `submitUnlessCancelled(_:_:)` instead. The non-throwing variant returns `nil` if the calling task is cancelled before the operation settles; the throwing variant throws a cancellation [`Exception`](Sources/Modules/Foundation/Models/Public/Exception.swift). If the calling task is already cancelled on entry, no operation is started. In every case, the operation itself is never cancelled by an abandoned wait – other waiting callers still receive its result, and the slot is still cleared on completion:
+By default, callers wait for the in-flight operation to settle even when their own task is cancelled. When abandoning the wait is preferable – racing network work against a fallback, for example – use `submitUnlessCancelled(_:_:)` instead. It returns `nil` if the calling task is cancelled before the operation settles, and throws the operation's error if the operation fails first. If the calling task is already cancelled on entry, no operation is started. In every case, the operation itself is never cancelled by an abandoned wait – other waiting callers still receive its result, and the slot is still cleared on completion:
 
 ```swift
 // nil when the calling task is cancelled; the operation continues
 // for any other coalesced callers.
-let profile = await coalescer.submitUnlessCancelled(userID) { await fetchProfile(userID) }
+let profile = try await profiles.submitUnlessCancelled(userID) { try await loadProfile(userID) }
 ```
 
 > **Note:** `replace` relies on cooperative cancellation. The cancelled operation must check `Task.isCancelled` or call cancellation-aware APIs to stop promptly. An operation that ignores cancellation keeps running; its result is discarded, but its side effects are not undone.
 
 #### SingleSlotCoalescer
 
-[`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift) is `Coalescer` specialized to a single lane. It is a type alias over a unit key, with the key argument removed from each call, and takes the same `Policy`:
+[`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift) is `Coalescer` specialized to a single lane. It is a type alias over a unit key, with the key argument removed from each call, and takes the same `Policy` and `Failure`:
 
 ```swift
-let coalescer = SingleSlotCoalescer<Profile>()
+// Throwing: callers share the result or the error.
+let profile = SingleSlotCoalescer<Profile, Exception>()
+let current = try await profile { try await loadProfile() }
 
-// Non-throwing usage.
-async let a = coalescer { await fetchProfile() }
-async let b = coalescer { await fetchProfile() }
-let (profileA, profileB) = await (a, b) // identical result
-
-// Throwing usage.
-let profile = try await coalescer { try await loadProfile() }
+// Non-throwing: the operation cannot fail, so neither can the call.
+let count = SingleSlotCoalescer<Int, Never>()
+async let a = count { await countMessages() }
+async let b = count { await countMessages() }
+let (countA, countB) = await (a, b) // identical result
 
 // Replacing: a newer query cancels the running one, and every
 // caller still waiting receives the newer query's result.
-let search = SingleSlotCoalescer<[Match]>(policy: .replace)
+let search = SingleSlotCoalescer<[Match], Exception>(policy: .replace)
 
 // Rerunning: a refresh requested mid-refresh lets the current one
 // finish, then runs once more so no request is served stale state.
-let refresh = SingleSlotCoalescer<Void>(policy: .rerun)
+let refresh = SingleSlotCoalescer<Void, Exception>(policy: .rerun)
 ```
 
 ### Developer Tools

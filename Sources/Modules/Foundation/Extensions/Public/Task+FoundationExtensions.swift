@@ -292,7 +292,10 @@ private struct TaskRegistry {
 
     fileprivate static let shared = TaskRegistry()
 
-    private let tasks = LockIsolated<[AnyHashable: Entry]>([:])
+    // Keys arrive as `some Hashable & Sendable` but are erased to
+    // `AnyHashable`, which is not `Sendable`; the claim is made
+    // explicitly here.
+    private let tasks = UncheckedLockIsolated<[AnyHashable: Entry]>([:])
 
     // MARK: - Methods
 

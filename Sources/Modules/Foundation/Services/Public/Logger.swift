@@ -192,7 +192,7 @@ public enum Logger {
     /// Apply a filter with ``setFilter(_:)`` to narrow the logger's
     /// output. Only entries that satisfy the active filter are printed
     /// to the console and written to the session record.
-    public enum Filter: Equatable {
+    public enum Filter: Equatable, Sendable {
         /* MARK: Cases */
 
         /// Restricts output to entries originating from the specified
@@ -272,8 +272,11 @@ public enum Logger {
         _subscribedDomains.wrappedValue
     }
 
+    // Resolved once at first access and never mutated, so no lock is
+    // needed; the box only vouches for the pointer crossing isolation
+    // boundaries, which `UnsafeRawPointer` cannot do on its own.
     @usableFromInline
-    static let swiftUIDynamicSharedObject = LockIsolated<UnsafeRawPointer?>(
+    static let swiftUIDynamicSharedObject = UncheckedSendable<UnsafeRawPointer?>(
         {
             // Walk loaded images looking for SwiftUI
             for index in 0 ..< _dyld_image_count() {

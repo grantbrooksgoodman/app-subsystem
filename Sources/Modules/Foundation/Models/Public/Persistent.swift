@@ -237,7 +237,9 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
 enum PersistenceCache {
     // MARK: - Properties
 
-    private static let storage = LockIsolated([String: Any]())
+    // Cached values are `Any`-typed by API contract, so the lock cannot
+    // vouch for their sendability; the claim is made explicitly here.
+    private static let storage = UncheckedLockIsolated([String: Any]())
 
     // MARK: - Methods
 

@@ -35,7 +35,7 @@ import Foundation
 /// list of available keys, see ``SubsystemStringKey``.
 ///
 /// - SeeAlso: ``Localized``, ``LocalizedStringKeyRepresentable``
-public enum LocalizationSource: Hashable {
+public enum LocalizationSource: Hashable, Sendable {
     // MARK: - Cases
 
     /// Reads from the main bundle. The property list name defaults

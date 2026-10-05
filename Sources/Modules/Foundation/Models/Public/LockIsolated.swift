@@ -60,6 +60,20 @@ import Foundation
 /// collection. Mutating that snapshot is distinct from mutating the isolated
 /// storage.
 ///
+/// ## Sendability
+///
+/// ``LockIsolated`` is `Sendable` only when `Value` is `Sendable`. The lock
+/// serializes access to the stored value, but it cannot make a non-`Sendable`
+/// value safe to share: a reference type handed out through the wrapped value or
+/// ``LockIsolatedProjection/withValue(_:)`` leaves the lock behind and is used
+/// unsynchronized by whoever receives it.
+///
+/// When a non-`Sendable` value genuinely must be guarded across isolation
+/// domains, use ``UncheckedLockIsolated``. It offers the same API and states the
+/// unverified claim at the declaration site. To move a non-`Sendable` value
+/// across a boundary without a lock – for example, to capture a dependency in a
+/// `@Sendable` closure – use ``UncheckedSendable`` instead.
+///
 /// ## Discussion
 ///
 /// ``LockIsolated`` isolates individual accesses to the wrapped value. For
@@ -98,7 +112,7 @@ import Foundation
 ///     within ``LockIsolatedProjection/withValue(_:)``. Keep isolated operations
 ///     small and focused.
 @propertyWrapper
-public final class LockIsolated<Value>: Sendable {
+public final class LockIsolated<Value> {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>
@@ -125,8 +139,63 @@ public final class LockIsolated<Value>: Sendable {
     }
 }
 
+/// Lock-isolated storage for a value that is not `Sendable`.
+///
+/// `UncheckedLockIsolated` behaves identically to ``LockIsolated`` – the same
+/// wrapped value, projected value, and ``LockIsolatedProjection/withValue(_:)``
+/// semantics – but is `Sendable` regardless of `Value`. The compiler cannot
+/// verify that the stored value is safe to share across isolation domains; that
+/// guarantee is yours.
+///
+/// Use it only when both of the following hold:
+///
+/// - The value cannot reasonably be made `Sendable` – a system object with no
+///   `Sendable` annotation, a dictionary of plain closures, or an `Any`-typed
+///   payload.
+/// - The lock is genuinely needed, because the value is read or mutated from
+///   more than one context.
+///
+/// If the value is `Sendable`, use ``LockIsolated``. If the value only needs to
+/// cross a boundary once and is never shared afterward, use
+/// ``UncheckedSendable``, which carries no lock.
+///
+/// ```swift
+/// @UncheckedLockIsolated private var effects = [EffectID: () -> Void]()
+/// ```
+@propertyWrapper
+public final class UncheckedLockIsolated<Value>: @unchecked Sendable {
+    // MARK: - Properties
+
+    private let base: LockIsolated<Value>
+
+    // MARK: - Init
+
+    public init(
+        wrappedValue: @autoclosure () -> Value
+    ) {
+        base = LockIsolated(wrappedValue: wrappedValue())
+    }
+
+    public convenience init(
+        _ wrappedValue: @autoclosure () -> Value
+    ) {
+        self.init(wrappedValue: wrappedValue())
+    }
+
+    // MARK: - Projected Value
+
+    public var projectedValue: LockIsolatedProjection<Value> { base.projectedValue }
+
+    // MARK: - Wrapped Value
+
+    public var wrappedValue: Value {
+        get { base.wrappedValue }
+        set { base.wrappedValue = newValue }
+    }
+}
+
 @dynamicMemberLookup
-public struct LockIsolatedProjection<Value>: Sendable {
+public struct LockIsolatedProjection<Value> {
     // MARK: - Properties
 
     private let isolatedValue: _LockIsolated<Value>
@@ -204,6 +273,9 @@ private final class _LockIsolated<Value>: @unchecked Sendable {
         lock.sync { _value[keyPath: keyPath] }
     }
 }
+
+extension LockIsolated: Sendable where Value: Sendable {}
+extension LockIsolatedProjection: Sendable where Value: Sendable {}
 
 public extension LockIsolatedProjection {
     func contains<Element: Hashable>(
@@ -284,19 +356,3 @@ extension _LockIsolated {
         lock.sync { _value }
     }
 }
-
-#if swift(<6)
-@available(*, deprecated, message: "Lock isolated values should not be equatable")
-extension _LockIsolated: Equatable where Value: Equatable {
-    static func == (left: _LockIsolated, right: _LockIsolated) -> Bool {
-        left.value == right.value
-    }
-}
-
-@available(*, deprecated, message: "Lock isolated values should not be hashable")
-extension _LockIsolated: Hashable where Value: Hashable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(value)
-    }
-}
-#endif

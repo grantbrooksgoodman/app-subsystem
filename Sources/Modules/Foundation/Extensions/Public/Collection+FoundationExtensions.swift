@@ -90,6 +90,14 @@ public extension Collection {
         }
 
         let elements = Array(self)
+
+        // Neither `Element` nor `perform` is required to be `Sendable`, so
+        // they cannot be captured by the task group's child tasks unassisted.
+        // Each element is read exactly once, by exactly one child task, and
+        // `perform` is never mutated, which is what these boxes assert.
+        let sendableElements = UncheckedSendable(elements)
+        let sendablePerform = UncheckedSendable(perform)
+
         let result: Exception? = await withTaskGroup(
             of: Exception?.self
         ) { taskGroup in
@@ -100,12 +108,9 @@ public extension Collection {
                 let index = nextIndex
                 nextIndex += 1
 
-                @LockIsolated var elements: [Element] = elements
-                @LockIsolated var perform: (Element) async throws(Exception) -> Void = perform
-
                 taskGroup.addTask {
                     do throws(Exception) {
-                        try await perform(elements[index])
+                        try await sendablePerform.wrappedValue(sendableElements.wrappedValue[index])
                         return nil
                     } catch {
                         return error
@@ -160,6 +165,14 @@ public extension Collection {
         }
 
         let elements = Array(self)
+
+        // Neither `Element` nor `transform` is required to be `Sendable`, so
+        // they cannot be captured by the task group's child tasks unassisted.
+        // Each element is read exactly once, by exactly one child task, and
+        // `transform` is never mutated, which is what these boxes assert.
+        let sendableElements = UncheckedSendable(elements)
+        let sendableTransform = UncheckedSendable(transform)
+
         return await withTaskGroup(
             of: (Int, Callback<Output, Exception>).self
         ) { taskGroup in
@@ -175,13 +188,10 @@ public extension Collection {
                 let index = nextIndex
                 nextIndex += 1
 
-                @LockIsolated var elements: [Element] = elements
-                @LockIsolated var transform: (Element) async -> Callback<Output, Exception> = transform
-
                 taskGroup.addTask {
                     await (
                         index,
-                        transform(elements[index])
+                        sendableTransform.wrappedValue(sendableElements.wrappedValue[index])
                     )
                 }
             }

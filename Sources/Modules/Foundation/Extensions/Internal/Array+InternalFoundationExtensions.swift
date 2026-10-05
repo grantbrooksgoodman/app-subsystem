@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-extension Array where Element == Any {
+extension [Any] {
     var isValidMetadata: Bool {
         guard count == 4,
               !String(self[0]).isEmpty,

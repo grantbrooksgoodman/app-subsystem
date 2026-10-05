@@ -47,7 +47,9 @@ final class MailComposer: UIViewController, @preconcurrency MFMailComposeViewCon
 
     // MARK: - Computed Properties
 
-    var canSendMail: Bool { MFMailComposeViewController.canSendMail() }
+    var canSendMail: Bool {
+        MFMailComposeViewController.canSendMail()
+    }
 
     // MARK: - Init
 

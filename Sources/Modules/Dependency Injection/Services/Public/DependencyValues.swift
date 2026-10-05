@@ -128,5 +128,7 @@ private final class ResolverCache: @unchecked Sendable {
 }
 
 private extension ObjectIdentifier {
-    static func identifier(for type: (some DependencyKey).Type) -> Self { Self(type) }
+    static func identifier(for type: (some DependencyKey).Type) -> Self {
+        Self(type)
+    }
 }

@@ -117,8 +117,8 @@ private enum Cache {
 
     fileprivate static let didReachMemoryCeiling = LockIsolated(false)
 
-    // `AnyObject` entries carry no `Sendable` guarantee, so the claim is
-    // made explicitly here rather than inferred from the lock.
+    /// `AnyObject` entries carry no `Sendable` guarantee, so the claim is
+    /// made explicitly here rather than inferred from the lock.
     private static let _value = UncheckedLockIsolated(NSCache<NSString, AnyObject>())
 
     // MARK: - Computed Properties

@@ -62,5 +62,7 @@ public protocol NavigatorState {
 public protocol Paths: Hashable, Identifiable {}
 
 public extension Paths {
-    var id: String { .init() }
+    var id: String {
+        .init()
+    }
 }

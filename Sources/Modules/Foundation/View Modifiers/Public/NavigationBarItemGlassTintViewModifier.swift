@@ -32,10 +32,10 @@ private struct NavigationBarItemGlassTintViewModifier: ViewModifier {
             .if(UIApplication.isGlassTintingEnabled) {
                 $0.onNavigationTransition(.didAppear) { _ in
                     let color = UIColor(color)
-                    placement.forEach {
+                    for item in placement {
                         NavigationBar.setItemGlassTint(
                             color,
-                            for: $0
+                            for: item
                         )
                     }
                 }

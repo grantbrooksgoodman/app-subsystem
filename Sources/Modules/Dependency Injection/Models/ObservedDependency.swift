@@ -37,7 +37,7 @@ import SwiftUI
 /// - SeeAlso: ``Dependency``, ``DependencyValues``
 @MainActor
 @propertyWrapper
-public struct ObservedDependency<Value>: DynamicProperty where Value: ObservableObject {
+public struct ObservedDependency<Value: ObservableObject>: DynamicProperty {
     // MARK: - Properties
 
     @ObservedObject private var value: Value
@@ -45,10 +45,14 @@ public struct ObservedDependency<Value>: DynamicProperty where Value: Observable
     // MARK: - Computed Properties
 
     /// A binding wrapper for the dependency's published properties.
-    public var projectedValue: ObservedObject<Value>.Wrapper { $value }
+    public var projectedValue: ObservedObject<Value>.Wrapper {
+        $value
+    }
 
     /// The resolved dependency instance.
-    public var wrappedValue: Value { value }
+    public var wrappedValue: Value {
+        value
+    }
 
     // MARK: - Init
 

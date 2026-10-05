@@ -12,8 +12,9 @@ import UIKit
 /// The dependency key that provides a ``UIApplication`` instance.
 public enum UIApplicationDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> UIApplication {
+        // swiftformat:disable all
         @MainActorIsolated var uiApplication = UIApplication.shared
-        return uiApplication
+        return uiApplication // swiftformat:enable all
     }
 }
 

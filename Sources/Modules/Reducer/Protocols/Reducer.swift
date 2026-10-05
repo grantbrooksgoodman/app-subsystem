@@ -112,5 +112,7 @@ public protocol Reducer<State, Action> {
 }
 
 public extension Reducer where ReducerBody == Never {
-    var body: ReducerBody { fatalError("Body may not be called directly") }
+    var body: ReducerBody {
+        fatalError("Body may not be called directly")
+    }
 }

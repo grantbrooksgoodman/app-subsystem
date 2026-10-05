@@ -46,7 +46,9 @@ public struct ObservedNavigator<N: Navigating>: DynamicProperty {
 
     // MARK: - Computed Properties
 
-    public var wrappedValue: NavigationCoordinator<N> { value }
+    public var wrappedValue: NavigationCoordinator<N> {
+        value
+    }
 
     // MARK: - Init
 

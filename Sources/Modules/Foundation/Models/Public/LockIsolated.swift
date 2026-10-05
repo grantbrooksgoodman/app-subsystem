@@ -129,7 +129,9 @@ public final class LockIsolated<Value> {
 
     // MARK: - Projected Value
 
-    public var projectedValue: LockIsolatedProjection<Value> { .init(isolatedValue) }
+    public var projectedValue: LockIsolatedProjection<Value> {
+        .init(isolatedValue)
+    }
 
     // MARK: - Wrapped Value
 
@@ -184,7 +186,9 @@ public final class UncheckedLockIsolated<Value>: @unchecked Sendable {
 
     // MARK: - Projected Value
 
-    public var projectedValue: LockIsolatedProjection<Value> { base.projectedValue }
+    public var projectedValue: LockIsolatedProjection<Value> {
+        base.projectedValue
+    }
 
     // MARK: - Wrapped Value
 

@@ -41,7 +41,9 @@ public struct Swipe: OptionSet, Equatable {
     // MARK: - Computed Properties
 
     /// All four swipe directions.
-    public static var all: Swipe { [.down, .left, .right, .up] }
+    public static var all: Swipe {
+        [.down, .left, .right, .up]
+    }
 
     /// A downward swipe.
     public static var down: Swipe {
@@ -79,7 +81,9 @@ public struct Swipe: OptionSet, Equatable {
         return swipe
     }
 
-    fileprivate var array: [Swipe] { [.left, .right, .up, .down].filter { contains($0) } }
+    fileprivate var array: [Swipe] {
+        [.left, .right, .up, .down].filter { contains($0) }
+    }
 
     // MARK: - Init
 

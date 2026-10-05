@@ -122,53 +122,52 @@ private struct HeaderViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .if(
-                UIApplication.isFullyV26Compatible && usesInlineDisplayMode,
-                { content in
-                    NavigationWindow(
-                        displayMode: .inline,
-                        isBackButtonHidden: true,
-                        toolbarItems: [
-                            leadingToolbarItem,
-                            principalToolbarItem,
-                            trailingToolbarItem,
-                        ].compactMap { $0 }
-                    ) {
-                        ZStack(alignment: .top) {
-                            Color.clear
-                                .frame(width: .zero, height: .zero)
-                                .ignoresSafeArea(edges: .top)
-                                .navigationBarAppearance(
-                                    navigationBarAppearance,
-                                    restoreOnDisappear: attributes.restoreOnDisappear
-                                )
+                UIApplication.isFullyV26Compatible && usesInlineDisplayMode
+            ) { content in
+                NavigationWindow(
+                    displayMode: .inline,
+                    isBackButtonHidden: true,
+                    toolbarItems: [
+                        leadingToolbarItem,
+                        principalToolbarItem,
+                        trailingToolbarItem,
+                    ].compactMap(\.self)
+                ) {
+                    ZStack(alignment: .top) {
+                        Color.clear
+                            .frame(width: .zero, height: .zero)
+                            .ignoresSafeArea(edges: .top)
+                            .navigationBarAppearance(
+                                navigationBarAppearance,
+                                restoreOnDisappear: attributes.restoreOnDisappear
+                            )
 
-                            content
+                        content
 
-                            Rectangle()
-                                .fill(Color(uiColor: attributes.appearance.backgroundColor))
-                                .frame(height:
-                                    NavigationBar.height + Floats.navigationBarHeightIncrement
-                                )
-                                .ignoresSafeArea(edges: .top)
-                        }
+                        Rectangle()
+                            .fill(Color(uiColor: attributes.appearance.backgroundColor))
+                            .frame(
+                                height:
+                                NavigationBar.height + Floats.navigationBarHeightIncrement
+                            )
+                            .ignoresSafeArea(edges: .top)
                     }
-                    .ifLet(popGestureAction) { content, popGestureAction in
-                        content.popGesture(
-                            popGestureAction
-                        )
-                    }
-                },
-                else: {
-                    $0
-                        .header(
-                            leftItem: leftItem,
-                            centerItem,
-                            rightItem: rightItem,
-                            attributes: attributes,
-                            popGestureAction: popGestureAction
-                        )
                 }
-            )
+                .ifLet(popGestureAction) { content, popGestureAction in
+                    content.popGesture(
+                        popGestureAction
+                    )
+                }
+            } else: {
+                $0
+                    .header(
+                        leftItem: leftItem,
+                        centerItem,
+                        rightItem: rightItem,
+                        attributes: attributes,
+                        popGestureAction: popGestureAction
+                    )
+            }
     }
 
     // MARK: - Toolbar Items

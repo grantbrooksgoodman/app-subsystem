@@ -14,7 +14,9 @@ public extension UIView {
     // MARK: - Properties
 
     /// A string describing the view's type.
-    var descriptor: String { .init(type(of: self)) }
+    var descriptor: String {
+        .init(type(of: self))
+    }
 
     /// All subviews in the hierarchy below this view, resolved
     /// recursively.

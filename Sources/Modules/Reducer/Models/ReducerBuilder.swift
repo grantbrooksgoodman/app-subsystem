@@ -27,16 +27,16 @@ import Foundation
 /// You do not use this type directly. It is applied automatically through
 /// the `@ReducerBuilder` attribute on ``Reducer/ReducerBody``.
 @resultBuilder
-public enum ReducerBuilder<State, Action> where State: Equatable {
+public enum ReducerBuilder<State: Equatable, Action> {
     // MARK: - Build Block
 
-    public static func buildBlock<R>(_ components: R...) -> [R] where R: Reducer, R.State == State, R.Action == Action {
+    public static func buildBlock<R: Reducer>(_ components: R...) -> [R] where R.State == State, R.Action == Action {
         components
     }
 
     // MARK: - Build Partial Block
 
-    public static func buildPartialBlock<R>(first: R) -> R where R: Reducer, R.State == State, R.Action == Action {
+    public static func buildPartialBlock<R: Reducer>(first: R) -> R where R.State == State, R.Action == Action {
         first
     }
 }

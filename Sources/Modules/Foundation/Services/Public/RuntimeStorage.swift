@@ -42,8 +42,8 @@ import Foundation
 public enum RuntimeStorage {
     // MARK: - Properties
 
-    // Stored items are `Any`-typed by API contract, so the lock cannot
-    // vouch for their sendability; the claim is made explicitly here.
+    /// Stored items are `Any`-typed by API contract, so the lock cannot
+    /// vouch for their sendability; the claim is made explicitly here.
     private static let storedItems = UncheckedLockIsolated([String: Any]())
 
     // MARK: - Removal

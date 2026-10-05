@@ -42,7 +42,7 @@ public extension NavigationBar {
             }
         }
 
-        extantGlassViews.forEach { glassView in
+        for glassView in extantGlassViews {
             uiApplication
                 .presentedViews
                 .filter { $0.tag == glassView.key }
@@ -107,7 +107,7 @@ public extension NavigationBar {
                     return isObservingTraitCollectionChanges = false
                 }
 
-                extantGlassViews.forEach { glassView in
+                for glassView in extantGlassViews {
                     uiApplication
                         .presentedViews
                         .filter { $0.tag == glassView.key }
@@ -179,7 +179,9 @@ public extension NavigationBar {
 }
 
 private extension UIView {
-    var isInSheetPresentation: Bool { sheetPresentationController != nil }
+    var isInSheetPresentation: Bool {
+        sheetPresentationController != nil
+    }
 
     private var owningViewController: UIViewController? {
         sequence(first: next, next: { $0?.next })

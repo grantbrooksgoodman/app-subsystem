@@ -117,7 +117,9 @@ public extension Effect {
     ///    return .none
     /// ```
     ///
-    static var none: Self { .init { _ in } }
+    static var none: Self {
+        .init { _ in }
+    }
 
     // MARK: - Fire & Forget
 
@@ -196,10 +198,10 @@ public extension Effect {
     ///   - priority: The task priority for the effect. Defaults to `nil`.
     ///   - sequence: The asynchronous sequence whose elements are sent as
     ///     actions.
-    static func run<S: AsyncSequence>(
+    static func run<S: AsyncSequence & Sendable>(
         priority: TaskPriority? = nil,
         _ sequence: S
-    ) -> Self where S.Element == Action, S.Element: Sendable, S: Sendable {
+    ) -> Self where S.Element == Action, S.Element: Sendable {
         assert(
             !String(describing: type(of: sequence)).localizedStandardContains("AsyncPublisher") &&
                 !String(describing: type(of: sequence)).localizedStandardContains("AsyncThrowingPublisher")

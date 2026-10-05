@@ -11,8 +11,9 @@ import Foundation
 /// The dependency key that provides a ``QuickViewer`` instance.
 public enum QuickViewerDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> QuickViewer {
+        // swiftformat:disable all
         @MainActorIsolated var quickViewer = QuickViewer()
-        return quickViewer
+        return quickViewer // swiftformat:enable all
     }
 }
 

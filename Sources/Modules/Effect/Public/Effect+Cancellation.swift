@@ -137,7 +137,7 @@ public func withTaskCancellation<T: Sendable>(
     id: some CancelID,
     cancelInFlight: Bool = false,
     operation: @Sendable @escaping () async -> T,
-    isolation: isolated(any Actor)? = #isolation
+    isolation: isolated (any Actor)? = #isolation
 ) async -> T {
     if cancelInFlight { await internalCancellableTasks.cancel(id: id) }
 
@@ -171,7 +171,7 @@ public func withTaskCancellation<T: Sendable>(
     id: Any.Type,
     cancelInFlight: Bool = false,
     operation: @Sendable @escaping () async -> T,
-    isolation: isolated(any Actor)? = #isolation
+    isolation: isolated (any Actor)? = #isolation
 ) async -> T {
     await withTaskCancellation(
         id: ObjectIdentifier(id),
@@ -219,11 +219,15 @@ actor CancellableTasks {
 
     // MARK: - Computed Properties
 
-    var count: Int { storage.count }
+    var count: Int {
+        storage.count
+    }
 
     // MARK: - Methods
 
-    func exists(at id: AnyHashable) -> Bool { storage[InternalCancelID(id: id)] != nil }
+    func exists(at id: AnyHashable) -> Bool {
+        storage[InternalCancelID(id: id)] != nil
+    }
 
     func cancel(id: AnyHashable) {
         let cancelID = InternalCancelID(id: id)

@@ -184,5 +184,7 @@ public extension UITheme {
 }
 
 extension UITheme {
-    static var subsystemCases: [UITheme] { [.default] }
+    static var subsystemCases: [UITheme] {
+        [.default]
+    }
 }

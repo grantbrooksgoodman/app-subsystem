@@ -18,8 +18,9 @@ var _build: Build!
 public enum BuildDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> Build {
         guard AppSubsystem.didInitialize else { fatalError("AppSubsystem was not initialized") }
+        // swiftformat:disable all
         @MainActorIsolated var build = _build!
-        return build
+        return build // swiftformat:enable all
     }
 }
 

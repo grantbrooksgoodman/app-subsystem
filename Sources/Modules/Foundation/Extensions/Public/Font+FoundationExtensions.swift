@@ -35,7 +35,9 @@ public extension Font {
 
         /* MARK: Properties */
 
-        var fontNameValue: String { rawValue.firstUppercase }
+        var fontNameValue: String {
+            rawValue.firstUppercase
+        }
     }
 
     // MARK: - Functions

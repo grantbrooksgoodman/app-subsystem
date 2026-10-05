@@ -22,7 +22,9 @@ struct BuildInfoOverlayViewService {
 
     // MARK: - Properties
 
-    private var buildInfoButtonMessage: (string: String, messageAttributes: AttributedStringConfig?) { getBuildInfoButtonMessage() }
+    private var buildInfoButtonMessage: (string: String, messageAttributes: AttributedStringConfig?) {
+        getBuildInfoButtonMessage()
+    }
 
     // MARK: - Build Info Button Tapped
 

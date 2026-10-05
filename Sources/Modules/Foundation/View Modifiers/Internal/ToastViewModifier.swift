@@ -49,7 +49,6 @@ private struct ToastViewModifier: ViewModifier {
             }
     }
 
-    @ViewBuilder
     private var toastView: some View {
         Group {
             if let toast {

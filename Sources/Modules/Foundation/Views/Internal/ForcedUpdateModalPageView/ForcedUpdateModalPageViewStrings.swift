@@ -21,7 +21,9 @@ public extension TranslatedLabelStringCollection {
 
         // MARK: - Properties
 
-        public var alternate: String? { nil }
+        public var alternate: String? {
+            nil
+        }
 
         public var rawValue: String {
             @Dependency(\.build) var build: Build
@@ -60,5 +62,7 @@ enum ForcedUpdateModalPageViewStrings: TranslatedLabelStrings {
 }
 
 extension TranslatedLabelStringCollection {
-    static func forcedUpdateModalPageView(_ key: ForcedUpdateModalPageViewStringKey) -> TranslatedLabelStringCollection { .init(key.rawValue) }
+    static func forcedUpdateModalPageView(_ key: ForcedUpdateModalPageViewStringKey) -> TranslatedLabelStringCollection {
+        .init(key.rawValue)
+    }
 }

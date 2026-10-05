@@ -30,5 +30,7 @@ enum SubsystemStringKey: String, LocalizedStringKeyRepresentable {
 
     // MARK: - Properties
 
-    var referent: String { rawValue.snakeCased }
+    var referent: String {
+        rawValue.snakeCased
+    }
 }

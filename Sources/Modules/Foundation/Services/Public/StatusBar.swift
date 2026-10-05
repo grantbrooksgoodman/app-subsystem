@@ -35,10 +35,12 @@ public enum StatusBar {
         @Dependency(\.coreKit.ui) var coreUI: CoreKit.UI
         @Dependency(\.uiApplication.windows) var windows: [UIWindow]
 
-        return (windows
-            .first(where: {
-                $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW")
-            }))?.rootViewController as? StatusBarViewController
+        return (
+            windows
+                .first(where: {
+                    $0.tag == coreUI.semTag(for: "STATUS_BAR_WINDOW")
+                })
+        )?.rootViewController as? StatusBarViewController
     }
 
     // MARK: - Override Style
@@ -88,8 +90,13 @@ final class StatusBarViewController: UIViewController {
 
     // MARK: - Computed Properties
 
-    override var preferredStatusBarStyle: UIStatusBarStyle { statusBarStyle }
-    override var prefersStatusBarHidden: Bool { isStatusBarHidden }
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        statusBarStyle
+    }
+
+    override var prefersStatusBarHidden: Bool {
+        isStatusBarHidden
+    }
 
     // MARK: - Init
 

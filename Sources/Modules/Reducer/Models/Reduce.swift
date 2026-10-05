@@ -31,7 +31,7 @@ import Foundation
 /// reference, and test.
 ///
 /// - SeeAlso: ``Reducer``, ``ReducerBuilder``
-public struct Reduce<State, Action>: Reducer where State: Equatable {
+public struct Reduce<State: Equatable, Action>: Reducer {
     // MARK: - Properties
 
     let reduce: (inout State, Action) -> Effect<Action>

@@ -44,18 +44,4 @@ public struct CoreKit: Sendable {
 
     /// General-purpose utilities.
     public let utils: Utilities
-
-    // MARK: - Init
-
-    init(
-        gcd: GCD,
-        hud: HUD,
-        ui: UI,
-        utils: Utilities
-    ) {
-        self.gcd = gcd
-        self.hud = hud
-        self.ui = ui
-        self.utils = utils
-    }
 }

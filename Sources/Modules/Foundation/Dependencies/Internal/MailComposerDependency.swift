@@ -10,8 +10,9 @@ import Foundation
 
 enum MailComposerDependency: DependencyKey {
     static func resolve(_: DependencyValues) -> MailComposer {
+        // swiftformat:disable all
         @MainActorIsolated var mailComposer = MailComposer.shared
-        return mailComposer
+        return mailComposer // swiftformat:enable all
     }
 }
 

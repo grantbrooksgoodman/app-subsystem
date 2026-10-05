@@ -14,8 +14,9 @@ import AlertKit
 /// The dependency key that provides an ``AlertKit/Config`` instance.
 public enum AlertKitConfigDependency: DependencyKey {
     public static func resolve(_: DependencyValues) -> AlertKit.Config {
+        // swiftformat:disable all
         @MainActorIsolated var alertKitConfig = AlertKit.config
-        return alertKitConfig
+        return alertKitConfig // swiftformat:enable all
     }
 }
 

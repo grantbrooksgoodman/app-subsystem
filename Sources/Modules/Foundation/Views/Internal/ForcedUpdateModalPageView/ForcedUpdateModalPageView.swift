@@ -130,7 +130,7 @@ struct ForcedUpdateModalPageView: View {
     }
 }
 
-private extension Array where Element == TranslationOutputMap {
+private extension [TranslationOutputMap] {
     func value(for key: TranslatedLabelStringCollection.ForcedUpdateModalPageViewStringKey) -> String {
         (first(where: { $0.key == .forcedUpdateModalPageView(key) })?.value ?? key.rawValue).sanitized
     }

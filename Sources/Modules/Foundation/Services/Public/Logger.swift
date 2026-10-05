@@ -272,9 +272,9 @@ public enum Logger {
         _subscribedDomains.wrappedValue
     }
 
-    // Resolved once at first access and never mutated, so no lock is
-    // needed; the box only vouches for the pointer crossing isolation
-    // boundaries, which `UnsafeRawPointer` cannot do on its own.
+    /// Resolved once at first access and never mutated, so no lock is
+    /// needed; the box only vouches for the pointer crossing isolation
+    /// boundaries, which `UnsafeRawPointer` cannot do on its own.
     @usableFromInline
     static let swiftUIDynamicSharedObject = UncheckedSendable<UnsafeRawPointer?>(
         {

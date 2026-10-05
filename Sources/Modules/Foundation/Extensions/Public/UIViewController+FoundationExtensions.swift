@@ -13,7 +13,9 @@ public extension UIViewController {
     // MARK: - Properties
 
     /// A string describing the view controller's type.
-    var descriptor: String { .init(type(of: self)) }
+    var descriptor: String {
+        .init(type(of: self))
+    }
 
     /// The deepest child view controller in the hierarchy.
     var leafViewController: UIViewController {
@@ -36,6 +38,6 @@ public extension UIViewController {
             var result = (child as? T).map { [$0] } ?? []
             result += child.descendants(type: type)
             return result
-        }.flatMap { $0 }
+        }.flatMap(\.self)
     }
 }

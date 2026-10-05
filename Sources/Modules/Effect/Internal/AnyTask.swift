@@ -13,7 +13,9 @@ final class AnyTask {
 
     let options: Options
 
-    var isCancelled: Bool { isCancelledBlock() }
+    var isCancelled: Bool {
+        isCancelledBlock()
+    }
 
     private let assertionFailureHandler: (@autoclosure () -> String, StaticString, UInt) -> Void
     private let hashValueBlock: () -> Int
@@ -88,12 +90,19 @@ extension AnyTask {
 }
 
 extension AnyTask: Hashable {
-    static func == (lhs: AnyTask, rhs: AnyTask) -> Bool { lhs.hashValue == rhs.hashValue }
-    func hash(into hasher: inout Hasher) { hasher.combine(hashValueBlock()) }
+    static func == (lhs: AnyTask, rhs: AnyTask) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(hashValueBlock())
+    }
 }
 
 extension Task {
-    func erased(options: AnyTask.Options = .default) -> AnyTask { .init(self, options: options) }
+    func erased(options: AnyTask.Options = .default) -> AnyTask {
+        .init(self, options: options)
+    }
 
     @discardableResult
     func store<Collection: RangeReplaceableCollection>(

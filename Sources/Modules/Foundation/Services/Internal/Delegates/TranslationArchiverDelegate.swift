@@ -7,11 +7,16 @@
 
 /* Native */
 import Foundation
+import UIKit
 
 /* Proprietary */
 import Translator
 
 final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unchecked Sendable {
+    // MARK: - Constants Accessors
+
+    private typealias Floats = FoundationConstants.CGFloats.LocalTranslationArchiverDelegate
+
     // MARK: - Properties
 
     private let ioLock = NSRecursiveLock()
@@ -25,23 +30,45 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
 
     /// Maps "<input value hash>|<language pair>" to its translation for
     /// constant-time lookups, avoiding a per-entry hash computation on every
-    /// query.
+    /// query. The index is the archive's only in-memory copy; writes persist
+    /// its values.
     private var archiveIndex = [String: Translation]()
 
-    /// The decoded archive, loaded from disk at most once per launch.
-    private var cachedArchive: Set<Translation>?
+    /// Whether the archive has been loaded from disk, which happens at most
+    /// once per launch.
+    private var isArchiveLoaded = false
+
+    /// Whether a write of the archive is scheduled and has yet to run.
+    private var isWritePending = false
 
     @Persistent(.translationArchive) private var persistedArchive: Set<Translation>?
 
     // MARK: - Init
 
     init() {
+        @Dependency(\.notificationCenter) var notificationCenter: NotificationCenter
+
         // Decode and index the archive ahead of the first lookup, keeping the
         // one-time cost off both the launch path and the translation path.
         persistenceQueue.async {
             self.ioLock.lock()
             defer { self.ioLock.unlock() }
-            _ = self.loadArchiveIfNeeded()
+            self.loadArchiveIfNeeded()
+        }
+
+        // A pending write reaches the disk before the app can be suspended
+        // or terminated.
+        for name in [
+            UIApplication.didEnterBackgroundNotification,
+            UIApplication.willTerminateNotification,
+        ] {
+            notificationCenter.addObserver(
+                self,
+                name: name
+            ) { [weak self] _ in
+                guard let self else { return }
+                persistenceQueue.sync { self.persistPendingArchive() }
+            }
         }
     }
 
@@ -58,30 +85,23 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        var archive = loadArchiveIfNeeded()
-        insert(
-            translation,
-            into: &archive
-        )
-
-        cachedArchive = archive
-        persistArchive(archive)
+        loadArchiveIfNeeded()
+        guard insert(translation) else { return }
+        schedulePersistence()
     }
 
     func addValues(_ translations: Set<Translation>) {
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        var archive = loadArchiveIfNeeded()
+        loadArchiveIfNeeded()
+        var didChangeArchive = false
         for translation in translations {
-            insert(
-                translation,
-                into: &archive
-            )
+            didChangeArchive = insert(translation) || didChangeArchive
         }
 
-        cachedArchive = archive
-        persistArchive(archive)
+        guard didChangeArchive else { return }
+        schedulePersistence()
     }
 
     // MARK: - Get Value
@@ -93,7 +113,7 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        _ = loadArchiveIfNeeded()
+        loadArchiveIfNeeded()
         return archiveIndex[indexKey(
             inputValueEncodedHash: hash,
             languagePair: languagePair
@@ -109,20 +129,13 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        guard let value = getValue(
+        loadArchiveIfNeeded()
+        guard archiveIndex.removeValue(forKey: indexKey(
             inputValueEncodedHash: hash,
             languagePair: languagePair
-        ) else { return }
+        )) != nil else { return }
 
-        var archive = loadArchiveIfNeeded()
-        archive.remove(value)
-        archiveIndex[indexKey(
-            inputValueEncodedHash: hash,
-            languagePair: languagePair
-        )] = nil
-
-        cachedArchive = archive
-        persistArchive(archive)
+        schedulePersistence()
     }
 
     // MARK: - Clear Archive
@@ -132,8 +145,8 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
         defer { ioLock.unlock() }
 
         archiveIndex = [:]
-        cachedArchive = []
-        persistArchive([])
+        isArchiveLoaded = true
+        schedulePersistence()
     }
 
     // MARK: - Auxiliary
@@ -152,39 +165,48 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
         )
     }
 
-    /// Inserts the translation into both the archive and the index, replacing
-    /// any existing translation for the same input and language pair.
-    private func insert(
-        _ translation: Translation,
-        into archive: inout Set<Translation>
-    ) {
+    /// Inserts the translation into the index, replacing any existing
+    /// translation for the same input and language pair. Returns `false`
+    /// when the index already holds the translation.
+    private func insert(_ translation: Translation) -> Bool {
         let key = indexKey(for: translation)
-        if let existingTranslation = archiveIndex[key] {
-            archive.remove(existingTranslation)
-        }
-
-        archive.insert(translation)
+        guard archiveIndex[key] != translation else { return false }
         archiveIndex[key] = translation
+        return true
     }
 
-    private func loadArchiveIfNeeded() -> Set<Translation> {
-        if let cachedArchive { return cachedArchive }
-
-        let archive = persistedArchive ?? []
-        cachedArchive = archive
-        archiveIndex = archive.reduce(into: [String: Translation]()) { index, translation in
+    private func loadArchiveIfNeeded() {
+        guard !isArchiveLoaded else { return }
+        isArchiveLoaded = true
+        archiveIndex = (persistedArchive ?? []).reduce(into: [String: Translation]()) { index, translation in
             index[indexKey(for: translation)] = translation
         }
-
-        return archive
     }
 
-    /// Writes the archive on a background queue, keeping disk I/O off the
-    /// translation path. Writes are serialized in submission order, so the
-    /// last snapshot always wins.
-    private func persistArchive(_ archive: Set<Translation>) {
-        persistenceQueue.async {
-            self.persistedArchive = archive.isEmpty ? nil : archive
+    /// Writes the archive if a write is pending. Runs on the persistence
+    /// queue.
+    private func persistPendingArchive() {
+        let archive: Set<Translation>? = ioLock.withLock {
+            guard isWritePending else { return nil }
+            isWritePending = false
+            return Set(archiveIndex.values)
+        }
+
+        guard let archive else { return }
+        persistedArchive = archive.isEmpty ? nil : archive
+    }
+
+    /// Schedules a write of the archive on the persistence queue. Every change
+    /// made before the write runs is coalesced into it, so a burst of changes
+    /// encodes the archive once. Call while holding the I/O lock.
+    private func schedulePersistence() {
+        guard !isWritePending else { return }
+        isWritePending = true
+
+        persistenceQueue.asyncAfter(
+            deadline: .now() + .milliseconds(Int(Floats.writeDelayMilliseconds))
+        ) {
+            self.persistPendingArchive()
         }
     }
 }

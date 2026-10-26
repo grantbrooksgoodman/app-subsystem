@@ -176,9 +176,22 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
         defaults.removeObject(forKey: key)
     }
 
+    /// Each write replaces the stored value before removing its copy in
+    /// the other storage location, so an interrupted write leaves the
+    /// previous value in place rather than none.
     private func setValue(to newValue: T?) {
         guard newValue != nil else { return removeValue() }
-        removeValue()
+
+        defer {
+            PersistenceCache.setValue(
+                newValue as Any,
+                forKey: key
+            )
+        }
+
+        let fileURL = FileManager
+            .applicationSupportDirectoryURL
+            .appending(path: key.rawValue)
 
         let encodedData = (try? propertyListEncoder.encode(newValue)) ?? (try? jsonEncoder.encode(newValue))
         guard let encodedData else {
@@ -187,50 +200,39 @@ public final class Persistent<T: Codable>: @unchecked Sendable {
                 forKey: key
             )
 
-            return PersistenceCache.setValue(
-                newValue as Any,
-                forKey: key
-            )
+            try? fileManager.removeItem(at: fileURL)
+            return
         }
 
-        if encodedData.count >= 16000 {
-            guard let compressedData = try? (encodedData as NSData)
-                .compressed(using: .lz4) as Data else {
-                defaults.set(
-                    encodedData,
-                    forKey: key
-                )
-
-                return PersistenceCache.setValue(
-                    newValue as Any,
-                    forKey: key
-                )
-            }
-
-            do {
-                try compressedData.write(
-                    to: FileManager
-                        .applicationSupportDirectoryURL
-                        .appending(path: key.rawValue),
-                    options: [.atomic]
-                )
-            } catch {
-                Logger.log(.init(
-                    error,
-                    metadata: .init(sender: self)
-                ))
-            }
-        } else {
+        guard encodedData.count >= 16000,
+              let compressedData = try? (encodedData as NSData)
+              .compressed(using: .lz4) as Data else {
             defaults.set(
                 encodedData,
                 forKey: key
             )
+
+            try? fileManager.removeItem(at: fileURL)
+            return
         }
 
-        PersistenceCache.setValue(
-            newValue as Any,
-            forKey: key
-        )
+        do {
+            try compressedData.write(
+                to: fileURL,
+                options: [.atomic]
+            )
+
+            // The string-keyed overload leaves the file just written in
+            // place.
+            defaults.removeObject(forKey: key.rawValue)
+        } catch {
+            Logger.log(.init(
+                error,
+                metadata: .init(sender: self)
+            ))
+
+            removeValue()
+        }
     }
 }
 

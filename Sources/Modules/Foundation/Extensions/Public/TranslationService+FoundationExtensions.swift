@@ -192,10 +192,7 @@ public extension TranslationService {
 
         let didComplete = LockIsolated(false)
         let exception = LockIsolated<Exception?>(nil)
-        // `Translation` is declared by the Translator package without a
-        // `Sendable` annotation visible here, so the claim is made
-        // explicitly rather than inferred from the lock.
-        let translations = UncheckedLockIsolated([Translation]())
+        let translations = LockIsolated([Translation]())
 
         if let hudConfig {
             Task.delayed(by: hudConfig.appearsAfter) { @MainActor in

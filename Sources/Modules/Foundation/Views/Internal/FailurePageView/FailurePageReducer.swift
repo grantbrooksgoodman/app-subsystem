@@ -85,7 +85,7 @@ struct FailurePageReducer: Reducer {
             state.didReportBug = true
             return .fireAndForget { @MainActor in
                 @Dependency(\.alertKitConfig.reportDelegate) var reportDelegate: (any AlertKit.ReportDelegate)?
-                reportDelegate?.fileReport(exception)
+                reportDelegate?.fileReport(exception.hydrated)
             }
         }
 

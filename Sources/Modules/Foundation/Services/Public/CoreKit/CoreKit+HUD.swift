@@ -66,8 +66,8 @@ public extension CoreKit {
             image: HUDImage
         ) {
             Task { @MainActor in
-                var alertIcon: AlertIcon?
-                var animatedIcon: AnimatedIcon?
+                var alertIcon: ProgressHUD.AlertIcon?
+                var animatedIcon: ProgressHUD.AnimatedIcon?
 
                 switch image {
                 case .success:

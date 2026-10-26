@@ -231,9 +231,9 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                             )
                         ).present(translating: [])
 
-                        guard let input else { return }
+                        guard let languageCode = input?.lowercasedTrimmingWhitespaceAndNewlines else { return }
                         guard let languageCodes = RuntimeStorage.languageCodeDictionary,
-                              languageCodes.keys.contains(input.lowercasedTrimmingWhitespaceAndNewlines) else {
+                              languageCodes.keys.contains(languageCode) else {
                             let tryAgainAction: AKAction = .init(
                                 "Try Again",
                                 style: .preferred
@@ -250,7 +250,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                             ).present(translating: [])
                         }
 
-                        core.utils.setLanguageCode(input, override: true)
+                        core.utils.setLanguageCode(languageCode, override: true)
                         core.hud.showSuccess()
                     }
 

@@ -87,18 +87,26 @@ public extension UserDefaults {
     ///
     /// This method removes values from both `UserDefaults` and the
     /// Application Support directory, ensuring that filesystem-backed
-    /// entries written by ``Persistent`` are also deleted.
+    /// entries written by ``Persistent`` are also deleted. Values
+    /// that ``Persistent`` has cached in memory are discarded.
     ///
     /// The default strategy preserves permanent keys registered
     /// through the
     /// ``AppSubsystem/Delegates/PermanentPersistentStorageKeyDelegate``
     /// and subsystem-internal keys.
     ///
+    /// - Important: Every file at the top level of the Application
+    ///   Support directory whose name doesn't match a preserved key
+    ///   is deleted. Subdirectories are left in place.
+    ///
     /// - Parameter preserving: The preservation strategy. The default
     ///   is ``KeyPreservationStrategy/permanentAndSubsystemKeys(plus:)``.
     func reset(preserving: KeyPreservationStrategy = .permanentAndSubsystemKeys()) {
+        @Dependency(\.fileManager) var fileManager: FileManager
+
+        let preservedKeys = preserving.keys
         let dictionary = dictionaryRepresentation()
-        let preservedValues = preserving.keys.reduce(into: [String: Any]()) { partialResult, key in
+        let preservedValues = preservedKeys.reduce(into: [String: Any]()) { partialResult, key in
             if let value = value(forKey: key.rawValue) {
                 partialResult[key.rawValue] = value
             }
@@ -108,6 +116,25 @@ public extension UserDefaults {
         for (key, value) in preservedValues {
             set(value, forKey: key)
         }
+
+        // Values archived by Persistent live only in files
+        // named for their keys, so they never appear in the
+        // dictionary representation.
+        let preservedFileNames = Set(preservedKeys.map(\.rawValue))
+        let fileURLs = (try? fileManager.contentsOfDirectory(
+            at: FileManager.applicationSupportDirectoryURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: .skipsHiddenFiles
+        )) ?? []
+
+        for fileURL in fileURLs where !preservedFileNames.contains(fileURL.lastPathComponent) {
+            guard (try? fileURL.resourceValues(
+                forKeys: [.isRegularFileKey]
+            ))?.isRegularFile == true else { continue }
+            try? fileManager.removeItem(at: fileURL)
+        }
+
+        PersistenceCache.clearCache()
     }
 
     /// Sets the value for the given key.

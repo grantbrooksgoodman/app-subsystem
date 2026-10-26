@@ -1128,15 +1128,4 @@ private extension DependencyValues {
     }
 }
 
-/* MARK: Auxiliary */
-
-private extension Exception {
-    var hydrated: Exception {
-        appending(userInfo: [
-            UserInfo.descriptor.rawValue: descriptor,
-            UserInfo.errorCode.rawValue: code,
-        ])
-    }
-}
-
 // swiftlint:enable file_length type_body_length

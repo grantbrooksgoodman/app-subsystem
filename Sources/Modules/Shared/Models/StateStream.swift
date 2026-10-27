@@ -67,6 +67,13 @@ public final class StateStream<Value: Sendable>: Sendable {
 
     private let storage: LockIsolated<Storage>
 
+    /// Serializes stores and their yields so subscribers receive values
+    /// in store order. Continuations are never yielded while the
+    /// storage lock is held: yielding takes the receiving task's status
+    /// lock, which a cancellation already holds while it runs
+    /// `onTermination` – and that handler takes the storage lock.
+    private let yieldLock = NSRecursiveLock()
+
     // MARK: - Computed Properties
 
     /// An asynchronous sequence of the current value and its changes.
@@ -96,9 +103,13 @@ public final class StateStream<Value: Sendable>: Sendable {
                 self?.storage.projectedValue.withValue { $0.continuations[id] = nil }
             }
 
-            storage.projectedValue.withValue { storage in
-                storage.continuations[id] = continuation
-                continuation.yield(storage.value)
+            yieldLock.sync {
+                let value = storage.projectedValue.withValue { storage in
+                    storage.continuations[id] = continuation
+                    return storage.value
+                }
+
+                continuation.yield(value)
             }
         }
     }
@@ -113,12 +124,7 @@ public final class StateStream<Value: Sendable>: Sendable {
     public var value: Value {
         get { storage.projectedValue.value }
         set {
-            storage.projectedValue.withValue { storage in
-                storage.value = newValue
-                for continuation in storage.continuations.values {
-                    continuation.yield(newValue)
-                }
-            }
+            withValue { $0 = newValue }
         }
     }
 
@@ -132,10 +138,12 @@ public final class StateStream<Value: Sendable>: Sendable {
     }
 
     deinit {
-        storage.projectedValue.withValue { storage in
-            storage.continuations.values.forEach { $0.finish() }
-            storage.continuations.removeAll()
+        let continuations = storage.projectedValue.withValue { storage in
+            defer { storage.continuations.removeAll() }
+            return storage.continuations
         }
+
+        continuations.values.forEach { $0.finish() }
     }
 
     // MARK: - Methods
@@ -164,10 +172,14 @@ public final class StateStream<Value: Sendable>: Sendable {
     public func withValue<T>(
         _ operation: (inout Value) throws -> T
     ) rethrows -> T {
-        try storage.projectedValue.withValue { storage in
-            let result = try operation(&storage.value)
-            for continuation in storage.continuations.values {
-                continuation.yield(storage.value)
+        try yieldLock.sync {
+            let (result, value, continuations) = try storage.projectedValue.withValue { storage in
+                let result = try operation(&storage.value)
+                return (result, storage.value, storage.continuations)
+            }
+
+            for continuation in continuations.values {
+                continuation.yield(value)
             }
 
             return result

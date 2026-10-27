@@ -62,6 +62,13 @@ public final class EventStream<Payload: Sendable>: Sendable {
 
     private let continuations = LockIsolated([UUID: AsyncStream<Payload>.Continuation]())
 
+    /// Serializes sends so subscribers receive payloads in send order.
+    /// Continuations are never yielded while the continuation lock is
+    /// held: yielding takes the receiving task's status lock, which a
+    /// cancellation already holds while it runs `onTermination` – and
+    /// that handler takes the continuation lock.
+    private let sendLock = NSRecursiveLock()
+
     // MARK: - Computed Properties
 
     /// An asynchronous sequence of event payloads.
@@ -96,10 +103,12 @@ public final class EventStream<Payload: Sendable>: Sendable {
     public init() {}
 
     deinit {
-        continuations.projectedValue.withValue { continuations in
-            continuations.values.forEach { $0.finish() }
-            continuations.removeAll()
+        let continuations = continuations.projectedValue.withValue { continuations in
+            defer { continuations.removeAll() }
+            return continuations
         }
+
+        continuations.values.forEach { $0.finish() }
     }
 
     // MARK: - Methods
@@ -112,8 +121,8 @@ public final class EventStream<Payload: Sendable>: Sendable {
     ///
     /// - Parameter payload: The payload to deliver.
     public func send(_ payload: Payload) {
-        continuations.projectedValue.withValue { continuations in
-            for continuation in continuations.values {
+        sendLock.sync {
+            for continuation in continuations.wrappedValue.values {
                 continuation.yield(payload)
             }
         }

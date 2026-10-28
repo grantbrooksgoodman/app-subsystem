@@ -75,13 +75,13 @@ public struct ThemedView: View {
         Themed(
             .init(
                 initialState: .init(
-                    viewBody,
                     navigationBarAppearance: navigationBarAppearance,
                     redrawsOnAppearanceChange: redrawsOnAppearanceChange,
                     restoresNavigationBarAppearanceOnDisappear: restoresNavigationBarAppearanceOnDisappear
                 ),
                 reducer: ThemedReducer()
-            )
+            ),
+            body: viewBody
         )
     }
 }
@@ -89,11 +89,17 @@ public struct ThemedView: View {
 private struct Themed: View {
     // MARK: - Properties
 
+    private let viewBody: () -> any View
+
     @StateObject private var viewModel: ViewModel<ThemedReducer>
 
     // MARK: - Init
 
-    init(_ viewModel: ViewModel<ThemedReducer>) {
+    init(
+        _ viewModel: ViewModel<ThemedReducer>,
+        body: @escaping () -> any View
+    ) {
+        viewBody = body
         _viewModel = .init(
             wrappedValue: viewModel
                 .observing(
@@ -107,8 +113,7 @@ private struct Themed: View {
     // MARK: - View
 
     var body: some View {
-        viewModel
-            .body()
+        viewBody()
             .eraseToAnyView()
             .id(viewModel.viewID)
             .onFirstAppear {

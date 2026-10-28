@@ -23,7 +23,6 @@ struct ThemedReducer: Reducer {
     struct State: Equatable {
         /* MARK: Properties */
 
-        var body: () -> any View
         var viewID = UUID()
 
         fileprivate var navigationBarAppearance: NavigationBarAppearance?
@@ -35,12 +34,10 @@ struct ThemedReducer: Reducer {
         /* MARK: Init */
 
         init(
-            _ body: @escaping (() -> any View),
             navigationBarAppearance: NavigationBarAppearance?,
             redrawsOnAppearanceChange: Bool, // swiftlint:disable:next identifier_name
             restoresNavigationBarAppearanceOnDisappear: Bool
         ) {
-            self.body = body
             self.navigationBarAppearance = navigationBarAppearance
             self.redrawsOnAppearanceChange = redrawsOnAppearanceChange
             self.restoresNavigationBarAppearanceOnDisappear = restoresNavigationBarAppearanceOnDisappear

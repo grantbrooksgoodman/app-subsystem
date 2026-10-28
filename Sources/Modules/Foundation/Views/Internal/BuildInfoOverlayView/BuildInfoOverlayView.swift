@@ -85,6 +85,12 @@ struct BuildInfoOverlayView: View {
                 foregroundColor: Colors.buildInfoButtonLabelForeground
             )
         }
+        .simultaneousGesture(
+            LongPressGesture()
+                .onEnded { _ in
+                    viewModel.send(.buildInfoButtonLongPressed)
+                }
+        )
         .disabled(viewModel.isUserInteractionDisabled)
         .frame(height: Floats.buildInfoButtonFrameHeight)
         .padding(.horizontal, 1)

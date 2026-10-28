@@ -19,6 +19,8 @@ extension FoundationConstants.CGFloats {
         static let developerModeIndicatorFrameWidth: CGFloat = 8
         static let developerModeIndicatorTrailingPadding: CGFloat = -6
 
+        static let longPressTapSuppressionInterval: CGFloat = 1
+
         static let sendFeedbackButtonFrameHeight: CGFloat = 20
         static let sendFeedbackButtonLabelFontSize: CGFloat = 12
 

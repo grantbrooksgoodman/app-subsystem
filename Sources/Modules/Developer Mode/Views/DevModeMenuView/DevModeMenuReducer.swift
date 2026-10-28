@@ -7,6 +7,7 @@
 
 /* Native */
 import Foundation
+import UIKit
 
 struct DevModeMenuReducer: Reducer {
     // MARK: - Constants Accessors
@@ -16,6 +17,7 @@ struct DevModeMenuReducer: Reducer {
     // MARK: - Dependencies
 
     @Dependency(\.notificationCenter) private var notificationCenter: NotificationCenter
+    @Dependency(\.uiApplication) private var uiApplication: UIApplication
 
     // MARK: - Actions
 
@@ -84,6 +86,8 @@ struct DevModeMenuReducer: Reducer {
     ) -> Effect<Action> {
         switch action {
         case .viewAppeared:
+            uiApplication.resignFirstResponders()
+
             let notificationCenter = notificationCenter
             return .run { send in
                 for await _ in notificationCenter.notifications(named: .uiAlertControllerDismissed) {

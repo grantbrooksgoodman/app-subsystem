@@ -237,15 +237,13 @@ public enum DevModeService {
     /// performs it and refreshes the menu, which stays presented until
     /// the user dismisses it or chooses to disable Developer Mode.
     ///
-    /// This method has no effect while an alert controller or another
-    /// root sheet is presented.
+    /// This method has no effect while an alert controller is presented.
     public static func presentMenu() {
         Task { @MainActor in
             @Dependency(\.uiApplication) var uiApplication: UIApplication
+            guard !uiApplication.isPresentingAlertController else { return }
 
-            guard !uiApplication.isPresentingAlertController,
-                  SharedState(\.rootViewSheet).wrappedValue == nil else { return }
-
+            RootSheets.dismiss()
             RootSheets.present(.init(.init(
                 DevModeMenuView(
                     .init(

@@ -31,7 +31,7 @@ import ComponentKit
 /// ``ListRowView`` leading image – call ``image(_:)``, which renders
 /// the icon once and caches the result per configuration.
 ///
-/// - SeeAlso: ``Configuration``, ``SquareIconImageCache``
+/// - SeeAlso: ``Configuration``
 public struct SquareIconView: View {
     // MARK: - Constants Accessors
 
@@ -137,8 +137,9 @@ public struct SquareIconView: View {
     /// Returns the icon for the given configuration, rendered as an
     /// image.
     ///
-    /// Rendered images are cached in memory per configuration. Call
-    /// ``SquareIconImageCache/clearCache()`` to discard them.
+    /// Rendered images are cached in memory per configuration. The
+    /// cache is cleared along with the subsystem's other cache
+    /// domains.
     ///
     /// - Parameter configuration: The configuration that describes
     ///   the icon.

@@ -10,6 +10,10 @@ import Foundation
 import SwiftUI
 
 struct BuildInfoOverlayReducer: Reducer {
+    // MARK: - Constants Accessors
+
+    private typealias Floats = FoundationConstants.CGFloats.BuildInfoOverlayView
+
     // MARK: - Types
 
     private enum CancelIDs {
@@ -26,6 +30,7 @@ struct BuildInfoOverlayReducer: Reducer {
     enum Action {
         case viewAppeared
 
+        case buildInfoButtonLongPressed
         case buildInfoButtonTapped
         case sendFeedbackButtonTapped
 
@@ -43,6 +48,7 @@ struct BuildInfoOverlayReducer: Reducer {
 
         var buildInfoButtonText = ""
         var developerModeIndicatorDotColor: Color = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
+        var longPressRecognitionDate: Date?
         var shouldUseTranslucentAppearance = false
         var statsLabelText = "Calculating..."
         var yOffset: CGFloat
@@ -95,7 +101,21 @@ struct BuildInfoOverlayReducer: Reducer {
                 .updateStatsLabelText
             }
 
+        case .buildInfoButtonLongPressed:
+            guard build.isDeveloperModeEnabled else { return .none }
+            state.longPressRecognitionDate = .now
+            DevModeService.presentMenu()
+
         case .buildInfoButtonTapped:
+            // The button's action also fires on release after a
+            // recognized long press; that release must not present
+            // the build information sheet over the menu.
+            if let longPressRecognitionDate = state.longPressRecognitionDate {
+                state.longPressRecognitionDate = nil
+                let elapsed = Date.now.timeIntervalSince(longPressRecognitionDate)
+                guard elapsed > TimeInterval(Floats.longPressTapSuppressionInterval) else { return .none }
+            }
+
             return .fireAndForget { @MainActor in
                 viewService.buildInfoButtonTapped()
             }

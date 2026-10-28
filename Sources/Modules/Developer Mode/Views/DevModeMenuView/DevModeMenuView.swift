@@ -48,15 +48,13 @@ struct DevModeMenuView: View {
     // MARK: - View
 
     var body: some View {
-        ThemedView {
-            NavigationStack(path: navigationPathBinding) {
-                page(for: [])
-                    .navigationDestination(for: [String].self) { path in
-                        page(for: path)
-                    }
-            }
-            .accentColor(Color.accent)
+        NavigationStack(path: navigationPathBinding) {
+            page(for: [])
+                .navigationDestination(for: [String].self) { path in
+                    page(for: path)
+                }
         }
+        .accentColor(Color.accent)
         .if(!UIApplication.isFullyV26Compatible) { $0.ignoresSafeArea() }
         .onFirstAppear {
             viewModel.send(.viewAppeared)
@@ -90,14 +88,18 @@ struct DevModeMenuView: View {
         return ScrollView {
             VStack(spacing: Floats.groupedListViewSpacing) {
                 ForEach(0 ..< groups.count, id: \.self) { index in
-                    GroupedListView(
-                        rows(for: groups[index].actions, at: path),
-                        headerText: groups[index].headerText
-                    )
+                    ThemedView(redrawsOnAppearanceChange: true) {
+                        GroupedListView(
+                            rows(for: groups[index].actions, at: path),
+                            headerText: groups[index].headerText
+                        )
+                    }
                 }
 
                 if path.isEmpty {
-                    GroupedListView([disableDeveloperModeRow])
+                    ThemedView(redrawsOnAppearanceChange: true) {
+                        GroupedListView([disableDeveloperModeRow])
+                    }
                 }
             }
             .padding(.horizontal, Floats.groupedListViewHorizontalPadding)
@@ -134,32 +136,36 @@ struct DevModeMenuView: View {
         let title = viewModel.state.title(for: path)
         let isRoot = path.isEmpty
 
-        if UIApplication.isFullyV26Compatible {
-            contentView(for: path)
-                .header(
-                    .text(.init(title)),
-                    rightItem: isRoot ? .doneButton(
-                        foregroundColor: Colors.v26DoneHeaderButtonForeground
-                    ) { viewModel.send(.doneHeaderItemTapped) } : nil,
-                    attributes: .init(sizeClass: .sheet),
-                    embedsInNavigationWindow: false
-                )
-                .navigationBarItemGlassTint(
-                    Colors.v26DoneHeaderButtonBackground,
-                    for: .trailing
-                )
-        } else {
-            contentView(for: path)
-                .header(
-                    leftItem: isRoot ? nil : .backButton { viewModel.send(.backHeaderItemTapped) },
-                    .text(.init(
-                        title,
-                        foregroundColor: .navigationBarTitle
-                    )),
-                    rightItem: isRoot ? .doneButton { viewModel.send(.doneHeaderItemTapped) } : nil,
-                    attributes: .init(sizeClass: .sheet),
-                    popGestureAction: isRoot ? nil : { viewModel.send(.backHeaderItemTapped) }
-                )
+        ThemedView(
+            redrawsOnAppearanceChange: !isRoot
+        ) {
+            if UIApplication.isFullyV26Compatible {
+                contentView(for: path)
+                    .header(
+                        .text(.init(title)),
+                        rightItem: isRoot ? .doneButton(
+                            foregroundColor: Colors.v26DoneHeaderButtonForeground
+                        ) { viewModel.send(.doneHeaderItemTapped) } : nil,
+                        attributes: .init(sizeClass: .sheet),
+                        embedsInNavigationWindow: false
+                    )
+                    .navigationBarItemGlassTint(
+                        Colors.v26DoneHeaderButtonBackground,
+                        for: .trailing
+                    )
+            } else {
+                contentView(for: path)
+                    .header(
+                        leftItem: isRoot ? nil : .backButton { viewModel.send(.backHeaderItemTapped) },
+                        .text(.init(
+                            title,
+                            foregroundColor: .navigationBarTitle
+                        )),
+                        rightItem: isRoot ? .doneButton { viewModel.send(.doneHeaderItemTapped) } : nil,
+                        attributes: .init(sizeClass: .sheet),
+                        popGestureAction: isRoot ? nil : { viewModel.send(.backHeaderItemTapped) }
+                    )
+            }
         }
     }
 

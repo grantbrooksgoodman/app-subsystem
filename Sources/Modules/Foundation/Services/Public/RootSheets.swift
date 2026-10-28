@@ -23,7 +23,8 @@ import Foundation
 ///
 /// Call ``dismiss()`` to remove the sheet programmatically. An
 /// optional `onDismiss` closure can be provided at presentation time
-/// to perform cleanup when the sheet is dismissed.
+/// to perform cleanup when the sheet is dismissed, whether
+/// programmatically or interactively by the user.
 ///
 /// - SeeAlso: ``RootSheet``
 @MainActor
@@ -39,7 +40,8 @@ public enum RootSheets {
     /// - Parameters:
     ///   - sheet: The ``RootSheet`` to present.
     ///   - onDismiss: An optional closure executed when the sheet is
-    ///     dismissed.
+    ///     dismissed, whether programmatically or interactively by
+    ///     the user.
     public static func present(
         _ sheet: RootSheet,
         onDismiss: (@MainActor () -> Void)? = nil

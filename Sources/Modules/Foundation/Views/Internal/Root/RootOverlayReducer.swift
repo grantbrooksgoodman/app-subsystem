@@ -88,13 +88,15 @@ struct RootOverlayReducer: Reducer {
 
         case .didShakeDevice:
             guard build.isDeveloperModeEnabled else { return .none }
-            DevModeService.presentActionSheet()
+            DevModeService.presentMenu()
 
         case let .isBuildInfoOverlayHiddenChanged(isBuildInfoOverlayHidden):
             state.isBuildInfoOverlayHidden = isBuildInfoOverlayHidden
 
         case let .isPresentingSheetChanged(isPresentingSheet):
             state.isPresentingSheet = isPresentingSheet
+            guard !isPresentingSheet else { return .none }
+            RootSheets.dismiss()
 
         case let .sheetChanged(sheet):
             state.sheet = sheet ?? .init(EmptyView())

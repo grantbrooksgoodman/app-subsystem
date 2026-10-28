@@ -88,5 +88,6 @@ extension CacheDomain {
         .localization,
         .localTranslationArchive,
         .persistence,
+        .squareIconImage,
     ]
 }

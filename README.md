@@ -1005,7 +1005,7 @@ Any log call can optionally surface a runtime issue in Xcode by passing `showRun
 
 #### Developer Mode Menu
 
-A customizable action sheet provides app-specific debugging tasks at runtime. Register actions through [`DevModeService`](Sources/Modules/Developer%20Mode/Services/DevModeService.swift):
+A customizable menu, presented as a sheet from the root view, provides app-specific debugging tasks at runtime. Actions are grouped by domain – app-domain actions above the subsystem's built-in actions – followed by an option to disable Developer Mode. Register actions through [`DevModeService`](Sources/Modules/Developer%20Mode/Services/DevModeService.swift):
 
 ```swift
 DevModeService.addAction(
@@ -1015,7 +1015,7 @@ DevModeService.addAction(
 )
 ```
 
-Additional actions can be provided by registering a [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) on `AppSubsystem.delegates`. Present the menu by calling `DevModeService.presentActionSheet()`.
+An action that toggles a setting can present as an inline switch by passing `interaction: .switch(isOn:)` with the setting's current state. Related actions can be grouped under their own page by creating a destination action with `DevModeAction(title:iconConfiguration:isDestructive:destination:)`. Additional actions can be provided by registering a [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) on `AppSubsystem.delegates`. Present the menu by calling `DevModeService.presentMenu()`. The menu refreshes itself after each action performs and whenever an alert is dismissed; an action whose state changes later should call `DevModeService.refreshMenu()` so its title or switch reflects the new value.
 
 ---
 

@@ -26,6 +26,7 @@ private struct HeaderViewModifier: ViewModifier {
 
     private let attributes: HeaderView.Attributes
     private let centerItem: HeaderView.CenterItemType?
+    private let embedsInNavigationWindow: Bool
     private let leftItem: HeaderView.PeripheralButtonType?
     private let popGestureAction: (() -> Void)?
     private let rightItem: HeaderView.PeripheralButtonType?
@@ -96,6 +97,7 @@ private struct HeaderViewModifier: ViewModifier {
         rightItem: HeaderView.PeripheralButtonType?,
         attributes: HeaderView.Attributes,
         popGestureAction: (() -> Void)?,
+        embedsInNavigationWindow: Bool,
         usesInlineDisplayMode: Bool,
         usesV26Attributes: Bool
     ) {
@@ -113,6 +115,7 @@ private struct HeaderViewModifier: ViewModifier {
             sizeClass: attributes.sizeClass
         ) : attributes
         self.popGestureAction = popGestureAction
+        self.embedsInNavigationWindow = embedsInNavigationWindow
         self.usesInlineDisplayMode = usesInlineDisplayMode
         self.usesV26Attributes = usesV26Attributes
     }
@@ -124,40 +127,12 @@ private struct HeaderViewModifier: ViewModifier {
             .if(
                 UIApplication.isFullyV26Compatible && usesInlineDisplayMode
             ) { content in
-                NavigationWindow(
-                    displayMode: .inline,
-                    isBackButtonHidden: true,
-                    toolbarItems: [
-                        leadingToolbarItem,
-                        principalToolbarItem,
-                        trailingToolbarItem,
-                    ].compactMap(\.self)
-                ) {
-                    ZStack(alignment: .top) {
-                        Color.clear
-                            .frame(width: .zero, height: .zero)
-                            .ignoresSafeArea(edges: .top)
-                            .navigationBarAppearance(
-                                navigationBarAppearance,
-                                restoreOnDisappear: attributes.restoreOnDisappear
-                            )
-
-                        content
-
-                        Rectangle()
-                            .fill(Color(uiColor: attributes.appearance.backgroundColor))
-                            .frame(
-                                height:
-                                NavigationBar.height + Floats.navigationBarHeightIncrement
-                            )
-                            .ignoresSafeArea(edges: .top)
+                inlineNavigationBody(for: content)
+                    .ifLet(popGestureAction) { content, popGestureAction in
+                        content.popGesture(
+                            popGestureAction
+                        )
                     }
-                }
-                .ifLet(popGestureAction) { content, popGestureAction in
-                    content.popGesture(
-                        popGestureAction
-                    )
-                }
             } else: {
                 $0
                     .header(
@@ -171,6 +146,14 @@ private struct HeaderViewModifier: ViewModifier {
     }
 
     // MARK: - Toolbar Items
+
+    private var toolbarItems: [NavigationWindow.Toolbar.Item] {
+        [
+            leadingToolbarItem,
+            principalToolbarItem,
+            trailingToolbarItem,
+        ].compactMap(\.self)
+    }
 
     private var leadingToolbarItem: NavigationWindow.Toolbar.Item? {
         guard let leftItem else { return nil }
@@ -200,6 +183,45 @@ private struct HeaderViewModifier: ViewModifier {
     }
 
     // MARK: - Auxiliary
+
+    private func inlineNavigationContent(for content: Content) -> some View {
+        ZStack(alignment: .top) {
+            Color.clear
+                .frame(width: .zero, height: .zero)
+                .ignoresSafeArea(edges: .top)
+                .navigationBarAppearance(
+                    navigationBarAppearance,
+                    restoreOnDisappear: attributes.restoreOnDisappear
+                )
+
+            content
+
+            Rectangle()
+                .fill(Color(uiColor: attributes.appearance.backgroundColor))
+                .frame(
+                    height:
+                    NavigationBar.height + Floats.navigationBarHeightIncrement
+                )
+                .ignoresSafeArea(edges: .top)
+        }
+    }
+
+    @ViewBuilder
+    private func inlineNavigationBody(for content: Content) -> some View {
+        if embedsInNavigationWindow {
+            NavigationWindow(
+                displayMode: .inline,
+                isBackButtonHidden: true,
+                toolbarItems: toolbarItems
+            ) {
+                inlineNavigationContent(for: content)
+            }
+        } else {
+            inlineNavigationContent(for: content)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { NavigationWindow.Toolbar(toolbarItems) }
+        }
+    }
 
     private func peripheralToolbarButton(
         for type: HeaderView.PeripheralButtonType,
@@ -287,6 +309,13 @@ public extension View {
     ///     the active theme.
     ///   - popGestureAction: A closure to execute when the user
     ///     performs a pop gesture.
+    ///   - embedsInNavigationWindow: Whether the inline navigation
+    ///     bar on iOS 26 and later is hosted in a ``NavigationWindow``
+    ///     of its own. Pass `false` when the view already sits inside
+    ///     a navigation container, such as a `NavigationStack`, so the
+    ///     header styles that container's bar – and keeps its back
+    ///     button – instead of nesting a second one. The default is
+    ///     `true`.
     ///   - usesInlineDisplayMode: Whether to use an inline
     ///     navigation bar on iOS 26 and later. The default is `true`.
     ///   - usesV26Attributes: Whether to adapt the attributes for
@@ -297,6 +326,7 @@ public extension View {
         rightItem: HeaderView.PeripheralButtonType? = nil,
         attributes: HeaderView.Attributes = .init(),
         popGestureAction: (() -> Void)? = nil,
+        embedsInNavigationWindow: Bool = true,
         usesInlineDisplayMode: Bool = true,
         usesV26Attributes: Bool = true
     ) -> some View {
@@ -307,6 +337,7 @@ public extension View {
                 rightItem: rightItem,
                 attributes: attributes,
                 popGestureAction: popGestureAction,
+                embedsInNavigationWindow: embedsInNavigationWindow,
                 usesInlineDisplayMode: usesInlineDisplayMode,
                 usesV26Attributes: usesV26Attributes
             )

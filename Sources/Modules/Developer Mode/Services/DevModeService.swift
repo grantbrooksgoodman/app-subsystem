@@ -17,20 +17,23 @@ import AlertKit
 ///
 /// `DevModeService` maintains an ordered list of app-level
 /// ``DevModeAction`` values alongside a set of built-in subsystem
-/// actions. When the Developer Mode action sheet is presented, the
-/// service groups actions into two domains:
+/// actions. When the Developer Mode menu is presented, the service
+/// groups actions into two domains:
 ///
-/// - **Application domain.** Actions registered by the host
-///   app, either through the
-///   ``AppSubsystem/Delegates/DevModeAppActionDelegate`` at launch or
-///   added dynamically at runtime.
+/// - **Application domain.** Actions supplied by the host app through
+///   the ``AppSubsystem/Delegates/DevModeAppActionDelegate``, read each
+///   time the menu is presented or refreshed, followed by any actions
+///   added at runtime.
 /// - **Subsystem domain.** Built-in diagnostic actions provided by
 ///   AppSubsystem (theme switching, cache clearing, language overrides,
 ///   and others).
 ///
 /// ## Adding and Removing Actions
 ///
-/// Add actions at any point after initialization:
+/// Add actions at any point after initialization. Actions added this
+/// way form the runtime list, which follows the delegate's actions in
+/// the app domain. The methods below never affect delegate-supplied
+/// actions:
 ///
 /// ```swift
 /// DevModeService.addAction(
@@ -56,10 +59,12 @@ import AlertKit
 ///
 /// ## Presenting the Menu
 ///
-/// Call ``presentActionSheet()`` to show the Developer Mode menu. When
-/// app-domain actions are available, the user first chooses
-/// between the app and subsystem domains before seeing the
-/// individual actions.
+/// Call ``presentMenu()`` to show the Developer Mode menu as a sheet
+/// from the root view. Each domain's actions are listed in their own
+/// group, with app-domain actions above subsystem-domain actions.
+/// Selecting an action performs it and refreshes the menu, which
+/// stays presented until the user dismisses it. Call ``refreshMenu()``
+/// from an action whose state changes after it performs.
 ///
 /// ## Toggling Developer Mode
 ///
@@ -70,41 +75,38 @@ import AlertKit
 /// - SeeAlso: ``DevModeAction``,
 ///   ``AppSubsystem/Delegates/DevModeAppActionDelegate``
 public enum DevModeService {
-    // MARK: - Types
-
-    private enum ActionDomain {
-        case application
-        case subsystem
-    }
-
     // MARK: - Properties
 
-    private static let appActions = LockIsolated(
-        AppSubsystem.delegates.devModeAppActions?.appActions ?? []
-    )
+    private static let runtimeActions = LockIsolated([DevModeAction]())
 
     // MARK: - Computed Properties
 
-    private static var subsystemActions: [DevModeAction] {
+    @MainActor
+    static var appDomainActions: [DevModeAction] {
+        (AppSubsystem.delegates.devModeAppActions?.appActions ?? []) + runtimeActions.wrappedValue
+    }
+
+    @MainActor
+    static var subsystemDomainActions: [DevModeAction] {
         DevModeAction.Subsystem.available
     }
 
     // MARK: - Action Addition
 
-    /// Adds an action to the end of the app-domain list.
+    /// Adds an action to the end of the runtime list.
     ///
     /// If an action with matching metadata already exists, it is
     /// replaced.
     ///
     /// - Parameter action: The action to add.
     public static func addAction(_ action: DevModeAction) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             $0.removeAll(where: { $0.metadata(isEqual: action) })
             $0.append(action)
         }
     }
 
-    /// Adds multiple actions to the end of the app-domain list.
+    /// Adds multiple actions to the end of the runtime list.
     ///
     /// - Parameter actions: The actions to add.
     public static func addActions(_ actions: [DevModeAction]) {
@@ -126,7 +128,7 @@ public enum DevModeService {
         _ action: DevModeAction,
         after precedingAction: DevModeAction
     ) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             guard let index = $0.firstIndex(where: {
                 $0.metadata(isEqual: precedingAction)
             }) else { return }
@@ -136,8 +138,7 @@ public enum DevModeService {
         }
     }
 
-    /// Inserts an action at the given index in the app-domain
-    /// list.
+    /// Inserts an action at the given index in the runtime list.
     ///
     /// If an action with matching metadata already exists, it is
     /// removed before the insertion. If the index equals the current
@@ -151,7 +152,7 @@ public enum DevModeService {
         _ action: DevModeAction,
         at index: Int
     ) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             guard index > -1,
                   index <= $0.count else { return }
 
@@ -187,7 +188,7 @@ public enum DevModeService {
         _ action: DevModeAction,
         before succeedingAction: DevModeAction
     ) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             guard let index = $0.firstIndex(where: {
                 $0.metadata(isEqual: succeedingAction)
             }) else { return }
@@ -199,14 +200,14 @@ public enum DevModeService {
 
     // MARK: - Action Removal
 
-    /// Removes the action at the given index from the
-    /// app-domain list.
+    /// Removes the action at the given index from the runtime
+    /// list.
     ///
     /// Out-of-bounds indices are ignored.
     ///
     /// - Parameter index: The position of the action to remove.
     public static func removeAction(at index: Int) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             guard index < $0.count,
                   index > -1 else { return }
 
@@ -214,12 +215,12 @@ public enum DevModeService {
         }
     }
 
-    /// Removes all actions with the given title from the
-    /// app-domain list.
+    /// Removes all actions with the given title from the runtime
+    /// list.
     ///
     /// - Parameter withTitle: The title of the action to remove.
     public static func removeAction(withTitle: String) {
-        appActions.projectedValue.withValue {
+        runtimeActions.projectedValue.withValue {
             guard $0.contains(where: { $0.title == withTitle }) else { return }
             $0.removeAll(where: { $0.title == withTitle })
         }
@@ -227,63 +228,46 @@ public enum DevModeService {
 
     // MARK: - Menu Presentation
 
-    /// Presents the Developer Mode action sheet.
+    /// Presents the Developer Mode menu as a sheet from the root view.
     ///
-    /// When the app-domain list contains actions, the sheet
-    /// first offers a choice between the app and subsystem
-    /// domains. When the list is empty, the subsystem-domain actions
-    /// are shown directly.
-    public static func presentActionSheet() {
+    /// The menu lists each domain's actions in a separate group, with
+    /// app-domain actions above subsystem-domain actions, followed by
+    /// an option to disable Developer Mode. The app-domain group is
+    /// omitted when the app domain has no actions. Selecting an action
+    /// performs it and refreshes the menu, which stays presented until
+    /// the user dismisses it or chooses to disable Developer Mode.
+    ///
+    /// This method has no effect while an alert controller or another
+    /// root sheet is presented.
+    public static func presentMenu() {
         Task { @MainActor in
             @Dependency(\.uiApplication) var uiApplication: UIApplication
 
-            guard !uiApplication.isPresentingAlertController else { return }
-            guard !appActions.wrappedValue.isEmpty else { return presentActionSheet(domain: .subsystem) }
+            guard !uiApplication.isPresentingAlertController,
+                  SharedState(\.rootViewSheet).wrappedValue == nil else { return }
 
-            let actions: [AKAction] = [
-                .init("App Domain") { presentActionSheet(domain: .application) },
-                .init("Subsystem Domain") { presentActionSheet(domain: .subsystem) },
-                .init("Disable Developer Mode", style: .destructive, effect: DevModeService.promptToToggle),
-            ]
-
-            await AKActionSheet(
-                title: "Developer Mode Options",
-                actions: actions
-            ).present(translating: [])
+            RootSheets.present(.init(.init(
+                DevModeMenuView(
+                    .init(
+                        initialState: .init(),
+                        reducer: DevModeMenuReducer()
+                    )
+                )
+            )))
         }
     }
 
-    private static func presentActionSheet(domain: ActionDomain) {
-        Task { @MainActor in
-            var akActions = [AKAction]()
-            appActions.projectedValue.withValue {
-                let actions = domain == .application ? $0 : subsystemActions
-                akActions = actions.map { devModeAction in
-                    .init(
-                        devModeAction.title,
-                        style: devModeAction.isDestructive ? .destructive : .default
-                    ) {
-                        devModeAction.perform()
-                    }
-                }
+    // MARK: - Menu Refresh
 
-                if !$0.isEmpty {
-                    akActions.append(
-                        .init(
-                            "Back",
-                            style: .cancel
-                        ) {
-                            DevModeService.presentActionSheet()
-                        }
-                    )
-                }
-            }
-
-            await AKActionSheet(
-                title: "Developer Mode Options",
-                actions: akActions
-            ).present(translating: [])
-        }
+    /// Refreshes the Developer Mode menu, if it is presented.
+    ///
+    /// The menu refreshes automatically after each action performs
+    /// and whenever an alert controller is dismissed. Call this method
+    /// from an action whose state changes later – for example, after
+    /// asynchronous work completes – so that the menu's titles and
+    /// switch states reflect the latest values.
+    public static func refreshMenu() {
+        SharedEvent(\.devModeMenuRefreshRequested).wrappedValue.send()
     }
 
     // MARK: - Toggling

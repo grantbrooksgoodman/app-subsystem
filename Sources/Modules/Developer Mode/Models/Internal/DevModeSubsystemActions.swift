@@ -7,7 +7,7 @@
 
 /* Native */
 import Foundation
-import UIKit
+import SwiftUI
 
 /* Proprietary */
 import AlertKit
@@ -19,19 +19,19 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
         static var available: [DevModeAction] {
             var availableActions: [DevModeAction] = [
                 eraseContentAndSettingsAction,
-                toggleBuildInfoOverlayAction,
                 overrideLanguageCodeAction,
                 toggleBreadcrumbsAction,
+                toggleBuildInfoOverlayAction,
                 toggleGlassTintingAction,
                 toggleTimebombAction,
                 viewLoggerSessionRecordAction,
             ].compactMap(\.self)
 
             if UITheme.allCases.count > 1 {
-                availableActions.insert(changeThemeAction, at: 0)
+                availableActions.append(changeThemeAction)
             }
 
-            return availableActions
+            return availableActions.sorted { $0.title < $1.title }
         }
 
         // MARK: - Standard Actions
@@ -64,6 +64,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
             return .init(
                 title: "Change Theme",
+                iconConfiguration: .init(
+                    backgroundColor: .green,
+                    overlay: .symbol(name: "eye.fill")
+                ),
                 perform: changeTheme
             )
         }()
@@ -183,6 +187,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
             return .init(
                 title: "Erase Content & Settings",
+                iconConfiguration: .init(
+                    backgroundColor: .red,
+                    overlay: .symbol(name: "trash.fill")
+                ),
                 perform: eraseContentAndSettings
             )
         }()
@@ -208,6 +216,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
             return .init(
                 title: "View Logger Session Record",
+                iconConfiguration: .init(
+                    backgroundColor: .gray,
+                    overlay: .symbol(name: "doc.text.fill")
+                ),
                 perform: viewLoggerSessionRecord
             )
         }()
@@ -306,6 +318,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             let prefix = RuntimeStorage.retrieve(.overriddenLanguageCode) == nil ? "Override" : "Restore"
             return .init(
                 title: "\(prefix) Language Code",
+                iconConfiguration: .init(
+                    backgroundColor: .blue,
+                    overlay: .symbol(name: "globe")
+                ),
                 perform: overrideLanguageCode
             )
         }
@@ -329,11 +345,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                         do throws(Exception) {
                             try AppSubsystem.delegates.breadcrumbsCapture.stopCapture()
                             coreHUD.showSuccess()
-                            DevModeService.removeAction(withTitle: "Stop Breadcrumbs Capture")
-                            DevModeService.insertAction(
-                                toggleBreadcrumbsAction,
-                                after: overrideLanguageCodeAction
-                            )
+                            DevModeService.refreshMenu()
                         } catch {
                             Logger.log(
                                 error,
@@ -352,11 +364,7 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                             do throws(Exception) {
                                 try AppSubsystem.delegates.breadcrumbsCapture.startCapture()
                                 coreHUD.showSuccess()
-                                DevModeService.removeAction(withTitle: "Start Breadcrumbs Capture")
-                                DevModeService.insertAction(
-                                    toggleBreadcrumbsAction,
-                                    after: overrideLanguageCodeAction
-                                )
+                                DevModeService.refreshMenu()
                             } catch {
                                 Logger.log(
                                     error,
@@ -398,6 +406,10 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             let command = isCapturing ? "Stop" : "Start"
             return .init(
                 title: "\(command) Breadcrumbs Capture",
+                iconConfiguration: .init(
+                    backgroundColor: .orange,
+                    overlay: .symbol(name: "camera.fill")
+                ),
                 isDestructive: command == "Stop",
                 perform: toggleBreadcrumbs
             )
@@ -413,17 +425,21 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             }
 
             @SharedState(\.isBuildInfoOverlayHidden) var isBuildInfoOverlayHidden
-            let prefix = isBuildInfoOverlayHidden ? "Show" : "Hide"
             return .init(
-                title: "\(prefix) Build Info Overlay",
+                title: "Hide Build Info Overlay",
+                iconConfiguration: .init(
+                    backgroundColor: .indigo,
+                    overlay: .symbol(name: "info.circle.fill")
+                ),
+                interaction: .switch(isOn: isBuildInfoOverlayHidden),
                 perform: toggleBuildInfoOverlay
             )
         }
 
         private static var toggleGlassTintingAction: DevModeAction? {
             @Sendable
-            func toggleGlassTintingAction() {
-                Task { @MainActor in
+            func toggleGlassTinting() {
+                MainActor.assumeIsolated {
                     @Dependency(\.coreKit) var core: CoreKit
 
                     @Persistent(.isGlassTintingEnabled) var persistedValue: Bool?
@@ -439,10 +455,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             let isGlassTintingEnabled = MainActor.assumeIsolated { UIApplication.isGlassTintingEnabled }
 
             guard isFullyV26Compatible else { return nil }
-            let prefix = isGlassTintingEnabled ? "Disable" : "Enable"
             return .init(
-                title: "\(prefix) Glass Tinting",
-                perform: toggleGlassTintingAction
+                title: "Glass Tinting",
+                iconConfiguration: .init(
+                    backgroundColor: .teal,
+                    overlay: .symbol(name: "paintbrush.fill")
+                ),
+                interaction: .switch(isOn: isGlassTintingEnabled),
+                perform: toggleGlassTinting
             )
         }
 
@@ -463,7 +483,12 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
             }
 
             return .init(
-                title: "\(isTimebombActive ? "Disable" : "Enable") Build Expiry Timebomb",
+                title: "Build Expiry Timebomb",
+                iconConfiguration: .init(
+                    backgroundColor: .purple,
+                    overlay: .symbol(name: "timer")
+                ),
+                interaction: .switch(isOn: isTimebombActive),
                 perform: toggleTimebomb
             )
         }

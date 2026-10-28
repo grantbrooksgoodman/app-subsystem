@@ -61,6 +61,11 @@ public extension CacheDomain {
         clear: clearPersistenceCache
     )
 
+    internal static let squareIconImage: CacheDomain = .init(
+        "squareIconImage",
+        clear: clearSquareIconImageCache
+    )
+
     /* MARK: Methods */
 
     private static func clearAppIconImageCache() {
@@ -84,6 +89,10 @@ public extension CacheDomain {
 
     private static func clearPersistenceCache() {
         PersistenceCache.clearCache()
+    }
+
+    private static func clearSquareIconImageCache() {
+        SquareIconImageCache.clearCache()
     }
 }
 
@@ -201,6 +210,10 @@ extension PersistentStorageKey {
 }
 
 extension SharedEvents {
+    var devModeMenuRefreshRequested: EventStream<Void> {
+        event()
+    }
+
     var rootViewTapped: EventStream<Void> {
         event()
     }

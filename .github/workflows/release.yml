@@ -1,7 +1,15 @@
-name: Release
+#
+#  release.yml
+#
+#  Created by Grant Brooks Goodman.
+#  Copyright © NEOTechnica Corporation. All rights reserved.
+#
 
-# Every push to main mints a semantic-version tag and a GitHub release.
-# Rules and override tokens: https://github.com/grantbrooksgoodman/swift-release
+# Mints a semantic version tag and a GitHub release for every
+# push to a Swift package's default branch. The rules are
+# documented at https://github.com/grantbrooksgoodman/swift-release.
+
+name: Release
 
 on:
   push:
@@ -11,8 +19,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: release
   cancel-in-progress: false
+  group: release
 
 jobs:
   release:

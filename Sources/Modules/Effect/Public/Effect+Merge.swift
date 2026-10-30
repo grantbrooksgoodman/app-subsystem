@@ -50,7 +50,15 @@ public extension Effect {
     ///
     /// - Returns: A single effect that runs both effects concurrently.
     func merge(with other: Self) -> Self {
-        .run { send in
+        guard !isNone else {
+            return other
+        }
+
+        guard !other.isNone else {
+            return self
+        }
+
+        return .run { send in
             await withTaskGroup(of: Void.self) { group in
                 group.addTask(priority: priority) {
                     await self.operation(send)

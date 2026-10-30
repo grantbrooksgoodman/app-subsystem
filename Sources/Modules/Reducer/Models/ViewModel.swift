@@ -214,6 +214,10 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
     private func _send(_ action: Action) -> Task<Void, Never> {
         checkThreadPreconditions()
         let effect = updateState(for: action)
+        guard !effect.isNone else {
+            return completedTask
+        }
+
         return Task(priority: effect.priority) { [weak self] in
             await effect.operation(
                 Send { [weak self] action in
@@ -544,3 +548,5 @@ public extension ViewModelOf {
         state[keyPath: keyPath]
     }
 }
+
+private let completedTask = Task<Void, Never> {}

@@ -86,6 +86,8 @@ public struct Effect<Action>: Sendable {
 
     // MARK: - Properties
 
+    let isNone: Bool
+
     /// The asynchronous closure that performs this effect's work.
     public let operation: Operation
 
@@ -95,9 +97,11 @@ public struct Effect<Action>: Sendable {
     // MARK: - Init
 
     init(
+        isNone: Bool = false,
         priority: TaskPriority? = nil,
         operation: @escaping Operation
     ) {
+        self.isNone = isNone
         self.priority = priority
         self.operation = operation
     }
@@ -117,8 +121,11 @@ public extension Effect {
     ///    return .none
     /// ```
     ///
+    /// The runtime does not start a task for this effect. Mapping
+    /// `.none` produces `.none`, and merging it with another effect
+    /// produces that effect unchanged.
     static var none: Self {
-        .init { _ in }
+        .init(isNone: true) { _ in }
     }
 
     // MARK: - Fire & Forget
@@ -279,7 +286,11 @@ public extension Effect {
     func map<MappedAction>(
         _ toMapAction: @Sendable @escaping (Action) -> (MappedAction)
     ) -> Effect<MappedAction> {
-        .run { send in
+        guard !isNone else {
+            return .none
+        }
+
+        return .run { send in
             await operation(
                 Send<Action> { action in
                     send(toMapAction(action))

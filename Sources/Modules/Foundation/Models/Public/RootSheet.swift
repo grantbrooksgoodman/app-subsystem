@@ -30,6 +30,7 @@ import SwiftUI
 public struct RootSheet: @unchecked Sendable {
     // MARK: - Properties
 
+    let id = UUID()
     let view: AnyView
 
     // MARK: - Init

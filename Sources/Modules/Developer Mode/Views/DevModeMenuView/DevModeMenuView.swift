@@ -144,14 +144,10 @@ struct DevModeMenuView: View {
                     .header(
                         .text(.init(title)),
                         rightItem: isRoot ? .doneButton(
-                            foregroundColor: Colors.v26DoneHeaderButtonForeground
+                            foregroundColor: .titleText
                         ) { viewModel.send(.doneHeaderItemTapped) } : nil,
                         attributes: .init(sizeClass: .sheet),
                         embedsInNavigationWindow: false
-                    )
-                    .navigationBarItemGlassTint(
-                        Colors.v26DoneHeaderButtonBackground,
-                        for: .trailing
                     )
             } else {
                 contentView(for: path)

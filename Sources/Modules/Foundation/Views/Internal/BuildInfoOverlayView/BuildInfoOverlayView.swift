@@ -38,6 +38,11 @@ struct BuildInfoOverlayView: View {
                         .wrappedValue
                         .events
                 ) { _ in .rootViewTapped }
+                .observing(
+                    SharedState(\.rootViewSheet)
+                        .projectedValue
+                        .changes
+                ) { .isDevModeMenuPresentedChanged(DevModeService.isMenuSheet($0)) }
         )
     }
 

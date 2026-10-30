@@ -24,8 +24,6 @@ extension FoundationConstants.CGFloats {
 extension FoundationConstants.Colors {
     enum DevModeMenuView {
         static let destructiveRowForeground: Color = .red
-        static let v26DoneHeaderButtonForeground: Color = .white
-        static let v26DoneHeaderButtonBackground: Color = .init(.systemBlue)
     }
 }
 

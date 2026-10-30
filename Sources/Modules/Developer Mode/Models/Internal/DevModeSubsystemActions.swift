@@ -36,29 +36,26 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
 
         // MARK: - Standard Actions
 
-        private static let changeThemeAction: DevModeAction = {
-            @Sendable
-            func changeTheme() {
-                Task { @MainActor in
-                    var actions = [AKAction]()
-                    actions = UITheme.allCases.map { uiTheme in
-                        .init(
-                            uiTheme.name,
-                            isEnabled: uiTheme.encodedHash != ThemeService.currentTheme.encodedHash
-                        ) {
-                            Task { @MainActor in
-                                ThemeService.setTheme(
-                                    uiTheme,
-                                    checkStyle: false
-                                )
-                            }
+        private static var changeThemeAction: DevModeAction {
+            let themeActions: [DevModeAction] = MainActor.assumeIsolated {
+                let currentThemeHash = ThemeService.currentTheme.encodedHash
+                return UITheme.allCases.map { uiTheme in
+                    let isCurrentTheme = uiTheme.encodedHash == currentThemeHash
+                    return .init(
+                        title: uiTheme.name,
+                        iconConfiguration: .init(
+                            backgroundColor: isCurrentTheme ? .green : .gray,
+                            overlay: .symbol(name: isCurrentTheme ? "checkmark" : "paintpalette.fill")
+                        )
+                    ) {
+                        guard !isCurrentTheme else { return }
+                        Task { @MainActor in
+                            ThemeService.setTheme(
+                                uiTheme,
+                                checkStyle: false
+                            )
                         }
                     }
-
-                    await AKActionSheet(
-                        title: "Change Theme",
-                        actions: actions
-                    ).present(translating: [])
                 }
             }
 
@@ -68,121 +65,168 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     backgroundColor: .green,
                     overlay: .symbol(name: "eye.fill")
                 ),
-                perform: changeTheme
+                destination: themeActions
             )
-        }()
+        }
 
         private static let eraseContentAndSettingsAction: DevModeAction = {
             @Sendable
-            func eraseContentAndSettings() {
+            func perform(
+                clearCaches: Bool = false,
+                resetUserDefaults: Bool = false,
+                eraseApplicationSupportDirectory: Bool = false,
+                eraseDocumentsDirectory: Bool = false,
+                eraseTemporaryDirectory: Bool = false
+            ) {
                 @Dependency(\.coreKit) var core: CoreKit
 
-                @Sendable
-                func perform(
-                    clearCaches: Bool = false,
-                    resetUserDefaults: Bool = false,
-                    eraseApplicationSupportDirectory: Bool = false,
-                    eraseDocumentsDirectory: Bool = false,
-                    eraseTemporaryDirectory: Bool = false
+                if clearCaches {
+                    core.utils.clearCaches()
+                }
+
+                if resetUserDefaults {
+                    @Dependency(\.userDefaults) var defaults: UserDefaults
+                    defaults.reset()
+                }
+
+                if eraseApplicationSupportDirectory {
+                    do {
+                        try core.utils.eraseApplicationSupportDirectory()
+                    } catch {
+                        Logger.log(
+                            error,
+                            with: .toast
+                        )
+                    }
+                }
+
+                if eraseDocumentsDirectory {
+                    do {
+                        try core.utils.eraseDocumentsDirectory()
+                    } catch {
+                        Logger.log(
+                            error,
+                            with: .toast
+                        )
+                    }
+                }
+
+                if eraseTemporaryDirectory {
+                    do {
+                        try core.utils.eraseTemporaryDirectory()
+                    } catch {
+                        Logger.log(
+                            error,
+                            with: .toast
+                        )
+                    }
+                }
+            }
+
+            @Sendable
+            func showSuccess(_ text: String? = nil) {
+                @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
+                coreHUD.showSuccess(text: text)
+            }
+
+            /// Every option confirms through an action sheet whose
+            /// sole destructive action carries the option's title.
+            @Sendable
+            func confirmedAction(
+                title: String,
+                iconConfiguration: SquareIconView.Configuration,
+                isDestructive: Bool = false,
+                effect: @escaping @Sendable () -> Void
+            ) -> DevModeAction {
+                .init(
+                    title: title,
+                    iconConfiguration: iconConfiguration,
+                    isDestructive: isDestructive
                 ) {
-                    if clearCaches {
-                        core.utils.clearCaches()
-                    }
-
-                    if resetUserDefaults {
-                        @Dependency(\.userDefaults) var defaults: UserDefaults
-                        defaults.reset()
-                    }
-
-                    if eraseApplicationSupportDirectory {
-                        do {
-                            try core.utils.eraseApplicationSupportDirectory()
-                        } catch {
-                            Logger.log(
-                                error,
-                                with: .toast
-                            )
-                        }
-                    }
-
-                    if eraseDocumentsDirectory {
-                        do {
-                            try core.utils.eraseDocumentsDirectory()
-                        } catch {
-                            Logger.log(
-                                error,
-                                with: .toast
-                            )
-                        }
-                    }
-
-                    if eraseTemporaryDirectory {
-                        do {
-                            try core.utils.eraseTemporaryDirectory()
-                        } catch {
-                            Logger.log(
-                                error,
-                                with: .toast
-                            )
-                        }
+                    Task {
+                        await AKActionSheet(
+                            actions: [.init(
+                                title,
+                                style: .destructive,
+                                effect: effect
+                            )]
+                        ).present(translating: [])
                     }
                 }
+            }
 
-                let clearCachesAction: AKAction = .init("Clear Caches") {
-                    perform(clearCaches: true)
-                    core.hud.showSuccess(text: "Cleared Caches")
-                }
+            let clearCachesAction = confirmedAction(
+                title: "Clear Caches",
+                iconConfiguration: .init(
+                    backgroundColor: .blue,
+                    overlay: .symbol(name: "arrow.counterclockwise")
+                )
+            ) {
+                perform(clearCaches: true)
+                showSuccess("Cleared Caches")
+            }
 
-                let eraseApplicationSupportDirectoryAction: AKAction = .init(
-                    "Erase Application Support Directory"
-                ) {
-                    perform(eraseApplicationSupportDirectory: true)
-                    core.hud.showSuccess(text: "Erased Application Support Directory")
-                }
+            let eraseApplicationSupportDirectoryAction = confirmedAction(
+                title: "Erase Application Support Directory",
+                iconConfiguration: .init(
+                    backgroundColor: .orange,
+                    overlay: .symbol(name: "folder.fill")
+                )
+            ) {
+                perform(eraseApplicationSupportDirectory: true)
+                showSuccess("Erased Application Support Directory")
+            }
 
-                let eraseDocumentsDirectoryAction: AKAction = .init("Erase Documents Directory") {
-                    perform(eraseDocumentsDirectory: true)
-                    core.hud.showSuccess(text: "Erased Documents Directory")
-                }
+            let eraseDocumentsDirectoryAction = confirmedAction(
+                title: "Erase Documents Directory",
+                iconConfiguration: .init(
+                    backgroundColor: .indigo,
+                    overlay: .symbol(name: "doc.fill")
+                )
+            ) {
+                perform(eraseDocumentsDirectory: true)
+                showSuccess("Erased Documents Directory")
+            }
 
-                let eraseTemporaryDirectoryAction: AKAction = .init("Erase Temporary Directory") {
-                    perform(eraseTemporaryDirectory: true)
-                    core.hud.showSuccess(text: "Erased Temporary Directory")
-                }
+            let eraseTemporaryDirectoryAction = confirmedAction(
+                title: "Erase Temporary Directory",
+                iconConfiguration: .init(
+                    backgroundColor: .teal,
+                    overlay: .symbol(name: "clock.fill")
+                )
+            ) {
+                perform(eraseTemporaryDirectory: true)
+                showSuccess("Erased Temporary Directory")
+            }
 
-                let resetUserDefaultsAction: AKAction = .init("Reset UserDefaults") {
-                    perform(resetUserDefaults: true)
-                    core.hud.showSuccess(text: "Reset UserDefaults")
-                }
+            let resetUserDefaultsAction = confirmedAction(
+                title: "Reset UserDefaults",
+                iconConfiguration: .init(
+                    backgroundColor: .gray,
+                    overlay: .symbol(name: "gearshape.fill")
+                )
+            ) {
+                perform(resetUserDefaults: true)
+                showSuccess("Reset UserDefaults")
+            }
 
-                let eraseAllContentAndSettingsAction: AKAction = .init(
-                    "Erase All Content & Settings",
-                    style: .destructivePreferred
-                ) {
-                    perform(
-                        clearCaches: true,
-                        resetUserDefaults: true,
-                        eraseApplicationSupportDirectory: true,
-                        eraseDocumentsDirectory: true,
-                        eraseTemporaryDirectory: true
-                    )
+            let eraseAllContentAndSettingsAction = confirmedAction(
+                title: "Erase All Content & Settings",
+                iconConfiguration: .init(
+                    backgroundColor: .red,
+                    overlay: .symbol(name: "trash.fill")
+                ),
+                isDestructive: true
+            ) {
+                perform(
+                    clearCaches: true,
+                    resetUserDefaults: true,
+                    eraseApplicationSupportDirectory: true,
+                    eraseDocumentsDirectory: true,
+                    eraseTemporaryDirectory: true
+                )
 
-                    core.hud.showSuccess()
-                }
-
-                Task {
-                    await AKActionSheet(
-                        title: "Erase Content & Settings",
-                        actions: [
-                            clearCachesAction,
-                            eraseApplicationSupportDirectoryAction,
-                            eraseDocumentsDirectoryAction,
-                            eraseTemporaryDirectoryAction,
-                            resetUserDefaultsAction,
-                            eraseAllContentAndSettingsAction,
-                        ]
-                    ).present(translating: [])
-                }
+                showSuccess()
             }
 
             return .init(
@@ -191,7 +235,14 @@ extension DevModeAction { // swiftlint:disable:next type_body_length
                     backgroundColor: .red,
                     overlay: .symbol(name: "trash.fill")
                 ),
-                perform: eraseContentAndSettings
+                destination: [
+                    clearCachesAction,
+                    eraseApplicationSupportDirectoryAction,
+                    eraseDocumentsDirectoryAction,
+                    eraseTemporaryDirectoryAction,
+                    resetUserDefaultsAction,
+                    eraseAllContentAndSettingsAction,
+                ]
             )
         }()
 

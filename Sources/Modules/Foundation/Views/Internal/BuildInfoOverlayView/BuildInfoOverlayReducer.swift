@@ -35,6 +35,7 @@ struct BuildInfoOverlayReducer: Reducer {
         case sendFeedbackButtonTapped
 
         case breadcrumbsDidCapture
+        case isDevModeMenuPresentedChanged(Bool)
         case restoreIndicatorColor
         case rootViewTapped
         case shouldUseTranslucentAppearanceChanged(Bool)
@@ -48,6 +49,7 @@ struct BuildInfoOverlayReducer: Reducer {
 
         var buildInfoButtonText = ""
         var developerModeIndicatorDotColor: Color = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange
+        var isDevModeMenuPresented = false
         var longPressRecognitionDate: Date?
         var shouldUseTranslucentAppearance = false
         var statsLabelText = "Calculating..."
@@ -104,6 +106,10 @@ struct BuildInfoOverlayReducer: Reducer {
         case .buildInfoButtonLongPressed:
             guard build.isDeveloperModeEnabled else { return .none }
             state.longPressRecognitionDate = .now
+
+            // A long press while the menu is already presented must
+            // neither re-present it nor fall through to the tap.
+            guard !state.isDevModeMenuPresented else { return .none }
             DevModeService.presentMenu()
 
         case .buildInfoButtonTapped:
@@ -125,6 +131,9 @@ struct BuildInfoOverlayReducer: Reducer {
             return .task(delay: .seconds(1.5)) {
                 .restoreIndicatorColor
             }
+
+        case let .isDevModeMenuPresentedChanged(isDevModeMenuPresented):
+            state.isDevModeMenuPresented = isDevModeMenuPresented
 
         case .restoreIndicatorColor:
             state.developerModeIndicatorDotColor = AppSubsystem.delegates.buildInfoOverlayDotIndicatorColor?.developerModeIndicatorDotColor ?? .orange

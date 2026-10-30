@@ -111,7 +111,6 @@ struct DevModeMenuReducer: Reducer {
             state.navigationPath.append(path)
 
         case .disableDeveloperModeRowTapped:
-            RootSheets.dismiss()
             DevModeService.promptToToggle()
 
         case .doneHeaderItemTapped:

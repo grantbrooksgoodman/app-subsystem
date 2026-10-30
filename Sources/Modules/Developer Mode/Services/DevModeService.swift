@@ -77,9 +77,21 @@ import AlertKit
 public enum DevModeService {
     // MARK: - Properties
 
+    private static let menuSheetID = LockIsolated<UUID?>(nil)
     private static let runtimeActions = LockIsolated([DevModeAction]())
 
     // MARK: - Computed Properties
+
+    /// A Boolean value indicating whether the Developer Mode menu is
+    /// currently presented.
+    ///
+    /// The value is `true` from the moment ``presentMenu()`` presents
+    /// the menu until the menu is dismissed, whether programmatically
+    /// or interactively by the user.
+    @MainActor
+    public static var isMenuPresented: Bool {
+        isMenuSheet(SharedState(\.rootViewSheet).wrappedValue)
+    }
 
     @MainActor
     static var appDomainActions: [DevModeAction] {
@@ -235,23 +247,29 @@ public enum DevModeService {
     /// an option to disable Developer Mode. The app-domain group is
     /// omitted when the app domain has no actions. Selecting an action
     /// performs it and refreshes the menu, which stays presented until
-    /// the user dismisses it or chooses to disable Developer Mode.
+    /// the user dismisses it or confirms disabling Developer Mode.
     ///
-    /// This method has no effect while an alert controller is presented.
+    /// This method has no effect while an alert controller is presented
+    /// or while the menu is already presented.
     public static func presentMenu() {
         Task { @MainActor in
             @Dependency(\.uiApplication) var uiApplication: UIApplication
-            guard !uiApplication.isPresentingAlertController else { return }
+            guard !uiApplication.isPresentingAlertController,
+                  !isMenuPresented else { return }
 
-            RootSheets.dismiss()
-            RootSheets.present(.init(.init(
+            let sheet = RootSheet(.init(
                 DevModeMenuView(
                     .init(
                         initialState: .init(),
                         reducer: DevModeMenuReducer()
                     )
                 )
-            )))
+            ))
+
+            menuSheetID.wrappedValue = sheet.id
+
+            RootSheets.dismiss()
+            RootSheets.present(sheet)
         }
     }
 
@@ -292,7 +310,7 @@ public enum DevModeService {
                 ).present(translating: [])
 
                 guard confirmed else { return }
-                return toggleDeveloperMode(enabled: false)
+                return await toggleDeveloperMode(enabled: false)
             }
 
             let input = await AKTextInputAlert(
@@ -318,17 +336,33 @@ public enum DevModeService {
                 ).present(translating: [])
             }
 
-            toggleDeveloperMode(enabled: true)
+            await toggleDeveloperMode(enabled: true)
         }
     }
 
     // MARK: - Auxiliary
 
+    static func isMenuSheet(_ sheet: RootSheet?) -> Bool {
+        guard let sheet,
+              let menuSheetID = menuSheetID.wrappedValue else { return false }
+        return sheet.id == menuSheetID
+    }
+
+    @MainActor
     private static func toggleDeveloperMode(enabled: Bool) {
         @Dependency(\.build) var build: Build
         @Dependency(\.coreKit.hud) var coreHUD: CoreKit.HUD
 
+        // The menu stays presented through the confirmation alert
+        // and is dismissed only once Developer Mode is disabled.
+        if !enabled,
+           isMenuPresented {
+            RootSheets.dismiss()
+        }
+
         build.setIsDeveloperModeEnabled(enabled)
-        coreHUD.showSuccess(text: "Developer Mode \(enabled ? "Enabled" : "Disabled")")
+        coreHUD.showSuccess(
+            text: "Developer Mode \(enabled ? "Enabled" : "Disabled")"
+        )
     }
 }

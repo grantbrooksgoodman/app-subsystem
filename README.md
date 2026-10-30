@@ -1015,7 +1015,7 @@ DevModeService.addAction(
 )
 ```
 
-An action that toggles a setting can present as an inline switch by passing `interaction: .switch(isOn:)` with the setting's current state. Related actions can be grouped under their own page by creating a destination action with `DevModeAction(title:iconConfiguration:isDestructive:destination:)`. Additional actions can be provided by registering a [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) on `AppSubsystem.delegates`. Present the menu by calling `DevModeService.presentMenu()`. The menu refreshes itself after each action performs and whenever an alert is dismissed; an action whose state changes later should call `DevModeService.refreshMenu()` so its title or switch reflects the new value.
+An action that toggles a setting can present as an inline switch by passing `interaction: .switch(isOn:)` with the setting's current state. Related actions can be grouped under their own page by creating a destination action with `DevModeAction(title:iconConfiguration:isDestructive:destination:)`. Additional actions can be provided by registering a [`DevModeAppActionDelegate`](Sources/Modules/Developer%20Mode/Protocols/DevModeAppActionDelegate.swift) on `AppSubsystem.delegates`. Present the menu by calling `DevModeService.presentMenu()`; the call has no effect while the menu is already presented, and `DevModeService.isMenuPresented` reports whether it is. The menu refreshes itself after each action performs and whenever an alert is dismissed; an action whose state changes later should call `DevModeService.refreshMenu()` so its title or switch reflects the new value.
 
 ---
 

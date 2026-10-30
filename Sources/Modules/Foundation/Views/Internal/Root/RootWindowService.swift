@@ -56,7 +56,7 @@ final class RootWindowService {
 
     func startRaisingWindow() {
         @Dependency(\.coreKit) var core: CoreKit
-        @Dependency(\.uiApplication.mainWindow) var mainWindow: UIWindow?
+        @Dependency(\.uiApplication.windows) var windows: [UIWindow]
 
         defer {
             Task.delayed(by: .milliseconds(50)) { @MainActor in
@@ -64,13 +64,18 @@ final class RootWindowService {
             }
         }
 
-        guard let mainWindow,
-              let rootOverlayWindow = mainWindow.subviews.first(where: {
-                  $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW")
-              }),
-              mainWindow.subviews.last != rootOverlayWindow else { return }
+        // The overlay window is located through its parent rather
+        // than the key window; touching the overlay makes its own
+        // window key, which must not stop it from being raised.
+        guard let rootOverlayWindow = windows
+            .flatMap(\.subviews)
+            .first(where: {
+                $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW")
+            }),
+            let rootWindow = rootOverlayWindow.superview,
+            rootWindow.subviews.last != rootOverlayWindow else { return }
 
-        mainWindow.bringSubviewToFront(rootOverlayWindow)
+        rootWindow.bringSubviewToFront(rootOverlayWindow)
     }
 }
 

@@ -160,7 +160,7 @@ public extension NavigationBar {
             UIView.animate(withDuration: 0.2) {
                 leadingItem.backgroundColor = color
             } completion: { _ in
-                leadingItem.tag = coreUI.semTag(for: "LEADING_COLORED_GLASS_\(knownTintedItems.count)")
+                leadingItem.tag = coreUI.semTag(for: "LEADING_COLORED_GLASS")
                 knownTintedItems[leadingItem.tag] = color
             }
 
@@ -169,7 +169,7 @@ public extension NavigationBar {
             UIView.animate(withDuration: 0.2) {
                 trailingItem.backgroundColor = color
             } completion: { _ in
-                trailingItem.tag = coreUI.semTag(for: "TRAILING_COLORED_GLASS_\(knownTintedItems.count)")
+                trailingItem.tag = coreUI.semTag(for: "TRAILING_COLORED_GLASS")
                 knownTintedItems[trailingItem.tag] = color
             }
         }

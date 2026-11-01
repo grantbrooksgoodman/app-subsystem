@@ -11,12 +11,6 @@ import UIKit
 
 @MainActor
 extension UIView {
-    // MARK: - Properties
-
-    @LockIsolated private(set) static var isBlockingUserInteraction = false
-
-    // MARK: - Methods
-
     func addOverlay(
         alpha: CGFloat,
         activityIndicator indicatorConfig: CoreKit.UI.OverlayActivityIndicatorConfiguration?,
@@ -28,8 +22,7 @@ extension UIView {
         @Dependency(\.uiApplication) var uiApplication: UIApplication
 
         if isModal {
-            UIView.isBlockingUserInteraction = true
-            core.ui.blockUserInteraction()
+            core.ui.blockUserInteraction(for: .modalOverlay)
             uiApplication
                 .windows
                 .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?
@@ -62,8 +55,7 @@ extension UIView {
             overlayViews.forEach { $0.removeFromSuperview() }
             activityIndicatorViews.forEach { $0.removeFromSuperview() }
 
-            UIView.isBlockingUserInteraction = false
-            core.ui.unblockUserInteraction()
+            core.ui.unblockUserInteraction(for: .modalOverlay)
             uiApplication
                 .windows
                 .first(where: { $0.tag == core.ui.semTag(for: "ROOT_OVERLAY_WINDOW") })?

@@ -16,6 +16,10 @@ public extension CoreKit {
     /// All members of `UI` are isolated to the main actor.
     @MainActor
     struct UI {
+        // MARK: - Constants Accessors
+
+        private typealias Floats = FoundationConstants.CGFloats.CoreKitUI
+
         // MARK: - Types
 
         /// The appearance of the activity indicator shown inside a
@@ -50,6 +54,11 @@ public extension CoreKit {
             }
         }
 
+        enum InteractionBlockingReason {
+            case modalHUD
+            case modalOverlay
+        }
+
         // MARK: - Dependencies
 
         @Dependency(\.userDefaults) private var defaults: UserDefaults
@@ -58,6 +67,17 @@ public extension CoreKit {
         // MARK: - Properties
 
         static let shared = UI()
+
+        private static let blockingReasons = LockIsolated(Set<InteractionBlockingReason>())
+        private static let dismissalTask = LockIsolated<Task<Void, Never>?>(nil)
+        private static let semTags = LockIsolated([String: Int]())
+        private static let sheetDismissingReasons = LockIsolated(Set<InteractionBlockingReason>())
+
+        // MARK: - Computed Properties
+
+        static var isBlockingUserInteraction: Bool {
+            !blockingReasons.wrappedValue.isEmpty
+        }
 
         // MARK: - Init
 
@@ -149,7 +169,6 @@ public extension CoreKit {
             embedded: Bool = false,
             forced: Bool = false
         ) {
-            @Sendable
             func forcePresentation() {
                 Task { @MainActor in
                     uiApplication.dismissAlertControllers()
@@ -162,7 +181,7 @@ public extension CoreKit {
             }
 
             guard !forced else {
-                return GCD.shared.syncOnMain { forcePresentation() }
+                return forcePresentation()
             }
 
             queuePresentation(
@@ -187,8 +206,32 @@ public extension CoreKit {
             uiApplication.windows.forEach { $0.overrideUserInterfaceStyle = style }
         }
 
-        /// Generates a semantic, integer-based identifier for a given view name.
+        /// Returns a stable integer tag for the given view name.
+        ///
+        /// Use `semTag(for:)` to assign a view's `tag`, and compare
+        /// against `tag` to find that view again:
+        ///
+        /// ```swift
+        /// overlayView.tag = core.ui.semTag(for: "OVERLAY_VIEW")
+        ///
+        /// let overlayView = subviews.first {
+        ///     $0.tag == core.ui.semTag(for: "OVERLAY_VIEW")
+        /// }
+        /// ```
+        ///
+        /// Equal names always yield equal tags. The derivation depends on floating-point
+        /// formatting, so never persist a tag or compare tags across builds.
+        ///
+        /// - Important: This method is isolated to the main actor.
+        ///
+        /// - Parameter viewName: The name that identifies the view.
+        ///
+        /// - Returns: The integer tag for the given name.
         public func semTag(for viewName: String) -> Int {
+            if let semTag = Self.semTags.wrappedValue[viewName] {
+                return semTag
+            }
+
             var float: Float = 1
 
             for (index, character) in viewName.components.enumerated() {
@@ -197,52 +240,42 @@ public extension CoreKit {
             }
 
             let rawString = String(float).removingOccurrences(of: ["."])
-            guard let integer = Int(rawString) else { return Int(float) }
-            return integer
+            let semTag = Int(rawString) ?? Int(float)
+            let collidingName = Self.semTags.wrappedValue.first(where: {
+                $0.value == semTag
+            })?.key
+
+            assert(
+                collidingName == nil,
+                "Semantic tag \(semTag) for \"\(viewName)\" collides with \"\(collidingName ?? "")\""
+            )
+
+            Self.semTags.wrappedValue[viewName] = semTag
+            return semTag
         }
 
         // MARK: - Auxiliary
 
-        func blockUserInteraction(dismissSheets: Bool = true) {
-            UIApplication.isBlockingUserInteraction = true
-
-            uiApplication
-                .windows
-                .filter {
-                    $0.tag == semTag(for: "ROOT_OVERLAY_WINDOW") ||
-                        $0.tag == semTag(for: "ROOT_WINDOW")
-                }
-                .forEach { $0.isUserInteractionEnabled = false }
-
-            dismissInteractiveContent(dismissSheets: dismissSheets)
-        }
-
-        func unblockUserInteraction() {
-            guard !CoreKit.HUD.isBlockingUserInteraction.wrappedValue,
-                  !UIView.isBlockingUserInteraction else { return }
-
-            UIApplication.isBlockingUserInteraction = false
-
-            uiApplication
-                .windows
-                .filter {
-                    $0.tag == semTag(for: "ROOT_OVERLAY_WINDOW") ||
-                        $0.tag == semTag(for: "ROOT_WINDOW")
-                }
-                .forEach { $0.isUserInteractionEnabled = true }
-        }
-
-        private func dismissInteractiveContent(dismissSheets: Bool) {
-            guard UIApplication.isBlockingUserInteraction else { return }
-
-            Toast.hide()
-            uiApplication.dismissAlertControllers()
-            if dismissSheets { uiApplication.dismissSheets() }
-            uiApplication.resignFirstResponders()
-
-            Task.delayed(by: .milliseconds(100)) { @MainActor in
-                dismissInteractiveContent(dismissSheets: dismissSheets)
+        func blockUserInteraction(
+            for reason: InteractionBlockingReason,
+            dismissSheets: Bool = true
+        ) {
+            Self.blockingReasons.wrappedValue.insert(reason)
+            if dismissSheets {
+                Self.sheetDismissingReasons.wrappedValue.insert(reason)
             }
+
+            setRootWindowsUserInteractionEnabled(false)
+            startDismissingInteractiveContent()
+        }
+
+        func unblockUserInteraction(for reason: InteractionBlockingReason) {
+            Self.blockingReasons.wrappedValue.remove(reason)
+            Self.sheetDismissingReasons.wrappedValue.remove(reason)
+            guard !Self.isBlockingUserInteraction else { return }
+
+            setRootWindowsUserInteractionEnabled(true)
+            stopDismissingInteractiveContent()
         }
 
         private func present(
@@ -266,31 +299,68 @@ public extension CoreKit {
             animated: Bool,
             embedded: Bool
         ) {
-            guard !UIApplication.isBlockingUserInteraction,
-                  !uiApplication.isPresentingAlertController else {
-                Task.delayed(by: .milliseconds(100)) { @MainActor in
-                    queuePresentation(
-                        of: viewController,
-                        animated: animated,
-                        embedded: embedded
-                    )
+            Task { @MainActor in
+                while Self.isBlockingUserInteraction ||
+                    uiApplication.isPresentingAlertController {
+                    try? await Task.sleep(for: .milliseconds(Int(Floats.pollIntervalMilliseconds)))
                 }
-                return
-            }
 
-            GCD.shared.syncOnMain { // FIXME: Audit usage of Task here.
-                Task { @MainActor in
-                    present(
-                        viewController,
-                        animated: animated,
-                        embedded: embedded
-                    )
-                }
+                present(
+                    viewController,
+                    animated: animated,
+                    embedded: embedded
+                )
             }
         }
     }
 }
 
+private extension CoreKit.UI {
+    // MARK: - Interaction Blocking
+
+    func setRootWindowsUserInteractionEnabled(_ isEnabled: Bool) {
+        let rootWindowTags = [
+            semTag(for: "ROOT_OVERLAY_WINDOW"),
+            semTag(for: "ROOT_WINDOW"),
+        ]
+
+        uiApplication
+            .windows
+            .filter { rootWindowTags.contains($0.tag) }
+            .forEach { $0.isUserInteractionEnabled = isEnabled }
+    }
+
+    // MARK: - Interactive Content Dismissal
+
+    func startDismissingInteractiveContent() {
+        guard Self.dismissalTask.wrappedValue == nil else { return }
+        Self.dismissalTask.wrappedValue = Task { @MainActor in
+            while Self.isBlockingUserInteraction,
+                  !Task.isCancelled {
+                dismissInteractiveContent()
+                try? await Task.sleep(for: .milliseconds(Int(Floats.pollIntervalMilliseconds)))
+            }
+        }
+    }
+
+    func stopDismissingInteractiveContent() {
+        Self.dismissalTask.wrappedValue?.cancel()
+        Self.dismissalTask.wrappedValue = nil
+    }
+
+    func dismissInteractiveContent() {
+        Toast.hide()
+        uiApplication.dismissAlertControllers()
+        if !Self.sheetDismissingReasons.wrappedValue.isEmpty {
+            uiApplication.dismissSheets()
+        }
+
+        uiApplication.resignFirstResponders()
+    }
+}
+
 extension UIApplication {
-    @LockIsolated fileprivate(set) static var isBlockingUserInteraction = false
+    static var isBlockingUserInteraction: Bool {
+        CoreKit.UI.isBlockingUserInteraction
+    }
 }

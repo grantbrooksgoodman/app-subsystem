@@ -80,7 +80,7 @@ public extension Exception {
             line: Int = #line
         ) {
             self.sender = sender
-            self.fileName = fileName.lastPathComponent
+            self.fileName = fileName.fileStem
             self.function = function
             self.line = line
         }
@@ -113,11 +113,9 @@ public extension Exception {
 }
 
 private extension String {
-    // TODO: Audit the "?? self".
-    var lastPathComponent: String {
-        components(separatedBy: "/")
-            .last?
-            .components(separatedBy: ".")
-            .first ?? self
+    var fileStem: String {
+        URL(
+            fileURLWithPath: self
+        ).deletingPathExtension().lastPathComponent
     }
 }

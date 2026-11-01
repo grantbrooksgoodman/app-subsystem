@@ -45,8 +45,6 @@ public extension CoreKit {
 
         static let shared = HUD()
 
-        static let isBlockingUserInteraction = LockIsolated(false)
-
         // MARK: - Init
 
         private init() {}
@@ -111,8 +109,7 @@ public extension CoreKit {
             after delay: Duration = .milliseconds(250)
         ) {
             Task { @MainActor in
-                HUD.isBlockingUserInteraction.wrappedValue = false
-                UI.shared.unblockUserInteraction()
+                UI.shared.unblockUserInteraction(for: .modalHUD)
                 ProgressHUD.dismiss()
                 try? await Task.sleep(for: delay)
                 ProgressHUD.remove()
@@ -140,8 +137,10 @@ public extension CoreKit {
                     Task { @MainActor in
                         ProgressHUD.show(text)
                         guard isModal else { return }
-                        HUD.isBlockingUserInteraction.wrappedValue = true
-                        UI.shared.blockUserInteraction(dismissSheets: false)
+                        UI.shared.blockUserInteraction(
+                            for: .modalHUD,
+                            dismissSheets: false
+                        )
                     }
                 }
 

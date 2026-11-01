@@ -46,6 +46,11 @@ import Foundation
 ///
 /// - SeeAlso: ``BuildDependency``
 public final class Build: @unchecked Sendable {
+    // MARK: - Constants Accessors
+
+    private typealias Floats = FoundationConstants.CGFloats.Build
+    private typealias Strings = FoundationConstants.Strings.Build
+
     // MARK: - Types
 
     /// The release cycle stage of a build.
@@ -124,6 +129,8 @@ public final class Build: @unchecked Sendable {
     /// The release cycle stage of this build.
     public let milestone: Milestone
 
+    private let reachability: Reachability?
+
     // MARK: - Computed Properties
 
     /// The major version number extracted from the bundle version
@@ -182,9 +189,11 @@ public final class Build: @unchecked Sendable {
     /// The date on which this build's evaluation period ends.
     ///
     /// Calculated as 30 days after the build date recorded in
-    /// `CFBuildDate`. When the current date is past this value
-    /// and ``isTimebombActive`` is `true`, the subsystem presents
-    /// the expiry gate on launch.
+    /// `CFBuildDate`. If `CFBuildDate` is absent, unset, or cannot
+    /// be parsed, the build date is treated as the current date,
+    /// so the evaluation period never ends. When the current date
+    /// is past this value and ``isTimebombActive`` is `true`, the
+    /// subsystem presents the expiry gate on launch.
     public var expiryDate: Date {
         getExpiryDate()
     }
@@ -274,6 +283,9 @@ public final class Build: @unchecked Sendable {
         self.loggingEnabled = loggingEnabled
         self.milestone = milestone
 
+        reachability = try? Reachability()
+        try? reachability?.startNotifier()
+
         Task.background { @MainActor in
             await listenForForcedUpdateStatusChanges()
         }
@@ -291,7 +303,11 @@ public final class Build: @unchecked Sendable {
 
         @Persistent(.isDeveloperModeEnabled) var persistedValue: Bool?
         persistedValue = isDeveloperModeEnabled
-        setIsTimebombActive(isDeveloperModeEnabled ? isTimebombActive : milestone == .generalRelease ? false : true)
+        if isDeveloperModeEnabled {
+            setIsTimebombActive(isTimebombActive)
+        } else {
+            setIsTimebombActive(milestone != .generalRelease)
+        }
     }
 
     func setIsTimebombActive(_ isTimebombActive: Bool) {
@@ -306,9 +322,13 @@ public final class Build: @unchecked Sendable {
     }
 
     private func getBuildDateUnixDouble() -> TimeInterval {
-        guard let cfBuildDate = infoDictionary["CFBuildDate"] as? String,
-              cfBuildDate != "1183100400" else { return floor(Date.now.timeIntervalSince1970) }
-        return .init(cfBuildDate) ?? 0
+        guard let cfBuildDate = infoDictionary[Strings.buildDateKey] as? String,
+              cfBuildDate != Strings.unsetBuildDateValue,
+              let buildDateUnixDouble = TimeInterval(cfBuildDate) else {
+            return floor(Date.now.timeIntervalSince1970)
+        }
+
+        return buildDateUnixDouble
     }
 
     private func getBuildNumber() -> Int {
@@ -320,10 +340,7 @@ public final class Build: @unchecked Sendable {
 
         var threeLetterID = codeName.uppercased()
         if codeName.count > 3 {
-            let prefix = String(codeName.first!)
-            let suffix = String(codeName.last!)
-            let middleLetterIndex = codeName.index(codeName.startIndex, offsetBy: Int((Double(codeName.count) / 2).rounded(.down)))
-            threeLetterID = "\(prefix)\(String(codeName[middleLetterIndex]))\(suffix)".uppercased()
+            threeLetterID = firstMiddleAndLastCharacters(of: codeName).joined().uppercased()
         }
 
         return "\(formattedBuildDateString)-\(threeLetterID)-\(String(format: "%06d", getBuildNumber()))\(milestone.shortString)"
@@ -351,20 +368,10 @@ public final class Build: @unchecked Sendable {
     }
 
     private func getExpirationOverrideCode() -> String {
-        guard !codeName.isEmpty,
-              let firstCharacter = codeName.first,
-              let lastCharacter = codeName.last else { return "000000" }
+        let characters = firstMiddleAndLastCharacters(of: codeName)
+        guard !characters.isEmpty else { return "000000" }
 
-        let firstLetter = String(firstCharacter)
-        let lastLetter = String(lastCharacter)
-
-        let middleIndex = codeName.index(
-            codeName.startIndex,
-            offsetBy: Int((Double(codeName.count) / 2).rounded(.down))
-        )
-        let middleLetter = String(codeName[middleIndex])
-
-        return [firstLetter, middleLetter, lastLetter].map { letter in
+        return characters.map { letter in
             String(
                 format: "%02d",
                 letter.alphabeticalPosition ?? 0
@@ -373,13 +380,14 @@ public final class Build: @unchecked Sendable {
     }
 
     private func getExpiryDate() -> Date {
-        calendar.date(
+        let buildDate = Date(timeIntervalSince1970: buildDateUnixDouble).comparator
+        let expiryDate = calendar.date(
             byAdding: .day,
-            value: 30,
-            to: .init(
-                timeIntervalSince1970: buildDateUnixDouble
-            ).comparator
-        )?.comparator ?? .distantPast
+            value: Int(Floats.evaluationPeriodDays),
+            to: buildDate
+        ) ?? buildDate.addingTimeInterval(Floats.evaluationPeriodDays * Floats.secondsPerDay)
+
+        return expiryDate.comparator
     }
 
     private func getExpiryInfoString() -> String {
@@ -402,7 +410,7 @@ public final class Build: @unchecked Sendable {
 
     private func getFirstCompileDate() -> Date {
         var timeInterval: TimeInterval = floor(Date.now.timeIntervalSince1970)
-        if let firstCompileDateString = infoDictionary["CFFirstCompileDate"] as? String {
+        if let firstCompileDateString = infoDictionary[Strings.firstCompileDateKey] as? String {
             timeInterval = .init(firstCompileDateString) ?? timeInterval
         }
 
@@ -420,8 +428,8 @@ public final class Build: @unchecked Sendable {
     }
 
     private func getNetworkStatus() -> Bool {
-        guard let reachability = try? Reachability() else { return false }
-        return reachability.connection.description != "No Connection"
+        guard let reachability else { return false }
+        return reachability.connection != .unavailable
     }
 
     private func getProjectID() -> String {
@@ -432,16 +440,10 @@ public final class Build: @unchecked Sendable {
 
         // Get code name letter positions
 
-        let firstLetterPosition = rawName.components.first?.alphabeticalPosition ?? 13
-        let lastLetterPosition = rawName.components.last?.alphabeticalPosition ?? 13
-        let middleLetter = String(rawName.components.itemAt(
-            rawName.distance(
-                to: rawName.index(
-                    rawName.startIndex,
-                    offsetBy: rawName.count / 2
-                )
-            )
-        ) ?? "A")
+        let characters = firstMiddleAndLastCharacters(of: rawName)
+        let firstLetterPosition = characters.first?.alphabeticalPosition ?? 13
+        let lastLetterPosition = characters.last?.alphabeticalPosition ?? 13
+        let middleLetter = characters.itemAt(1) ?? "A"
         let middleLetterPosition = middleLetter.alphabeticalPosition ?? 13
 
         // Calculate numeric ID
@@ -451,7 +453,13 @@ public final class Build: @unchecked Sendable {
             from: firstCompileDate
         )
 
-        let dateProduct = (dateComponents.day! * dateComponents.month! * dateComponents.year!)
+        guard let day = dateComponents.day,
+              let month = dateComponents.month,
+              let year = dateComponents.year else {
+            return .init()
+        }
+
+        let dateProduct = day * month * year
         let letterProduct = firstLetterPosition * middleLetterPosition * lastLetterPosition
         let numericID = String(letterProduct * dateProduct).digits
 
@@ -495,6 +503,26 @@ public final class Build: @unchecked Sendable {
             RootWindowStatus.shared.rootView = .forcedUpdateModalPage
             break
         }
+    }
+}
+
+private extension Build {
+    func firstMiddleAndLastCharacters(
+        of string: String
+    ) -> [String] {
+        guard let firstCharacter = string.first,
+              let lastCharacter = string.last else { return [] }
+
+        let middleIndex = string.index(
+            string.startIndex,
+            offsetBy: Int((Double(string.count) / 2).rounded(.down))
+        )
+
+        return [
+            String(firstCharacter),
+            String(string[middleIndex]),
+            String(lastCharacter),
+        ]
     }
 }
 

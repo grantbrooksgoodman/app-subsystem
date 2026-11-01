@@ -980,7 +980,7 @@ A persistent banner displays the build number, version, and milestone. It can be
 
 #### Build Expiry
 
-Pre-release builds enforce a 30-day evaluation period. The expiry date is calculated as the build date (recorded in `CFBuildDate`) plus 30 days. Once the period elapses, the app presents a full-screen gate on launch that requires a six-digit expiration override code to continue. If the correct code is not entered within 30 seconds, the app exits. General-release builds are exempt – the timebomb is never active when the milestone is `generalRelease`. The timebomb can also be toggled at runtime through the Developer Mode action menu.
+Pre-release builds enforce a 30-day evaluation period. The expiry date is calculated as the build date (recorded in `CFBuildDate`) plus 30 days. If `CFBuildDate` is absent, unset, or cannot be parsed, the build date is treated as the current date, so the evaluation period never ends. Once the period elapses, the app presents a full-screen gate on launch that requires a six-digit expiration override code to continue. If the correct code is not entered within 30 seconds, the app exits. General-release builds are exempt – the timebomb is never active when the milestone is `generalRelease`. The timebomb can also be toggled at runtime through the Developer Mode action menu.
 
 > **Important:** Keep pre-release builds up to date. After 30 days a build becomes restricted and cannot be used without the expiration override code.
 

@@ -256,21 +256,6 @@ public final class ViewModelOf<State: Equatable, Action>: ObservableObject {
 
     // MARK: - Binding for Key Path
 
-    /// Returns a read-only binding to a state value.
-    ///
-    /// The binding reflects the current state but does not send any
-    /// action when its value changes. Use this form when the view
-    /// needs to read a value but writes are handled elsewhere:
-    ///
-    ///     Text(viewModel.binding(for: \.title).wrappedValue)
-    ///
-    /// - Parameter keyPath: A key path to the state value.
-    ///
-    /// - Returns: A binding that reads from the current state.
-    public func binding<Value>(for keyPath: KeyPath<State, Value>) -> Binding<Value> {
-        binding(for: keyPath, sendAction: { _ in .none })
-    }
-
     /// Returns a binding that sends an action derived from each new
     /// value.
     ///

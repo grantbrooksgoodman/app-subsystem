@@ -114,8 +114,8 @@ public extension Exception {
 
 private extension String {
     var fileStem: String {
-        URL(
-            fileURLWithPath: self
-        ).deletingPathExtension().lastPathComponent
+        URL(fileURLWithPath: self)
+            .deletingPathExtension()
+            .lastPathComponent
     }
 }

@@ -8,7 +8,7 @@
 /* Native */
 import Foundation
 
-// MARK: - CGFloats
+// MARK: - CGFloat
 
 extension FoundationConstants.CGFloats {
     enum BuildExpiryAlert {

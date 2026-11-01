@@ -21,8 +21,6 @@ final class BuildExpiryAlert {
     // MARK: - Types
 
     fileprivate struct SessionStrings {
-        /* MARK: Properties */
-
         let alertMessage: String
         let incorrectOverrideCodeHUDText: String
         let timeExpiredAlertMessage: String
@@ -236,9 +234,12 @@ private extension BuildExpiryAlert {
 
         let message = displayedMessage(for: strings)
         let key = AlertKit.Constants.uiAlertControllerAttributedMessageKeyName
-        let setterSelector = NSSelectorFromString("set\(key.prefix(1).uppercased())\(key.dropFirst()):")
 
-        guard alertController.responds(to: setterSelector) else {
+        guard alertController.responds(
+            to: NSSelectorFromString(
+                "set\(key.prefix(1).uppercased())\(key.dropFirst()):"
+            )
+        ) else {
             return alertController.message = message
         }
 

@@ -168,7 +168,10 @@ public final class Build: @unchecked Sendable {
     /// The six-digit code required to bypass build expiry.
     ///
     /// This code is derived deterministically from ``codeName``
-    /// and remains stable across launches of the same build.
+    /// and remains stable across launches of the same build. The
+    /// first, middle, and last characters of the code name each
+    /// contribute their two-digit position in the English alphabet;
+    /// characters outside the English alphabet contribute `00`.
     /// When the evaluation period has elapsed, the subsystem
     /// prompts the user to enter this code before allowing
     /// continued use of the app.
@@ -361,10 +364,11 @@ public final class Build: @unchecked Sendable {
         )
         let middleLetter = String(codeName[middleIndex])
 
-        return [firstLetter, middleLetter, lastLetter].reduce(into: [String]()) { partialResult, letter in
-            if let position = letter.alphabeticalPosition {
-                partialResult.append(.init(format: "%02d", position))
-            }
+        return [firstLetter, middleLetter, lastLetter].map { letter in
+            String(
+                format: "%02d",
+                letter.alphabeticalPosition ?? 0
+            )
         }.joined()
     }
 

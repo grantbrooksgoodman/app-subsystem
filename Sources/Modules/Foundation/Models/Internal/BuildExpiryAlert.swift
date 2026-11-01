@@ -97,6 +97,7 @@ final class BuildExpiryAlert {
         await presentAlert()
 
         func presentAlert() async {
+            let overrideCode = build.expirationOverrideCode
             let textInputAlert = AKTextInputAlert(
                 title: "End of Evaluation Period",
                 message: expiryAlertMessage,
@@ -113,10 +114,12 @@ final class BuildExpiryAlert {
 
             textInputAlert.setMessageAttributes(messageAttributes.alertKitMapping)
             textInputAlert.onTextFieldChange { textField in
-                if let text = textField?.text {
-                    guard text.lowercasedTrimmingWhitespaceAndNewlines.count == 6 else { return textInputAlert.disableAction(at: 1) }
-                    textInputAlert.enableAction(at: 1)
+                guard let text = textField?.text else { return }
+                guard text.lowercasedTrimmingWhitespaceAndNewlines.count == overrideCode.count else {
+                    return textInputAlert.disableAction(at: 1)
                 }
+
+                textInputAlert.enableAction(at: 1)
             }
 
             @Sendable
@@ -141,7 +144,7 @@ final class BuildExpiryAlert {
             ])
 
             guard let input else { exit(0) }
-            guard input == build.expirationOverrideCode else {
+            guard input.lowercasedTrimmingWhitespaceAndNewlines == overrideCode else {
                 core.hud.flash(incorrectOverrideCodeHUDText, image: .exclamation)
                 _ = Task.delayed(by: .seconds(2)) { await self.present() }
                 return

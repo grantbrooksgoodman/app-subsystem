@@ -76,9 +76,16 @@ public extension UIApplication {
         mainWindow?.screen ?? .main
     }
 
-    /// The app's key window, or `nil`.
+    /// The app's root window, or the key window if the root window cannot be resolved.
+    ///
+    /// The root overlay window becomes key when touched, so resolving the key window alone would
+    /// redirect overlays, toasts, and alert presentation to it. The root window is located by its
+    /// semantic tag instead, and the key window serves only as a fallback before the root window
+    /// exists.
     var mainWindow: UIWindow? {
-        windows.first(where: \.isKeyWindow)
+        @Dependency(\.coreKit) var core: CoreKit
+        let rootWindowTag = core.ui.semTag(for: "ROOT_WINDOW")
+        return windows.first(where: { $0.tag == rootWindowTag }) ?? windows.first(where: \.isKeyWindow)
     }
 
     /// Recursively resolves all view controllers (including parents & children) associated with all windows in all window scenes.

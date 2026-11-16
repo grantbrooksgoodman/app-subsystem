@@ -58,8 +58,8 @@ import Foundation
 /// Pass the reducer and its initial state to a ``ViewModel``, then use
 /// the view model in your SwiftUI view:
 ///
-///     @StateObject var viewModel = ViewModel(
-///         initialState: CounterReducer.State(),
+///     @StateObject var viewModel = ViewModel<CounterReducer>(
+///         initialState: .init(),
 ///         reducer: CounterReducer()
 ///     )
 ///
@@ -74,7 +74,7 @@ public protocol Reducer<State, Action> {
     /// The type that enumerates the events this reducer can handle.
     associatedtype Action: Sendable
 
-    /// The type of this reducer's composed body. Use `Never` when the
+    /// The type of this reducer's ``body``. Use `Never` when the
     /// reducer implements ``reduce(into:action:)`` directly.
     associatedtype ReducerBody
 
@@ -83,10 +83,9 @@ public protocol Reducer<State, Action> {
 
     // MARK: - Properties
 
-    /// The composed body of this reducer, built using ``ReducerBuilder``.
+    /// The body of this reducer.
     ///
-    /// Override this property to compose multiple child reducers. When
-    /// implementing ``reduce(into:action:)`` directly, leave
+    /// When implementing ``reduce(into:action:)`` directly, leave
     /// `ReducerBody` as `Never` and do not provide a body.
     @ReducerBuilder<State, Action> var body: ReducerBody { get }
 

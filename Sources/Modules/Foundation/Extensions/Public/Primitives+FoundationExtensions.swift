@@ -14,7 +14,8 @@ import Translator
 // MARK: - Float
 
 public extension Float {
-    /// A formatted duration string in `H:MM:SS` or `M:SS` format.
+    /// A formatted duration string in `HH:MM:SS` or `MM:SS` format,
+    /// or `0:SS` for durations under one minute.
     var durationString: String {
         if self < 60 {
             return String(format: "0:%.02d", Int(rounded(.up)))
@@ -125,8 +126,8 @@ public extension String {
         prefix(1).uppercased() + dropFirst()
     }
 
-    /// A Boolean value indicating whether the string is a single
-    /// alphabetical character.
+    /// A Boolean value indicating whether the string falls within the
+    /// lexicographic range `"A" ... "Z"` or `"a" ... "z"`, inclusive.
     var isAlphabetical: Bool {
         "A" ... "Z" ~= self || "a" ... "z" ~= self
     }

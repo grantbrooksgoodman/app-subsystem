@@ -24,8 +24,10 @@ public extension AppSubsystem.Delegates {
     /// }
     /// ```
     ///
-    /// Pass the conforming instance to ``AppSubsystem`` during
-    /// initialization.
+    /// Register your conformance through
+    /// ``AppSubsystem/Delegates/register(breadcrumbsCaptureDelegate:buildInfoOverlayDotIndicatorColorDelegate:cacheDomainListDelegate:devModeAppActionDelegate:exceptionMetadataDelegate:forcedUpdateModalDelegate:loggerDomainSubscriptionDelegate:permanentPersistentStorageKeyDelegate:uiThemeListDelegate:)``
+    /// or
+    /// ``AppSubsystem/Delegates/registerPermanentPersistentStorageKeyDelegate(_:)``.
     ///
     /// - SeeAlso: ``PersistentStorageKey``,
     ///   ``UserDefaults/KeyPreservationStrategy``

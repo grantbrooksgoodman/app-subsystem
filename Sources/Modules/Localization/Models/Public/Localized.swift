@@ -48,8 +48,9 @@ import Foundation
 ///
 /// The property list for a given source is a dictionary of
 /// dictionaries. Each top-level key corresponds to a
-/// localization key's ``referent`` value, and its nested
-/// dictionary maps language codes to translated strings:
+/// localization key's ``LocalizedStringKeyRepresentable/referent``
+/// value, and its nested dictionary maps language codes to
+/// translated strings:
 ///
 /// ```xml
 /// <dict>

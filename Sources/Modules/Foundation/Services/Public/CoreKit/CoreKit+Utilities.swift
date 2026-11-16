@@ -158,7 +158,7 @@ public extension CoreKit {
         /// - Parameters:
         ///   - languageCode: The language code to set (for example,
         ///     `"fr"`).
-        ///   - override: Pass `true` to persist the code as an
+        ///   - override: Pass `true` to also store the code as an
         ///     override that takes precedence over the stored
         ///     language code. The default is `false`.
         public func setLanguageCode(

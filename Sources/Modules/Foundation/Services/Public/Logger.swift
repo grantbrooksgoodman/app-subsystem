@@ -765,9 +765,9 @@ public enum Logger {
     /// Appends a message to the currently open log stream.
     ///
     /// Each entry is prefixed with the source line number and
-    /// elapsed time since the last log call. If no stream is
-    /// currently open, the message is logged as a standalone entry
-    /// instead.
+    /// suffixed with the elapsed time since the last log call. If no
+    /// stream is currently open, the message is logged as a
+    /// standalone entry instead.
     ///
     /// - Parameters:
     ///   - message: The message to append.

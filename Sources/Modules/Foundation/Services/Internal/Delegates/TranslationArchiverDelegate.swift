@@ -30,8 +30,8 @@ final class LocalTranslationArchiverDelegate: TranslationArchiverDelegate, @unch
 
     /// Maps "<input value hash>|<language pair>" to its translation for
     /// constant-time lookups, avoiding a per-entry hash computation on every
-    /// query. The index is the archive's only in-memory copy; writes persist
-    /// its values.
+    /// query. The index is the archiver's in-memory copy of the
+    /// archive; writes persist its values.
     private var archiveIndex = [String: Translation]()
 
     /// Whether the archive has been loaded from disk, which happens at most

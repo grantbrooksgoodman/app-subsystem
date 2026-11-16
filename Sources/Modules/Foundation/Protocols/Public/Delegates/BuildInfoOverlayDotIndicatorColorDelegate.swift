@@ -27,7 +27,7 @@ public extension AppSubsystem.Delegates {
     /// ```
     ///
     /// Register your conformance through
-    /// ``AppSubsystem/Delegates/register(breadcrumbsCaptureDelegate:buildInfoOverlayDotIndicatorColorDelegate:cacheDomainListDelegate:devModeAppActionDelegate:exceptionMetadataDelegate:forcedUpdateModalDelegate:loggerDomainSubscriptionDelegate:permanentPersistentStorageKeyDelegate:)``
+    /// ``AppSubsystem/Delegates/register(breadcrumbsCaptureDelegate:buildInfoOverlayDotIndicatorColorDelegate:cacheDomainListDelegate:devModeAppActionDelegate:exceptionMetadataDelegate:forcedUpdateModalDelegate:loggerDomainSubscriptionDelegate:permanentPersistentStorageKeyDelegate:uiThemeListDelegate:)``
     /// or
     /// ``AppSubsystem/Delegates/registerBuildInfoOverlayDotIndicatorColorDelegate(_:)``.
     ///

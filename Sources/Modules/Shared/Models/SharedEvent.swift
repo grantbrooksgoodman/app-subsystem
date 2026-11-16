@@ -32,10 +32,10 @@ import Foundation
 /// ``EventStream`` – the ``SharedEvents`` container is not resolvable
 /// through ``Dependency``.
 ///
-/// The wrapper resolves its value from ``DependencyValues/current`` each
-/// time you access ``wrappedValue``, so overrides applied by
-/// ``DependencyScopes/withDependencies(_:operation:)`` are visible to any
-/// access within that scope.
+/// The wrapper resolves its value from the current dependency scope
+/// each time you access ``wrappedValue``, so overrides applied by
+/// ``DependencyScopes/withDependencies(_:operation:)`` are visible to
+/// any access within that scope.
 ///
 /// - SeeAlso: ``SharedEvents``, ``EventStream``, ``SharedState``
 @propertyWrapper

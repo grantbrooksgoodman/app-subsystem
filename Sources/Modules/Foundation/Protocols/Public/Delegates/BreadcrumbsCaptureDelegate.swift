@@ -63,7 +63,7 @@ public extension AppSubsystem.Delegates {
         /// While the session is active, the system periodically
         /// captures a snapshot of the current view hierarchy. Each
         /// unique view configuration is captured at most once per
-        /// session.
+        /// build; the capture history persists across launches.
         ///
         /// - Throws: An ``Exception`` if a capture session is
         ///   already running.

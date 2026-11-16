@@ -59,9 +59,9 @@ public typealias ViewModel<R> = ViewModelOf<R.State, R.Action> where R: Reducer
 /// ## Bindings
 ///
 /// Create two-way bindings to state values with
-/// ``binding(for:)``. The simplest form produces a read-only
-/// binding; pass a `sendAction` closure to dispatch an action
-/// whenever the binding's value changes:
+/// ``binding(for:sendAction:animation:)``. Pass a `sendAction`
+/// closure to dispatch an action whenever the binding's value
+/// changes:
 ///
 /// ```swift
 /// Toggle(

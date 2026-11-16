@@ -115,7 +115,7 @@ public extension Effect {
 ///
 /// Use this function outside of a reducer when you need cancellable async
 /// work that participates in the same cancellation registry as
-/// ``Effect.cancellable(id:cancelInFlight:)``:
+/// ``Effect/cancellable(id:cancelInFlight:)``:
 ///
 /// ```swift
 /// let result = await withTaskCancellation(id: CancelIDs.search) {

@@ -31,6 +31,10 @@ public extension TranslationService {
     ///   (untranslated) values when `returnsInputs` is `true`. When
     ///   `returnsInputs` is `false`, a timed-out request fails with
     ///   an ``Exception``.
+    /// - **Failure** – If the underlying translation request fails
+    ///   and `returnsInputs` is `true`, the error is logged and the
+    ///   method resolves with an empty array. When `returnsInputs`
+    ///   is `false`, the request fails with an ``Exception``.
     ///
     /// - Parameters:
     ///   - inputs: The translation inputs to translate.
@@ -41,14 +45,16 @@ public extension TranslationService {
     ///     blocked. Pass `nil` to suppress the HUD.
     ///   - timeoutConfig: A tuple controlling timeout behavior.
     ///     `duration` is how long to wait before timing out;
-    ///     `returnsInputs` determines whether a timed-out request
-    ///     falls back to original input values (`true`) or fails
+    ///     `returnsInputs` determines whether a timed-out or failed
+    ///     request resolves without throwing (`true`) or fails
     ///     with an exception (`false`). The default is 10 seconds
     ///     with fallback enabled.
     ///
     /// - Returns: The translated values.
     ///
-    /// - Throws: An ``Exception`` if the translation fails.
+    /// - Throws: An ``Exception`` if the translation fails or times
+    ///   out and `returnsInputs` is `false`, or if the number of
+    ///   translations returned does not match the number of inputs.
     func getTranslations(
         _ inputs: [TranslationInput],
         languagePair: LanguagePair,
@@ -159,7 +165,9 @@ public extension TranslationService {
     ///
     /// - Returns: The completed translation.
     ///
-    /// - Throws: An ``Exception`` if the translation fails.
+    /// - Throws: An ``Exception`` if the translation fails or times
+    ///   out and `returnsInputs` is `false`, or if the response is
+    ///   empty.
     func translate(
         _ input: TranslationInput,
         languagePair: LanguagePair,

@@ -85,8 +85,8 @@ public enum Localization {
         ///     its corresponding value. Pass `nil` to skip
         ///     replacement.
         ///   - strippingCharacterSet: A set of characters to
-        ///     strip from each word of the translated
-        ///     output. Pass `nil` to skip character
+        ///     trim from the start and end of each word of the
+        ///     translated output. Pass `nil` to skip character
         ///     stripping.
         ///
         /// - Warning: At least one parameter must be non-`nil`.
@@ -111,7 +111,7 @@ public enum Localization {
     }
 
     /// A configuration for the property list that
-    /// ``Localization`` generates when resolving strings.
+    /// ``Localization`` generates when translating strings.
     ///
     /// A `PropertyListConfiguration` specifies the name of
     /// the output property list and the bundle to search
@@ -201,10 +201,10 @@ public enum Localization {
     ///     before they are written to the property list, or
     ///     `nil` to apply default sanitization and
     ///     whitespace trimming only.
-    ///   - postProcessingTransformation: A closure that
-    ///     transforms each translated string after all
-    ///     processing is complete, or `nil` to skip
-    ///     additional transformation.
+    ///   - postProcess: A closure that transforms each
+    ///     translated string after all processing is
+    ///     complete, or `nil` to skip additional
+    ///     transformation.
     ///   - translate: A closure that translates the input
     ///     string into a target language, or `nil` to use
     ///     the default translation service.

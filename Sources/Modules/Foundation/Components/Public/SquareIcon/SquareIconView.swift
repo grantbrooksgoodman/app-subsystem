@@ -27,9 +27,9 @@ import ComponentKit
 /// )
 /// ```
 ///
-/// To use the icon where a `UIImage` is required – such as a
-/// ``ListRowView`` leading image – call ``image(_:)``, which renders
-/// the icon once and caches the result per configuration.
+/// To use the icon where a `UIImage` is required, call
+/// ``image(_:)``, which renders the icon once and caches the result
+/// per configuration.
 ///
 /// - SeeAlso: ``Configuration``
 public struct SquareIconView: View {

@@ -64,9 +64,10 @@ public extension TranslatedLabelStrings {
     /// pairs.
     ///
     /// Each entry resolves to the original English string when the
-    /// active language code is `"en"`, or to the stored translation
-    /// value otherwise. Use this property as a fallback when
-    /// translation results are not yet available or fail to resolve.
+    /// active language code is `"en"`, or to the input's alternate
+    /// value – falling back to the original string – otherwise.
+    /// Use this property as a fallback when translation results are
+    /// not yet available or fail to resolve.
     static var defaultOutputMap: [TranslationOutputMap] {
         keyPairs.map(\.defaultOutputMap)
     }

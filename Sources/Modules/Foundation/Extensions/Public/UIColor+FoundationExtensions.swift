@@ -19,8 +19,9 @@ extension UIColor: @MainActor EncodedHashable {
 public extension UIColor {
     /// Creates a color object using the specified RGB/hexadecimal code.
     ///
-    /// - Parameter rgb: A hexadecimal integer.
-    /// - Parameter alpha: The opacity of the color, from 0.0 to 1.0.
+    /// - Parameters:
+    ///   - rgb: A hexadecimal integer.
+    ///   - alpha: The opacity of the color, from 0.0 to 1.0.
     convenience init(
         rgb: Int,
         alpha: CGFloat = 1.0

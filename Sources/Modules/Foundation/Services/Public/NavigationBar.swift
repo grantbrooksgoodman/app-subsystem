@@ -164,12 +164,12 @@ public enum NavigationBar {
 
     // MARK: - Computed Properties
 
-    /// The height of the navigation bar in the topmost navigation
-    /// controller.
+    /// The current height of the navigation bar.
     ///
     /// Returns the smallest current navigation bar height across all
-    /// presented navigation controllers, or the system default if no
-    /// navigation controller is present.
+    /// presented navigation controllers, capped at a default value.
+    /// If no navigation controller is present, or the smallest height
+    /// is `0`, returns the default value.
     public static var height: CGFloat {
         typealias Floats = FoundationConstants.CGFloats.NavigationBar
         @Dependency(\.uiApplication.presentedViewControllers) var viewControllers: [UIViewController]
@@ -227,8 +227,8 @@ public enum NavigationBar {
     ///
     /// The appearance is set globally through
     /// `UINavigationBar.appearance()` and also applied directly to
-    /// every currently presented navigation controller to ensure
-    /// immediate effect.
+    /// the navigation item of every currently presented view
+    /// controller to ensure immediate effect.
     ///
     /// - Parameter appearance: The appearance to apply.
     public static func setAppearance(_ appearance: NavigationBarAppearance) {

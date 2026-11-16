@@ -30,7 +30,7 @@ import Translator
 ///
 /// - **Reducers and view models.** Each screen defines a ``Reducer`` that describes how state changes in response to actions. A ``ViewModel`` connects that reducer to SwiftUI, publishing state and accepting actions through bindings. Data flows in one direction: from actions, through the reducer, into state, and out to the view.
 ///
-/// - **Dependency injection.** Services and configuration are provided through the ``@Dependency`` property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
+/// - **Dependency injection.** Services and configuration are provided through the ``Dependency`` property wrapper rather than singletons or initializer parameters. Dependencies are resolved at the call site and can be overridden for testing or previews.
 ///
 /// - **Reactive observation.** Values that cross feature boundaries are expressed as ``EventStream`` and ``StateStream`` instances. View models subscribe with ``ViewModelOf/observing(_:_:)``, which maps each element to a reducer action delivered on the main actor.
 ///
@@ -307,8 +307,8 @@ public extension AppSubsystem {
         ///
         /// - Important: Register a replacement before calling
         ///   ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``.
-        ///   The subsystem reads this delegate's values during
-        ///   setup and does not re-read them afterward.
+        ///   The subsystem resumes a previously enabled capture
+        ///   session through this delegate during setup.
         ///
         /// - SeeAlso: ``BreadcrumbsCaptureDelegate``
         @LockIsolated public private(set) var breadcrumbsCapture: BreadcrumbsCaptureDelegate = Breadcrumbs.shared
@@ -351,8 +351,8 @@ public extension AppSubsystem {
         ///
         /// - Important: Register a replacement before calling
         ///   ``AppSubsystem/initialize(appStoreBuildNumber:buildMilestone:codeName:finalName:languageCode:loggingEnabled:)``.
-        ///   The subsystem reads this delegate's values during
-        ///   setup and does not re-read them afterward.
+        ///   The subsystem restores the persisted theme through
+        ///   this delegate during setup.
         ///
         /// - SeeAlso: ``UIThemeListDelegate``
         @LockIsolated public private(set) var uiThemeList: UIThemeListDelegate = DefaultUIThemeListDelegate()
@@ -383,7 +383,8 @@ public extension AppSubsystem {
         /// Developer Mode menu.
         ///
         /// When this property is `nil`, the Developer Mode menu
-        /// displays only the subsystem's built-in actions.
+        /// displays only the subsystem's built-in actions and any
+        /// actions added at runtime through ``DevModeService``.
         ///
         /// - SeeAlso: ``DevModeAppActionDelegate``
         public var devModeAppActions: DevModeAppActionDelegate? {

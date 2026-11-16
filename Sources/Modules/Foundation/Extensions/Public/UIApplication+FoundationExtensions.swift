@@ -202,7 +202,9 @@ public extension UIApplication {
         windows.forEach { $0.overrideUserInterfaceStyle = style }
     }
 
-    /// Recursively resolves all view controllers (including parents & children) associated with either the key window, or all windows in all window scenes.
+    /// Recursively resolves all view controllers (including parents
+    /// & children) associated with either the main window, or all
+    /// windows in all window scenes.
     func presentedViewControllers(_ mainWindowOnly: Bool = false) -> [UIViewController] {
         let windows = mainWindowOnly ? (mainWindow.map { [$0] } ?? []) : windows
         var viewControllers = [UIViewController?]()
@@ -222,7 +224,9 @@ public extension UIApplication {
         return viewControllers.compactMap(\.self).unique
     }
 
-    /// Recursively resolves all views (including superviews & subviews) associated with either the key window, or all windows in all window scenes.
+    /// Recursively resolves all views (including superviews &
+    /// subviews) associated with either the main window, or all
+    /// windows in all window scenes.
     func presentedViews(_ mainWindowOnly: Bool = false) -> [UIView] {
         let windowAttachedViews = (mainWindowOnly ? (mainWindow.map { [$0] } ?? []) : windows)
             .flatMap { [$0] + $0.traversedSubviews + $0.traversedSuperviews }

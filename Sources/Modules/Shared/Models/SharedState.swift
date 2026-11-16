@@ -39,10 +39,11 @@ import Foundation
 /// This wrapper is the only way to access a ``StateStream`` – the
 /// ``SharedStates`` container is not resolvable through ``Dependency``.
 ///
-/// The wrapper resolves its value from ``DependencyValues/current`` each
-/// time you access ``wrappedValue`` or ``projectedValue``, so overrides
-/// applied by ``DependencyScopes/withDependencies(_:operation:)`` are
-/// visible to any access within that scope.
+/// The wrapper resolves its value from the current dependency scope
+/// each time you access ``wrappedValue`` or ``projectedValue``, so
+/// overrides applied by
+/// ``DependencyScopes/withDependencies(_:operation:)`` are visible to
+/// any access within that scope.
 ///
 /// - Important: This wrapper is not a SwiftUI `DynamicProperty`. Reading a
 ///   shared value in a view's `body` doesn't invalidate the view when the

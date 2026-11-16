@@ -24,9 +24,9 @@ public extension NotificationCenter {
     /// }
     /// ```
     ///
-    /// The observer is kept alive through an associated object on
-    /// the `observer` instance. When the `observer` is deallocated,
-    /// the associated wrapper is released alongside it.
+    /// The notification handler is kept alive through an associated
+    /// object on the `observer` instance. When the `observer` is
+    /// deallocated, the associated wrapper is released alongside it.
     ///
     /// - Parameters:
     ///   - observer: The object registering as an observer. The

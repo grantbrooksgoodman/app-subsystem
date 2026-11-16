@@ -58,9 +58,9 @@ public extension EncodedHashable {
     ///
     /// The factors are JSON-encoded and then hashed using SHA-256.
     /// The result is a 64-character lowercase hexadecimal string.
-    /// Computed hashes are cached in memory for the lifetime of the
-    /// process, so accessing this property repeatedly for the same
-    /// factors does not recompute the digest.
+    /// Computed hashes are cached in memory, so accessing this
+    /// property repeatedly for the same factors does not recompute
+    /// the digest.
     var encodedHash: String {
         @Dependency(\.jsonEncoder) var jsonEncoder: JSONEncoder
 

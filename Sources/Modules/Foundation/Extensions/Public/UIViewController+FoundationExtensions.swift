@@ -17,7 +17,9 @@ public extension UIViewController {
         .init(type(of: self))
     }
 
-    /// The deepest child view controller in the hierarchy.
+    /// The last view controller in a depth-first traversal of the
+    /// child hierarchy, or this view controller if it has no
+    /// children.
     var leafViewController: UIViewController {
         descendants(type: UIViewController.self).last ?? self
     }

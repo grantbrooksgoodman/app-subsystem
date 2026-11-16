@@ -12,8 +12,8 @@ import Foundation
 ///
 /// A `CacheDomain` pairs a string identifier with a closure that
 /// removes all cached entries belonging to that domain. The subsystem
-/// uses cache domains to offer granular "clear caches" controls in
-/// Developer Mode and during memory-pressure cleanup.
+/// uses cache domains to back the "Clear Caches" action in Developer
+/// Mode and ``CoreKit/Utilities/clearCaches(_:)``.
 ///
 /// ## Defining a Cache Domain
 ///

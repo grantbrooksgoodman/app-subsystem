@@ -28,11 +28,11 @@ import Foundation
 ///   `LocalizedStrings` property list, bundled within the
 ///   AppSubsystem module.
 ///
-/// In most cases, pass ``app()`` to resolve strings from the
-/// app's property list. The ``subsystem`` source is used
-/// primarily by AppSubsystem itself, but apps can also pass it
-/// to resolve the subsystem's built-in strings. For the full
-/// list of available keys, see ``SubsystemStringKey``.
+/// In most cases, pass ``app(plistName:)`` to resolve strings
+/// from the app's property list. The ``subsystem`` source is
+/// used primarily by AppSubsystem itself, but apps can also
+/// pass it to resolve the subsystem's built-in strings. For the
+/// full list of available keys, see ``SubsystemStringKey``.
 ///
 /// - SeeAlso: ``Localized``, ``LocalizedStringKeyRepresentable``
 public enum LocalizationSource: Hashable, Sendable {

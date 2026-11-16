@@ -29,11 +29,14 @@ public extension AppSubsystem.Delegates {
     /// }
     /// ```
     ///
-    /// Pass the conforming instance to ``AppSubsystem`` during
-    /// initialization so that it is available when the Developer Mode
-    /// menu opens. Because the list is read on each presentation and
-    /// refresh, it can omit actions that do not apply to the current
-    /// state and supply the current state for switch-style actions.
+    /// Register your conformance through
+    /// ``AppSubsystem/Delegates/register(breadcrumbsCaptureDelegate:buildInfoOverlayDotIndicatorColorDelegate:cacheDomainListDelegate:devModeAppActionDelegate:exceptionMetadataDelegate:forcedUpdateModalDelegate:loggerDomainSubscriptionDelegate:permanentPersistentStorageKeyDelegate:uiThemeListDelegate:)``
+    /// or
+    /// ``AppSubsystem/Delegates/registerDevModeAppActionDelegate(_:)``
+    /// so that it is available when the Developer Mode menu opens.
+    /// Because the list is read on each presentation and refresh, it
+    /// can omit actions that do not apply to the current state and
+    /// supply the current state for switch-style actions.
     ///
     /// - SeeAlso: ``DevModeAction``, ``DevModeService``
     protocol DevModeAppActionDelegate {

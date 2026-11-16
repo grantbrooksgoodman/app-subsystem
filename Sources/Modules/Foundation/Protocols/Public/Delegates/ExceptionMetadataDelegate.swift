@@ -14,8 +14,10 @@ public extension AppSubsystem.Delegates {
     ///
     /// Conform to `ExceptionMetadataDelegate` to control which
     /// exceptions are reported and to supply user-facing descriptions
-    /// for known error conditions. Pass the conforming instance to
-    /// ``AppSubsystem`` during initialization.
+    /// for known error conditions. Register your conformance through
+    /// ``AppSubsystem/Delegates/register(breadcrumbsCaptureDelegate:buildInfoOverlayDotIndicatorColorDelegate:cacheDomainListDelegate:devModeAppActionDelegate:exceptionMetadataDelegate:forcedUpdateModalDelegate:loggerDomainSubscriptionDelegate:permanentPersistentStorageKeyDelegate:uiThemeListDelegate:)``
+    /// or
+    /// ``AppSubsystem/Delegates/registerExceptionMetadataDelegate(_:)``.
     ///
     /// - SeeAlso: ``Exception``
     protocol ExceptionMetadataDelegate {

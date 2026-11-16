@@ -19,6 +19,8 @@
 #                          directory for a .xcodeproj and infers the
 #                          target name from its filename.
 #
+#      --help, -h          Prints usage information and exits.
+#
 #  Created files:
 #
 #      <target>/AppDelegate.swift
@@ -26,6 +28,8 @@
 #      <target>/SceneDelegate.swift
 #      <target>/Info.plist
 #      <target>/LocalizedStrings.plist
+#      <target>.xcodeproj/xcshareddata/xcschemes/<target>.xcscheme
+#          (only when no scheme for the target exists on disk)
 #
 #  Copyright (c) NEOTechnica Corporation. All rights reserved.
 #

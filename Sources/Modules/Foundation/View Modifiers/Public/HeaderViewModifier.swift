@@ -296,9 +296,9 @@ public extension View {
     /// Applies a configurable header to the view, with support for
     /// leading, center, and trailing items.
     ///
-    /// On iOS 26 and later, the header uses an inline navigation bar
-    /// with toolbar items. On earlier versions, it falls back to a
-    /// custom ``HeaderView``.
+    /// When the app is fully iOS 26 compatible, the header uses an
+    /// inline navigation bar with toolbar items. Otherwise, it falls
+    /// back to a custom ``HeaderView``.
     ///
     /// - Parameters:
     ///   - leftItem: The button displayed on the leading edge.
@@ -310,14 +310,15 @@ public extension View {
     ///   - popGestureAction: A closure to execute when the user
     ///     performs a pop gesture.
     ///   - embedsInNavigationWindow: Whether the inline navigation
-    ///     bar on iOS 26 and later is hosted in a ``NavigationWindow``
-    ///     of its own. Pass `false` when the view already sits inside
-    ///     a navigation container, such as a `NavigationStack`, so the
-    ///     header styles that container's bar – and keeps its back
-    ///     button – instead of nesting a second one. The default is
-    ///     `true`.
+    ///     bar is hosted in a ``NavigationWindow`` of its own when
+    ///     the app is fully iOS 26 compatible. Pass `false` when the
+    ///     view already sits inside a navigation container, such as
+    ///     a `NavigationStack`, so the header styles that container's
+    ///     bar – and keeps its back button – instead of nesting a
+    ///     second one. The default is `true`.
     ///   - usesInlineDisplayMode: Whether to use an inline
-    ///     navigation bar on iOS 26 and later. The default is `true`.
+    ///     navigation bar when the app is fully iOS 26 compatible.
+    ///     The default is `true`.
     ///   - usesV26Attributes: Whether to adapt the attributes for
     ///     iOS 26. The default is `true`.
     func header(

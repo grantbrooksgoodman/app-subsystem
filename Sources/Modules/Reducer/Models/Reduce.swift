@@ -11,20 +11,7 @@ import Foundation
 /// A reducer that wraps a closure.
 ///
 /// Use `Reduce` when you want to express a reducer inline without
-/// declaring a dedicated type. This is useful when composing reducers in
-/// a ``Reducer/ReducerBody`` implementation:
-///
-/// ```swift
-/// var body: some Reducer<State, Action> {
-///    Reduce { state, action in
-///        switch action {
-///        case .increment:
-///            state.count += 1
-///            return .none
-///        }
-///    }
-/// }
-/// ```
+/// declaring a dedicated type.
 ///
 /// For standalone features, prefer conforming directly to ``Reducer``
 /// instead – the explicit type makes the feature easier to find,

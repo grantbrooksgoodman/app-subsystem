@@ -43,7 +43,7 @@ import SwiftUI
 /// SwiftUI presentation modifiers. The getter reads the current state and
 /// the setter dispatches a route:
 ///
-///     .sheet(item: coordinator.navigable(\.sheet, route: { .dismiss })) { path in
+///     .sheet(item: coordinator.navigable(\.sheet, route: { _ in .dismiss })) { path in
 ///         // ...
 ///     }
 @MainActor
@@ -78,7 +78,7 @@ public final class NavigationCoordinator<N: Navigating>: ObservableObject {
     /// Use this method to bridge the coordinator's state to SwiftUI
     /// presentation modifiers that require a `Binding`:
     ///
-    ///     .sheet(item: coordinator.navigable(\.sheet, route: { .dismiss })) { ... }
+    ///     .sheet(item: coordinator.navigable(\.sheet, route: { _ in .dismiss })) { ... }
     ///
     /// - Parameters:
     ///   - keyPath: A key path to the state property to read.

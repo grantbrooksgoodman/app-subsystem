@@ -19,7 +19,7 @@ import Foundation
 /// @Dependency(\.userDefaults) var userDefaults: UserDefaults
 /// ```
 ///
-/// The wrapper resolves its value from ``DependencyValues/current``
+/// The wrapper resolves its value from the current dependency scope
 /// each time you read ``wrappedValue``. Overrides applied by
 /// ``DependencyScopes/withDependencies(_:operation:)`` are visible
 /// to any `@Dependency` access within that scope.
@@ -33,8 +33,8 @@ import Foundation
 ///
 /// - Important: The wrapper resolves from the scope that is active at
 ///   the point of access, not the scope that was active when the
-///   wrapper was initialized. Because ``DependencyValues/current`` is
-///   a `@TaskLocal` value, overrides are visible only for the duration
+///   wrapper was initialized. Because the current scope is a
+///   `@TaskLocal` value, overrides are visible only for the duration
 ///   of the ``DependencyScopes/withDependencies(_:operation:)``
 ///   closure. Accessing the dependency after that closure returns
 ///   resolves from the enclosing scope.

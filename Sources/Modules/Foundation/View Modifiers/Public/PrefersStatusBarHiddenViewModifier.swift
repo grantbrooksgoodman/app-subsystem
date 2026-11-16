@@ -46,7 +46,7 @@ public extension View {
     /// - Parameters:
     ///   - isHidden: Pass `true` to hide the status bar. The
     ///     default is `true`.
-    ///   - restoreOnDisappear: Whether to restore the previous
+    ///   - restoreOnDisappear: Whether to apply the opposite
     ///     visibility when the view disappears. The default is
     ///     `true`.
     func prefersStatusBarHidden(

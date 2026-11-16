@@ -43,9 +43,9 @@ import Foundation
 /// ```swift
 /// let verboseLogging = DevModeAction(
 ///     title: "Verbose Logging",
-///     interaction: .switch(isOn: Logger.isVerbose)
+///     interaction: .switch(isOn: DebugFlags.isVerboseLogging)
 /// ) {
-///     Logger.isVerbose.toggle()
+///     DebugFlags.isVerboseLogging.toggle()
 /// }
 /// ```
 ///

@@ -83,7 +83,7 @@ AppSubsystem is organized around several key concepts:
 
 - **Navigation.** A coordinator-based navigation system manages stack, sheet, and modal presentation through a single published state value. SwiftUI views bind directly to the coordinator and respond to navigation changes automatically.
 
-- **Developer tools.** Pre-release builds include a build expiry timebomb, a build-info overlay, breadcrumb capture, logging, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically.
+- **Developer tools.** Pre-release builds include a build expiry timebomb, a build-info overlay, breadcrumb capture, and a Developer Mode action menu – all of which are disabled or hidden in general-release builds automatically. A domain-scoped logger is available in every build.
 
 ---
 
@@ -319,10 +319,10 @@ AppSubsystem is composed of nine internal modules, each with a focused responsib
 
 | Module | Purpose |
 |---|---|
-| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching (`CacheService`, [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift)), async work coalescing ([`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), [`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
+| **Foundation** | Core infrastructure: build lifecycle ([`Build`](Sources/Modules/Foundation/Services/Public/Build.swift)), logging ([`Logger`](Sources/Modules/Foundation/Services/Public/Logger.swift)), caching ([`@Cached`](Sources/Modules/Foundation/Models/Public/Cache.swift), [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Namespaces/CacheDomain.swift)), persistence ([`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift), [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Namespaces/PersistentStorageKey.swift)), async work coalescing ([`Coalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/Coalescer.swift), [`SingleSlotCoalescer`](Sources/Modules/Foundation/Models/Public/Coalescers/SingleSlotCoalescer.swift)), various property wrappers, [`AppConstants`](Sources/Modules/Foundation/Constants/AppConstants.swift), [`CoreKit`](Sources/Modules/Foundation/Services/Public/CoreKit/CoreKit.swift), UI components, view modifiers, and extensions. |
 | **Reducer** | The [`Reducer`](Sources/Modules/Reducer/Protocols/Reducer.swift) protocol, [`ViewModel`](Sources/Modules/Reducer/Models/ViewModel.swift), [`Reduce`](Sources/Modules/Reducer/Models/Reduce.swift), and [`ReducerBuilder`](Sources/Modules/Reducer/Models/ReducerBuilder.swift) for unidirectional state management. |
 | **Effect** | The [`Effect`](Sources/Modules/Effect/Public/Effect.swift) type and [`Send`](Sources/Modules/Effect/Public/Send.swift) callback for describing asynchronous work, including cancellation and merge support. |
-| **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) container, and scope propagation. |
+| **Dependency Injection** | The [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) and [`@ObservedDependency`](Sources/Modules/Dependency%20Injection/Models/ObservedDependency.swift) property wrappers, [`DependencyKey`](Sources/Modules/Dependency%20Injection/Protocols/DependencyKey.swift) protocol, [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/Public/DependencyValues.swift) container, and scope propagation. |
 | **Shared** | The [`EventStream`](Sources/Modules/Shared/Models/EventStream.swift) broadcaster for typed occurrences and the [`StateStream`](Sources/Modules/Shared/Models/StateStream.swift) container for values that emit changes, declared on and resolved through the [`SharedEvents`](Sources/Modules/Shared/Models/SharedEvents.swift) and [`SharedStates`](Sources/Modules/Shared/Models/SharedStates.swift) containers for reactive cross-feature communication. |
 | **Theming** | [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) definitions, [`ThemeService`](Sources/Modules/Theming/Services/ThemeService.swift), [`ThemedView`](Sources/Modules/Theming/Views/Public/ThemedView.swift), and convenience color extensions for runtime appearance swapping. |
 | **Localization** | Source-based string resolution through [`LocalizationSource`](Sources/Modules/Localization/Models/Public/LocalizationSource.swift), the [`@Localized`](Sources/Modules/Localization/Models/Public/Localized.swift) property wrapper, the [`LocalizedStringKeyRepresentable`](Sources/Modules/Localization/Protocols/LocalizedStringKeyRepresentable.swift) protocol, and the [`Localization`](Sources/Modules/Localization/Services/Public/Localization.swift) property list generation service. |
@@ -473,7 +473,7 @@ enum UserDefaultsDependency: DependencyKey {
 }
 ```
 
-Then expose the dependency on [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/DependencyValues.swift) through a computed property. This enables key-path-based access at the call site:
+Then expose the dependency on [`DependencyValues`](Sources/Modules/Dependency%20Injection/Services/Public/DependencyValues.swift) through a computed property. This enables key-path-based access at the call site:
 
 ```swift
 extension DependencyValues {
@@ -500,7 +500,7 @@ For SwiftUI views that need to observe an `ObservableObject` dependency and upda
 
 #### Scope Propagation
 
-Each access to a [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property resolves the value from ``DependencyValues.current``, which is propagated through Swift's structured concurrency via `@TaskLocal`. Scopes set with ``DependencyScopes.withDependencies`` are visible to any `@Dependency` access within that task. Effects automatically capture and restore the active scope, so dependencies resolved inside an effect closure see the same values that were active when the effect was created.
+Each access to a [`@Dependency`](Sources/Modules/Dependency%20Injection/Models/Dependency.swift) property resolves the value from the current dependency scope, which is propagated through Swift's structured concurrency via `@TaskLocal`. Scopes set with `DependencyScopes.withDependencies` are visible to any `@Dependency` access within that task. Effects automatically capture and restore the active scope, so dependencies resolved inside an effect closure see the same values that were active when the effect was created.
 
 ### Reactive Observation
 
@@ -622,8 +622,8 @@ Create a [`UITheme`](Sources/Modules/Theming/Models/UITheme.swift) by providing 
 let oceanTheme = UITheme(
     name: "Ocean",
     items: [
-        .init(.background, color: .systemBlue),
-        .init(.titleText, color: .white),
+        .init(.background, set: .init(.systemBlue)),
+        .init(.titleText, set: .init(.white)),
     ],
     style: .dark
 )
@@ -669,7 +669,7 @@ The [`LocalizationSource`](Sources/Modules/Localization/Models/Public/Localizati
 | Source | Property List | Bundle |
 |---|---|---|
 | `.app()` | `LocalizedStrings` (configurable) | Main bundle. |
-| `.custom(plistName:bundle:)` | Configurable | Configurable. |
+| `.custom(bundle:plistName:)` | Configurable | Configurable. |
 | `.subsystem` | `LocalizedStrings` | AppSubsystem module bundle. |
 
 #### Defining String Keys
@@ -779,7 +779,7 @@ For additional transformation after processing is complete, pass a closure to th
 
 #### Dynamic Translation
 
-For runtime translation of content not present in the property list, the `TranslationService` provides asynchronous methods with activity indicator and timeout support. Toast and alert content can be translated at runtime before presentation.
+For runtime translation of content not present in the property list, the `TranslationService` provides asynchronous methods with progress HUD and timeout support. Toast and alert content can be translated at runtime before presentation.
 
 ### Navigation
 
@@ -862,11 +862,11 @@ Use [`@Navigator`](Sources/Modules/Navigation/Models/Navigator.swift) to access 
 
 ### Persistence
 
-The [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) property wrapper persists a `Codable` value across launches through a strongly typed [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift). Values are encoded as binary property lists automatically, falling back to JSON when property list coding is not supported. Types that are natively supported by `UserDefaults` (such as `Bool`, `Int`, and `String`) are stored directly.
+The [`@Persistent`](Sources/Modules/Foundation/Models/Public/Persistent.swift) property wrapper persists a `Codable` value across launches through a strongly typed [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Namespaces/PersistentStorageKey.swift). Values are encoded as binary property lists automatically, falling back to JSON when property list coding is not supported. Types that are natively supported by `UserDefaults` (such as `Bool`, `Int`, and `String`) are stored directly.
 
 #### Defining Keys
 
-Declare keys as static properties on [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Key%20Domains/PersistentStorageKey.swift):
+Declare keys as static properties on [`PersistentStorageKey`](Sources/Modules/Foundation/Models/Public/Namespaces/PersistentStorageKey.swift):
 
 ```swift
 extension PersistentStorageKey {
@@ -902,7 +902,7 @@ Small values are stored in `UserDefaults`. When the encoded representation of a 
 
 `@Persistent` maintains a process-wide, write-through in-memory cache. Every write updates the cache, and every read checks it before falling back to disk. Values decoded from the persistent store are cached automatically so that subsequent reads within the same process do not repeat the decoding work.
 
-The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Key%20Domains/CacheDomain.swift), so clearing all cache domains also clears the persistence cache.
+The persistence cache is registered as a [`CacheDomain`](Sources/Modules/Foundation/Models/Public/Namespaces/CacheDomain.swift), so clearing all cache domains also clears the persistence cache.
 
 > **Note:** Keys registered through the [`PermanentPersistentStorageKeyDelegate`](Sources/Modules/Foundation/Protocols/Public/Delegates/PermanentPersistentStorageKeyDelegate.swift) are protected from cache clearing, ensuring that critical values survive a full reset. Calling `reset(preserving:)` removes values from both `UserDefaults` and the Application Support directory, so filesystem-backed entries are cleaned up automatically.
 
@@ -972,7 +972,7 @@ let refresh = SingleSlotCoalescer<Void, Exception>(policy: .rerun)
 
 ### Developer Tools
 
-Pre-release builds (any milestone before `generalRelease`) automatically include several diagnostic tools. All of them are disabled or hidden in general-release builds.
+Pre-release builds (any milestone before `generalRelease`) automatically include several diagnostic tools. All of them except the logger are disabled or hidden in general-release builds; logging is controlled by the `loggingEnabled` argument passed to `AppSubsystem.initialize`.
 
 #### Build-Info Overlay
 
@@ -1009,8 +1009,9 @@ A customizable menu, presented as a sheet from the root view, provides app-speci
 
 ```swift
 DevModeService.addAction(
-    DevModeAction(title: "Clear Cache") {
-        CacheService.clearAllDomains()
+    DevModeAction(title: "Clear Caches") {
+        @Dependency(\.coreKit) var core: CoreKit
+        core.utils.clearCaches()
     }
 )
 ```
@@ -1028,8 +1029,8 @@ Default behavior can be replaced or extended by registering delegates on `AppSub
 | Delegate | Purpose | Default |
 |---|---|---|
 | `breadcrumbsCapture` | Screenshot capture for debugging. | Built-in [`Breadcrumbs`](Sources/Modules/Foundation/Services/Internal/Breadcrumbs.swift) implementation. |
-| `cacheDomainList` | Application-specific cache domains. | Empty domain list. |
-| `loggerDomainSubscription` | Logger domain filtering and session-record exclusions. | Subscribes to all domains. |
+| `cacheDomainList` | Application-specific cache domains. | The subsystem's built-in cache domains. |
+| `loggerDomainSubscription` | Logger domain filtering and session-record exclusions. | Subscribes to the subsystem's built-in domains; excludes none from the session record. |
 | `uiThemeList` | Available themes for the theme picker. | Single default theme. |
 
 ### Optional Delegates

@@ -324,7 +324,7 @@ public struct Exception: Equatable, Exceptionable, Swift.Error, @unchecked Senda
     /// Returns a Boolean value indicating whether this exception's
     /// error code matches a catalogued ``AppException``.
     ///
-    /// - Parameter cataloggedException: The catalogued exception to
+    /// - Parameter cataloguedException: The catalogued exception to
     ///   compare against.
     ///
     /// - Returns: `true` if the codes match; otherwise, `false`.

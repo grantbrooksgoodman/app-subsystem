@@ -36,9 +36,10 @@ public struct TranslationInputMap: Equatable {
     /// A default output map for this input.
     ///
     /// Returns the original English string when the active language
-    /// code is `"en"`, or the stored translation value otherwise.
-    /// Use this property as a fallback when
-    /// translation results are not yet available or fail to resolve.
+    /// code is `"en"`, or the input's alternate value – falling
+    /// back to the original string – otherwise. Use this property
+    /// as a fallback when translation results are not yet available
+    /// or fail to resolve.
     public var defaultOutputMap: TranslationOutputMap {
         .init(
             key: key,

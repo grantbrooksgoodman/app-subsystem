@@ -18,12 +18,13 @@ import UIKit
 /// ``Appearance/themed`` style:
 ///
 /// ```swift
-/// HeaderView(
-///     leftItem: .text(.init("Cancel", font: .body) { dismiss() }),
-///     centerItem: .text(.init("New Message")),
-///     rightItem: .text(.init("Send") { send() }),
-///     attributes: .init(sizeClass: .sheet)
-/// )
+/// SheetContentView()
+///     .header(
+///         leftItem: .cancelButton { dismiss() },
+///         .text(.init("New Message")),
+///         rightItem: .text(.init(text: .init("Send")) { send() }),
+///         attributes: .init(sizeClass: .sheet)
+///     )
 /// ```
 ///
 /// ## Appearance

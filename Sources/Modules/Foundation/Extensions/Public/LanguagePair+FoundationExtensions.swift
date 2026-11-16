@@ -12,7 +12,7 @@ import Foundation
 import Translator
 
 public extension LanguagePair {
-    /// A language pair from English to the current system language.
+    /// A language pair from English to the active language code.
     static var system: LanguagePair {
         .init(from: "en", to: RuntimeStorage.languageCode)
     }

@@ -71,7 +71,9 @@ private struct HeaderViewModifier: ViewModifier {
 }
 
 extension View {
-    /// - Parameter attributes: Choosing a themed `appearance` value overrides all color values to those of the system theme.
+    /// - Parameter attributes: The header's visual configuration.
+    ///   Choosing a themed `appearance` overrides all color values to
+    ///   those of the active theme.
     func header(
         leftItem: HeaderView.PeripheralButtonType? = nil,
         _ centerItem: HeaderView.CenterItemType? = nil,

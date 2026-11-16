@@ -16,7 +16,11 @@ import Foundation
 /// keyed by its ``DependencyKey`` type:
 ///
 /// ```swift
-/// let defaults = DependencyValues.current[UserDefaultsDependency.self]
+/// try await DependencyScopes.withDependencies {
+///     $0[UserDefaultsDependency.self] = testDefaults
+/// } operation: {
+///     // Dependencies resolved here see `testDefaults`.
+/// }
 /// ```
 ///
 /// In practice, you rarely use the subscript directly. Instead, define a
@@ -37,7 +41,7 @@ import Foundation
 ///
 /// ## Scoping
 ///
-/// The ``current`` value is stored as a `@TaskLocal`, which means each
+/// The current scope is stored as a `@TaskLocal`, which means each
 /// structured-concurrency task inherits the dependency values of its
 /// parent. Use ``DependencyScopes/withDependencies(_:operation:)``
 /// to override individual dependencies for the duration of a closure.

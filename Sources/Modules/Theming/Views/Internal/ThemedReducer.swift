@@ -59,9 +59,7 @@ struct ThemedReducer: Reducer {
                   sameObjectID,
                   sameRedrawsOnAppearanceChange,
                   sameRestoresNavigationBarAppearanceOnDisappear,
-                  sameViewID else {
-                return false
-            }
+                  sameViewID else { return false }
 
             return true
         }

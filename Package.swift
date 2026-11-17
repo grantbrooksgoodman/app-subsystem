@@ -19,15 +19,15 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/grantbrooksgoodman/alert-kit",
-            branch: "main"
+            exact: "7.1.4"
         ),
         .package(
             url: "https://github.com/grantbrooksgoodman/component-kit",
-            branch: "main"
+            exact: "5.0.4"
         ),
         .package(
             url: "https://github.com/grantbrooksgoodman/translator",
-            branch: "main"
+            exact: "9.1.4"
         ),
     ],
     targets: [
